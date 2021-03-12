@@ -1,0 +1,4 @@
+docopt
+chardet
+nltk
+ftfy
