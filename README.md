@@ -1,5 +1,6 @@
 # Demeuk
-[![Documentation Status](https://readthedocs.org/projects/demeuk/badge/?version=latest)](https://demeuk.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/demeuk/badge/?version=latest)](https://demeuk.readthedocs.io/en/latest/?badge=latest) [![Tests](https://github.com/NetherlandsForensicInstitute/demeuk/actions/workflows/test.yml/badge.svg)](https://github.com/NetherlandsForensicInstitute/demeuk/actions/workflows/test.yml)
+
 Demeuk is a simple tool to clean up corpora (like dictionaries) or any dataset
 containing plain text strings. Example use cases are: cleaning up language dictionaries,
 password sets (like for example RockYou) or any file containing plain text strings.
