@@ -1,4 +1,5 @@
 # Demeuk
+[![Documentation Status](https://readthedocs.org/projects/demeuk/badge/?version=latest)](https://demeuk.readthedocs.io/en/latest/?badge=latest)
 Demeuk is a simple tool to clean up corpora (like dictionaries) or any dataset
 containing plain text strings. Example use cases are: cleaning up language dictionaries,
 password sets (like for example RockYou) or any file containing plain text strings.
@@ -40,3 +41,6 @@ Examples:
     demeuk -i inputfile.tmp -o outputfile.dict -d droppedfile.txt
     demeuk -i inputfile -o outputfile -j 24 -l logfile.log
 ```
+
+## Docs
+The docs are available at: <http://demeuk.rtfd.io/>
