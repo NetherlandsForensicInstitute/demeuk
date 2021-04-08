@@ -732,7 +732,7 @@ def clean_up(filename, chunk_start, chunk_size, config):
 
 def chunkify(fname, size=1024 * 1024):
     # based on: https://www.blopig.com/blog/2016/08/processing-large-files-using-python/
-    for filename in glob(fname):
+    for filename in glob(fname, recursive=True):
         if not path.isfile(filename):
             continue
         fileend = path.getsize(filename)
