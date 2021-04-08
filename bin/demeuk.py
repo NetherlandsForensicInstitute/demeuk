@@ -75,6 +75,7 @@
 """
 
 from binascii import hexlify, unhexlify
+from glob import glob
 from html import unescape
 from inspect import cleandoc
 from locale import LC_ALL, setlocale
@@ -731,17 +732,20 @@ def clean_up(filename, chunk_start, chunk_size, config):
 
 def chunkify(fname, size=1024 * 1024):
     # based on: https://www.blopig.com/blog/2016/08/processing-large-files-using-python/
-    fileend = path.getsize(fname)
-    with open(fname, 'br') as f:
-        chunkend = f.tell()
-        while True:
-            chunkstart = chunkend
-            f.seek(size, 1)
-            f.readline()
+    for filename in glob(fname):
+        if not path.isfile(filename):
+            continue
+        fileend = path.getsize(filename)
+        with open(filename, 'br') as f:
             chunkend = f.tell()
-            yield chunkstart, chunkend - chunkstart
-            if chunkend > fileend:
-                break
+            while True:
+                chunkstart = chunkend
+                f.seek(size, 1)
+                f.readline()
+                chunkend = f.tell()
+                yield chunkstart, chunkend - chunkstart
+                if chunkend > fileend:
+                    break
 
 
 def main():
