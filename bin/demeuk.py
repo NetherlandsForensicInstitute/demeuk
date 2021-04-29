@@ -47,6 +47,8 @@
         --no-check-controlchar          Disable the dropping of lines containing control chars.
         --check-email                   Drop lines containing e-mail addresses.
         --check-hash                    Drop lines containing hashes.
+        --check-non-ascii               If a line contain a non ascii char e.g. ü or ç (or everything outside ascii
+                                        range) the line is dropped.
 
     Modify modules (modify a line in place):
         --hex                           Replace lines like: $HEX[41424344] with ABCD.
@@ -345,6 +347,21 @@ def check_email(line):
         return False
     else:
         return True
+
+
+def check_non_ascii(line):
+    """Checks if a line contains a non ascii chars
+
+    Params:
+        line (unicode)
+    Returns:
+        true if line does not contain non ascii chars
+    """
+    try:
+        line.encode('ascii')
+        return True
+    except UnicodeEncodeError:
+        return False
 
 
 def clean_cut(line, delimiters, fields):
@@ -668,6 +685,11 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 log.append(f'Check_hash; dropped line because found a hash; {line_decoded}{linesep}')
                 stop = True
 
+        if config.get('check-non-ascii') and not stop:
+            if not check_non_ascii(line_decoded):
+                log.append(f'Check_non_ascii; dropped line because non ascii char found; {line_decoded}{linesep}')
+                stop = True
+
         if config.get('remove-punctuation') and not stop:
             status, line_decoded = remove_punctuation(line_decoded)
             if status and config['verbose']:
@@ -797,6 +819,7 @@ def main():
         'check-case': False,
         'check-email': False,
         'check-hash': False,
+        'check-non-ascii': False,
 
         # Add
         'add-lower': False,
@@ -870,6 +893,9 @@ def main():
 
     if arguments.get('--check-hash'):
         config['check-hash'] = True
+
+    if arguments.get('--check-non-ascii'):
+        config['check-non-ascii'] = True
 
     # Add modules
     if arguments.get('--add-lower'):

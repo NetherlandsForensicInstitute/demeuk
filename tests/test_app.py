@@ -412,3 +412,16 @@ def test_check_bug_comma_d():
         assert 'angus' in filecontent
         assert 'line2' not in filecontent
         assert 'snow' in filecontent
+
+
+def test_check_non_ascii():
+    testargs = [
+        'demeuk', '-i', 'testdata/input25', '-o', 'testdata/output25', '-l', 'testdata/log25',
+        '--verbose', '--check-non-ascii',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output25') as f:
+        filecontent = f.read()
+        assert 'laténight' not in filecontent
+        assert 'thestrokes' in filecontent
