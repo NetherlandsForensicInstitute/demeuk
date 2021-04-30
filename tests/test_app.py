@@ -425,3 +425,19 @@ def test_check_non_ascii():
         filecontent = f.read()
         assert 'laténight' not in filecontent
         assert 'thestrokes' in filecontent
+
+
+def test_clean_non_ascii():
+    testargs = [
+        'demeuk', '-i', 'testdata/input26', '-o', 'testdata/output26', '-l', 'testdata/log26',
+        '--verbose', '--non-ascii',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output26') as f:
+        filecontent = f.read()
+
+        assert 'polopaç' not in filecontent
+        assert 'mündster' not in filecontent
+        assert 'polopac' in filecontent
+        assert 'mundster' in filecontent

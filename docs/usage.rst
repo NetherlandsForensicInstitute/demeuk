@@ -223,6 +223,13 @@ umlaut
 In some spellings website the umlaut is not used correct. For example they are encoded as
 the characters a". This should of course be an a with an umlaut.
 
+non-ascii
+~~~~~~~~~
+Replaces Unicode chars to 7-bit Ascii replacement. For this the following lib is used:
+https://pypi.org/project/Unidecode/
+
+For example a line like 'kožušček' is replaced to kozuscek.
+
 no-mojibake
 ~~~~~~~~~~~
 Use this option to disable the default behavior of trying to fix encoding issues.

@@ -59,6 +59,8 @@
         --no-mojibake                   disable fixing mojibakes, useful if you know the encoding.
         --no-encode                     disable guessing of encoding, this force to use the --input-encoding.
         --no-tab                        disable replacing tab char with ':'
+        --non-ascii                     Replace non ascii char with their replacement letters. For example ü
+                                        becomes u, ç becomes c.
 
     Add modules (Modify a line, but keep the original as well):
         --add-lower                     If a line contains a capital letter this will add the lower case variant
@@ -98,9 +100,10 @@ from ftfy.chardata import HTML_ENTITIES, HTML_ENTITY_RE
 from ftfy.fixes import fix_latin_ligatures
 from nltk import str2tuple
 from nltk.tokenize import WhitespaceTokenizer
+from unidecode import unidecode
 
 
-version = '3.5.0'
+version = '3.6.0'
 
 HEX_REGEX = re_compile(r'\$HEX\[([0-9a-f]+)\]')
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]*\\.){1,3}[a-zA-Z0-9_-]*'
@@ -391,6 +394,21 @@ def clean_cut(line, delimiters, fields):
         return False, line
 
 
+def clean_non_ascii(line):
+    """Replace non ascii chars with there ascii representation.
+
+    Params:
+        line (Unicode)
+    Returns:
+        line (Unicode)
+    """
+    cleaned_line = unidecode(line)
+    if line != cleaned_line:
+        return True, cleaned_line
+    else:
+        return False, line
+
+
 def clean_tab(line):
     """Replace tab character with ':' greedy
 
@@ -653,6 +671,12 @@ def clean_up(filename, chunk_start, chunk_size, config):
             if status and config['verbose']:
                 log.append(f'Clean_umlaut; umlaut replaced; {line_decoded}{linesep}')
 
+        # Replace non-ascii
+        if config.get('non-ascii') and not stop:
+            status, line_decoded = clean_non_ascii(line_decoded)
+            if status and config['verbose']:
+                log.append(f'Clean_non_ascii; non-ascii replaced; {line_decoded}{linesep}')
+
         # Should we remove emails?
         if config.get('remove-email') and not stop:
             status, line_decoded = remove_email(line_decoded)
@@ -810,6 +834,7 @@ def main():
         'html': False,
         'html-named': False,
         'umlaut': False,
+        'non-ascii': False,
 
         # Check
         'length': False,
@@ -875,6 +900,9 @@ def main():
 
     if arguments.get('--umlaut'):
         config['umlaut'] = True
+
+    if arguments.get('--non-ascii'):
+        config['non-ascii'] = True
 
     # Check modules
     if arguments.get('--check-min-length'):

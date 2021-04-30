@@ -174,3 +174,7 @@ with open('testdata/input24', 'w') as file:
 with open('testdata/input25', 'w') as file:
     file.write(f'laténight{linesep}')
     file.write(f'thestrokes{linesep}')
+
+with open('testdata/input26', 'w') as file:
+    file.write(f'polopaç{linesep}')
+    file.write(f'mündster{linesep}')
