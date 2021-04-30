@@ -251,8 +251,7 @@ Remove modules
 remove-punctuation
 ~~~~~~~~~~~~~~~~~~
 Remove start and end punctuation. A line like: test- will be converted to
-test. This option is useful for language corpora. Currently it will only strip
-' ' and '-'.
+test. This option is useful for language corpora.
 
 remove-email
 ~~~~~~~~~~~~
