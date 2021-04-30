@@ -178,8 +178,14 @@ check-hash
 Checks if a line contains an hash. If so the line is dropped. The regex used are quite
 simple. One regex check if a line, from start to finish, contains a-f and 0-9's only.
 The other checks if the line contains a structure which looks like linux hash. Something
+like
 
 $1$fjdfh$qwertyuiopjfsdf
+
+check-non-ascii
+~~~~~~~~~~~~~~~
+Checks if a line contains non-ascii chars. It does this by using the 'ascii' encoding
+builtin Python. If the line does not encode correctly the line is dropped.
 
 Modify modules
 --------------
@@ -216,6 +222,13 @@ umlaut
 ~~~~~~
 In some spellings website the umlaut is not used correct. For example they are encoded as
 the characters a". This should of course be an a with an umlaut.
+
+non-ascii
+~~~~~~~~~
+Replaces Unicode chars to 7-bit Ascii replacement. For this the following lib is used:
+https://pypi.org/project/Unidecode/
+
+For example a line like 'kožušček' is replaced to kozuscek.
 
 no-mojibake
 ~~~~~~~~~~~

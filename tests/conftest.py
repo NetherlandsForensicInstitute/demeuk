@@ -170,3 +170,11 @@ with open('testdata/input24', 'w') as file:
     file.write(f'line1@example.com,angus{linesep}')
     file.write(f'line2@example.com:snow{linesep}')
     file.write(f'line3@example.com:julia{linesep}')
+
+with open('testdata/input25', 'w') as file:
+    file.write(f'laténight{linesep}')
+    file.write(f'thestrokes{linesep}')
+
+with open('testdata/input26', 'w') as file:
+    file.write(f'polopaç{linesep}')
+    file.write(f'mündster{linesep}')

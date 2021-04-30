@@ -9,6 +9,7 @@ dependencies = [
     'chardet',
     'nltk',
     'ftfy',
+    'unidecode',
 ]
 
 setup(
