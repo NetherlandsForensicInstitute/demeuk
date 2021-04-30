@@ -185,7 +185,7 @@ def test_language_processing():
     with patch.object(sys, 'argv', testargs):
         main()
     line_num_output = calculate_line_numbers('testdata/output11')
-    assert line_num_output == 27
+    assert line_num_output == 29
     with open('testdata/output11') as f:
         filecontent = f.read()
         assert 'cĳfer\n' in filecontent
@@ -201,6 +201,8 @@ def test_language_processing():
         assert '3-hoekig\n' in filecontent
         assert '\nhoekig\n' in filecontent
         assert '3\n' not in filecontent
+        assert 'Philipsburg.\n' not in filecontent
+        assert 'Philipsburg\n' in filecontent
 
 
 def test_fries():

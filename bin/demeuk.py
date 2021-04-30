@@ -103,7 +103,7 @@ from nltk.tokenize import WhitespaceTokenizer
 from unidecode import unidecode
 
 
-version = '3.6.0'
+version = '3.6.1'
 
 HEX_REGEX = re_compile(r'\$HEX\[([0-9a-f]+)\]')
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]*\\.){1,3}[a-zA-Z0-9_-]*'
@@ -254,7 +254,7 @@ def clean_add_umlaut(line):
         return False, line
 
 
-def remove_punctuation(line, punctuation=[' ', '-']):
+def remove_punctuation(line):
     """Returns the line without start and end punctuation
 
     Param:
@@ -262,7 +262,7 @@ def remove_punctuation(line, punctuation=[' ', '-']):
     Returns:
         line without start and end punctuation
     """
-    return_line = line.strip(''.join(punctuation))
+    return_line = line.strip(punctuation)
     if return_line != line:
         return True, return_line
     else:
