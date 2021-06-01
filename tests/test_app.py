@@ -412,3 +412,14 @@ def test_check_bug_comma_d():
         assert 'angus' in filecontent
         assert 'line2' not in filecontent
         assert 'snow' in filecontent
+
+
+def test_glob():
+    testargs = [
+        'demeuk', '-i', 'testdata/input*', '-o', 'testdata/output25', '-l', 'testdata/log25',
+        '--verbose', '-c', '-d', ',;:',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output25') as f:
+        assert len(f.readlines()) == 110
