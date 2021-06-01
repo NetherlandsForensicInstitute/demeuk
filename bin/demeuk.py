@@ -49,6 +49,8 @@
         --no-check-controlchar          Disable the dropping of lines containing control chars.
         --check-email                   Drop lines containing e-mail addresses.
         --check-hash                    Drop lines containing hashes.
+        --check-non-ascii               If a line contain a non ascii char e.g. ü or ç (or everything outside ascii
+                                        range) the line is dropped.
 
     Modify modules (modify a line in place):
         --hex                           Replace lines like: $HEX[41424344] with ABCD.
@@ -59,6 +61,8 @@
         --no-mojibake                   disable fixing mojibakes, useful if you know the encoding.
         --no-encode                     disable guessing of encoding, this force to use the --input-encoding.
         --no-tab                        disable replacing tab char with ':'
+        --non-ascii                     Replace non ascii char with their replacement letters. For example ü
+                                        becomes u, ç becomes c.
 
     Add modules (Modify a line, but keep the original as well):
         --add-lower                     If a line contains a capital letter this will add the lower case variant
@@ -100,9 +104,10 @@ from ftfy.chardata import HTML_ENTITIES, HTML_ENTITY_RE
 from ftfy.fixes import fix_latin_ligatures
 from nltk import str2tuple
 from nltk.tokenize import WhitespaceTokenizer
+from unidecode import unidecode
 
 
-version = '3.5.0'
+version = '3.6.1'
 
 HEX_REGEX = re_compile(r'\$HEX\[([0-9a-f]+)\]')
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]*\\.){1,3}[a-zA-Z0-9_-]*'
@@ -253,7 +258,7 @@ def clean_add_umlaut(line):
         return False, line
 
 
-def remove_punctuation(line, punctuation=[' ', '-']):
+def remove_punctuation(line):
     """Returns the line without start and end punctuation
 
     Param:
@@ -261,7 +266,7 @@ def remove_punctuation(line, punctuation=[' ', '-']):
     Returns:
         line without start and end punctuation
     """
-    return_line = line.strip(''.join(punctuation))
+    return_line = line.strip(punctuation)
     if return_line != line:
         return True, return_line
     else:
@@ -351,6 +356,21 @@ def check_email(line):
         return True
 
 
+def check_non_ascii(line):
+    """Checks if a line contains a non ascii chars
+
+    Params:
+        line (unicode)
+    Returns:
+        true if line does not contain non ascii chars
+    """
+    try:
+        line.encode('ascii')
+        return True
+    except UnicodeEncodeError:
+        return False
+
+
 def clean_cut(line, delimiters, fields):
     """Finds the first delimiter and returns the remaining string either after
     or before the delimiter.
@@ -374,6 +394,21 @@ def clean_cut(line, delimiters, fields):
             else:
                 fields = slice(int(fields) - 1, int(fields))
             return True, delimiter.join(line.split(delimiter)[fields])
+    else:
+        return False, line
+
+
+def clean_non_ascii(line):
+    """Replace non ascii chars with there ascii representation.
+
+    Params:
+        line (Unicode)
+    Returns:
+        line (Unicode)
+    """
+    cleaned_line = unidecode(line)
+    if line != cleaned_line:
+        return True, cleaned_line
     else:
         return False, line
 
@@ -641,6 +676,12 @@ def clean_up(filename, chunk_start, chunk_size, config):
             if status and config['verbose']:
                 log.append(f'Clean_umlaut; umlaut replaced; {line_decoded}{linesep}')
 
+        # Replace non-ascii
+        if config.get('non-ascii') and not stop:
+            status, line_decoded = clean_non_ascii(line_decoded)
+            if status and config['verbose']:
+                log.append(f'Clean_non_ascii; non-ascii replaced; {line_decoded}{linesep}')
+
         # Should we remove emails?
         if config.get('remove-email') and not stop:
             status, line_decoded = remove_email(line_decoded)
@@ -671,6 +712,11 @@ def clean_up(filename, chunk_start, chunk_size, config):
         if config.get('check-hash') and not stop:
             if not check_hash(line_decoded):
                 log.append(f'Check_hash; dropped line because found a hash; {line_decoded}{linesep}')
+                stop = True
+
+        if config.get('check-non-ascii') and not stop:
+            if not check_non_ascii(line_decoded):
+                log.append(f'Check_non_ascii; dropped line because non ascii char found; {line_decoded}{linesep}')
                 stop = True
 
         if config.get('remove-punctuation') and not stop:
@@ -796,6 +842,7 @@ def main():
         'html': False,
         'html-named': False,
         'umlaut': False,
+        'non-ascii': False,
 
         # Check
         'length': False,
@@ -805,6 +852,7 @@ def main():
         'check-case': False,
         'check-email': False,
         'check-hash': False,
+        'check-non-ascii': False,
 
         # Add
         'add-lower': False,
@@ -861,6 +909,9 @@ def main():
     if arguments.get('--umlaut'):
         config['umlaut'] = True
 
+    if arguments.get('--non-ascii'):
+        config['non-ascii'] = True
+
     # Check modules
     if arguments.get('--check-min-length'):
         config['check-length'] = True
@@ -878,6 +929,9 @@ def main():
 
     if arguments.get('--check-hash'):
         config['check-hash'] = True
+
+    if arguments.get('--check-non-ascii'):
+        config['check-non-ascii'] = True
 
     # Add modules
     if arguments.get('--add-lower'):

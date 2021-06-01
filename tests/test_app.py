@@ -185,7 +185,7 @@ def test_language_processing():
     with patch.object(sys, 'argv', testargs):
         main()
     line_num_output = calculate_line_numbers('testdata/output11')
-    assert line_num_output == 27
+    assert line_num_output == 29
     with open('testdata/output11') as f:
         filecontent = f.read()
         assert 'cĳfer\n' in filecontent
@@ -201,6 +201,8 @@ def test_language_processing():
         assert '3-hoekig\n' in filecontent
         assert '\nhoekig\n' in filecontent
         assert '3\n' not in filecontent
+        assert 'Philipsburg.\n' not in filecontent
+        assert 'Philipsburg\n' in filecontent
 
 
 def test_fries():
@@ -414,12 +416,41 @@ def test_check_bug_comma_d():
         assert 'snow' in filecontent
 
 
-def test_glob():
+def test_check_non_ascii():
     testargs = [
-        'demeuk', '-i', 'testdata/input*', '-o', 'testdata/output25', '-l', 'testdata/log25',
-        '--verbose', '-c', '-d', ',;:',
+        'demeuk', '-i', 'testdata/input25', '-o', 'testdata/output25', '-l', 'testdata/log25',
+        '--verbose', '--check-non-ascii',
     ]
     with patch.object(sys, 'argv', testargs):
         main()
     with open('testdata/output25') as f:
-        assert len(f.readlines()) == 110
+        filecontent = f.read()
+        assert 'laténight' not in filecontent
+        assert 'thestrokes' in filecontent
+
+
+def test_clean_non_ascii():
+    testargs = [
+        'demeuk', '-i', 'testdata/input26', '-o', 'testdata/output26', '-l', 'testdata/log26',
+        '--verbose', '--non-ascii',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output26') as f:
+        filecontent = f.read()
+
+        assert 'polopaç' not in filecontent
+        assert 'mündster' not in filecontent
+        assert 'polopac' in filecontent
+        assert 'mundster' in filecontent
+
+
+def test_glob():
+    testargs = [
+        'demeuk', '-i', 'testdata/input*', '-o', 'testdata/output27', '-l', 'testdata/log27',
+        '--verbose', '-c', '-d', ',;:',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output27') as f:
+        assert len(f.readlines()) == 115

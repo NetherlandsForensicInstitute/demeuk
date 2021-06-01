@@ -87,6 +87,7 @@ with open('testdata/input11', 'w') as file:
     file.write(f'St. Maarten{linesep}')
     file.write(f'-Aai-Aai-/Aa{linesep}')
     file.write(f'3-hoekig{linesep}')
+    file.write(f'Philipsburg.{linesep}')
 
 with open('testdata/input12', 'wb') as file:
     file.write(b'\x57\x65\x73\x74\x2D\x46\x72\x79\x73\x6C\xC2\x89\x6E' + f'{linesep}'.encode('utf-8'))
@@ -170,3 +171,11 @@ with open('testdata/input24', 'w') as file:
     file.write(f'line1@example.com,angus{linesep}')
     file.write(f'line2@example.com:snow{linesep}')
     file.write(f'line3@example.com:julia{linesep}')
+
+with open('testdata/input25', 'w') as file:
+    file.write(f'laténight{linesep}')
+    file.write(f'thestrokes{linesep}')
+
+with open('testdata/input26', 'w') as file:
+    file.write(f'polopaç{linesep}')
+    file.write(f'mündster{linesep}')
