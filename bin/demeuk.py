@@ -9,12 +9,14 @@
 
     Examples:
         demeuk -i inputfile.tmp -o outputfile.dict -l logfile.txt
+        demeuk -i inputfile0*.txt -o outputfile.dict -l logfile.txt
+        demeuk -i inputdir/* -o outputfile.dict -l logfile.txt
         demeuk -i inputfile -o outputfile -j 24
         demeuk -i inputfile -o outputfile -c -e
         demeuk -i inputfile -o outputfile --threads all
 
     Standard Options:
-        -i --input <path to file>       Specify the input file to be clean
+        -i --input <path to file>       Specify the input file to be cleaned, or provide a glob pattern
         -o --output <path to file>      Specify the output file name.
         -l --log <path to file>         Optional, specify where the log file needs to be writen to
         -j --threads <threads>          Optional, demeuk doesn't use threads by default. Specify amount of threads to
