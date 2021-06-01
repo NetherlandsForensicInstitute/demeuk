@@ -76,6 +76,7 @@
 
 from binascii import hexlify, unhexlify
 from glob import glob
+from hashlib import md5
 from html import unescape
 from inspect import cleandoc
 from locale import LC_ALL, setlocale
@@ -544,6 +545,7 @@ def clean_up(filename, chunk_start, chunk_size, config):
     log = []
 
     temp_folder = 'demeuk_tmp'
+    temp_file = md5(filename.encode()).hexdigest()
 
     with open(filename, 'rb') as f:
         f.seek(chunk_start)
@@ -714,19 +716,19 @@ def clean_up(filename, chunk_start, chunk_size, config):
 
         # We made it all the way here, check if we need to flush lines to disk
         if len(log) > 10000 or len(results) > 10000:
-            with open(path.join(temp_folder, f'{chunk_start}_result.txt'), 'a') as f:
+            with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_result.txt'), 'a') as f:
                 f.write(''.join(results))
             # Make sure list is deleted from memory
             del results[:]
-            with open(path.join(temp_folder, f'{chunk_start}_log.txt'), 'a') as f:
+            with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_log.txt'), 'a') as f:
                 f.write(''.join(log))
             # Make sure list is deleted from memory
             del log[:]
 
     # Processed all lines, flush everything
-    with open(path.join(temp_folder, f'{chunk_start}_result.txt'), 'a') as f:
+    with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_result.txt'), 'a') as f:
         f.write(''.join(results))
-    with open(path.join(temp_folder, f'{chunk_start}_log.txt'), 'a') as f:
+    with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_log.txt'), 'a') as f:
         f.write(''.join(log))
 
 
@@ -743,7 +745,7 @@ def chunkify(fname, size=1024 * 1024):
                 f.seek(size, 1)
                 f.readline()
                 chunkend = f.tell()
-                yield chunkstart, chunkend - chunkstart
+                yield chunkstart, chunkend - chunkstart, filename
                 if chunkend > fileend:
                     break
 
@@ -928,8 +930,8 @@ def main():
     jobs = []
 
     print('Main: starting chunking file.')
-    for chunk_start, chunk_size in chunkify(input_file):
-        jobs.append(pool.apply_async(clean_up, (input_file, chunk_start, chunk_size, config)))
+    for chunk_start, chunk_size, filename in chunkify(input_file):
+        jobs.append(pool.apply_async(clean_up, (filename, chunk_start, chunk_size, config)))
     print('Main: done chunking file.')
 
     print('Main: starting threads.')
