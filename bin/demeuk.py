@@ -9,12 +9,14 @@
 
     Examples:
         demeuk -i inputfile.tmp -o outputfile.dict -l logfile.txt
+        demeuk -i "inputfile*.txt" -o outputfile.dict -l logfile.txt
+        demeuk -i "inputdir/*" -o outputfile.dict -l logfile.txt
         demeuk -i inputfile -o outputfile -j 24
         demeuk -i inputfile -o outputfile -c -e
         demeuk -i inputfile -o outputfile --threads all
 
     Standard Options:
-        -i --input <path to file>       Specify the input file to be clean
+        -i --input <path to file>       Specify the input file to be cleaned, or provide a glob pattern
         -o --output <path to file>      Specify the output file name.
         -l --log <path to file>         Optional, specify where the log file needs to be writen to
         -j --threads <threads>          Optional, demeuk doesn't use threads by default. Specify amount of threads to
@@ -84,10 +86,12 @@
 """
 
 from binascii import hexlify, unhexlify
+from glob import glob
+from hashlib import md5
 from html import unescape
 from inspect import cleandoc
 from locale import LC_ALL, setlocale
-from multiprocessing import cpu_count, Pool
+from multiprocessing import cpu_count, current_process, Pool
 from os import linesep, mkdir, path, walk
 from re import compile as re_compile
 from re import search
@@ -108,7 +112,7 @@ from nltk.tokenize import WhitespaceTokenizer
 from unidecode import unidecode
 
 
-version = '3.7.1'
+version = '3.8.0'
 
 HEX_REGEX = re_compile(r'\$HEX\[([0-9a-f]+)\]')
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]*\\.){1,3}[a-zA-Z0-9_-]*'
@@ -616,10 +620,22 @@ def clean_up(filename, chunk_start, chunk_size, config):
     log = []
 
     temp_folder = 'demeuk_tmp'
+    temp_file = md5(filename.encode()).hexdigest()
+
+    pid = current_process().pid
+
+    if config.get('verbose'):
+        print(f'Clean_up ({pid}): starting {filename}, {chunk_start}, {chunk_size}')
 
     with open(filename, 'rb') as f:
+        if config.get('verbose'):
+            print(f'Clean_up ({pid}): seeking {filename}, {chunk_start}, {chunk_size}')
         f.seek(chunk_start)
+        if config.get('verbose'):
+            print(f'Clean_up ({pid}): splitting {filename}, {chunk_start}, {chunk_size}')
         lines = f.read(chunk_size).splitlines()
+    if config.get('verbose'):
+        print(f'Clean_up ({pid}): processing {filename}, {chunk_start}, {chunk_size}')
     for line in lines:
         # Check if the limit is set, if so minus 1 and if 0 is reached lets quit.
         if type(config['limit']) is int:
@@ -656,7 +672,6 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 stop = True
 
         # From here it is expected that line is correctly decoded!
-
         # Check if some lines contain a hex string like $HEX[41424344]
         if config.get('hex') and not stop:
             status, line_decoded = clean_hex(line_decoded)
@@ -809,35 +824,43 @@ def clean_up(filename, chunk_start, chunk_size, config):
 
         # We made it all the way here, check if we need to flush lines to disk
         if len(log) > 10000 or len(results) > 10000:
-            with open(path.join(temp_folder, f'{chunk_start}_result.txt'), 'a') as f:
+            with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_result.txt'), 'a') as f:
                 f.write(''.join(results))
             # Make sure list is deleted from memory
             del results[:]
-            with open(path.join(temp_folder, f'{chunk_start}_log.txt'), 'a') as f:
+            with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_log.txt'), 'a') as f:
                 f.write(''.join(log))
             # Make sure list is deleted from memory
             del log[:]
 
+    if config.get('verbose'):
+        print(f'Clean_up ({pid}): stopping {filename}, {chunk_start}, {chunk_size}')
     # Processed all lines, flush everything
-    with open(path.join(temp_folder, f'{chunk_start}_result.txt'), 'a') as f:
+    with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_result.txt'), 'a') as f:
         f.write(''.join(results))
-    with open(path.join(temp_folder, f'{chunk_start}_log.txt'), 'a') as f:
+    with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_log.txt'), 'a') as f:
         f.write(''.join(log))
+    if config.get('verbose'):
+        print(f'Clean_up ({pid}): done {filename}, {chunk_start}, {chunk_size}')
 
 
-def chunkify(fname, size=1024 * 1024):
+def chunkify(fname, config, size=1024 * 1024):
     # based on: https://www.blopig.com/blog/2016/08/processing-large-files-using-python/
-    fileend = path.getsize(fname)
-    with open(fname, 'br') as f:
-        chunkend = f.tell()
-        while True:
-            chunkstart = chunkend
-            f.seek(size, 1)
-            f.readline()
+    for filename in glob(fname, recursive=True):
+        if not path.isfile(filename):
+            continue
+        fileend = path.getsize(filename)
+        print(f'Chunkify: {filename}')
+        with open(filename, 'br') as f:
             chunkend = f.tell()
-            yield chunkstart, chunkend - chunkstart
-            if chunkend > fileend:
-                break
+            while True:
+                chunkstart = chunkend
+                f.seek(size, 1)
+                f.readline()
+                chunkend = f.tell()
+                yield chunkstart, chunkend - chunkstart, filename
+                if chunkend > fileend:
+                    break
 
 
 def main():
@@ -1041,11 +1064,11 @@ def main():
     jobs = []
 
     print('Main: starting chunking file.')
-    for chunk_start, chunk_size in chunkify(input_file):
-        jobs.append(pool.apply_async(clean_up, (input_file, chunk_start, chunk_size, config)))
+    for chunk_start, chunk_size, filename in chunkify(input_file, config):
+        jobs.append(pool.apply_async(clean_up, (filename, chunk_start, chunk_size, config)))
     print('Main: done chunking file.')
 
-    print('Main: starting threads.')
+    print('Main: waiting for threads to complete.')
     for job in jobs:
         job.get()
 

@@ -487,3 +487,14 @@ def test_add_without_punctuation():
         assert 'the clash' in filecontent
         assert 'standbyme' in filecontent
         assert 'theclash' in filecontent
+
+
+def test_glob():
+    testargs = [
+        'demeuk', '-i', 'testdata/input*', '-o', 'testdata/output30', '-l', 'testdata/log30',
+        '--verbose', '-c', '-d', ',;:',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output30') as f:
+        assert len(f.readlines()) > 100
