@@ -453,4 +453,4 @@ def test_glob():
     with patch.object(sys, 'argv', testargs):
         main()
     with open('testdata/output27') as f:
-        assert len(f.readlines()) == 115
+        assert len(f.readlines()) > 100
