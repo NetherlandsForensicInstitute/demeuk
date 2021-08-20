@@ -179,7 +179,7 @@ def test_language_processing():
         'demeuk', '-i', 'testdata/input11', '-o', 'testdata/output11',
         '-l', 'testdata/log11',
         '--cut', '--delimiter', '/', '--cut-before', '--check-min-length', '2',
-        '--remove-punctuation', '--add-lower', '--add-latin-ligatures',
+        '--remove-strip-punctuation', '--add-lower', '--add-latin-ligatures',
         '--add-split',
     ]
     with patch.object(sys, 'argv', testargs):

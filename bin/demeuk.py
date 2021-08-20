@@ -71,7 +71,8 @@
                                         one char.
 
     Remove modules (remove specific parts of a line):
-        --remove-punctuation            Remove start and ending punctuation.
+        --remove-strip-punctuation      Remove starting and trailing punctuation
+        --remove-punctuation            Remove all punctuation in a line
         --remove-email                  Enable email filter, this will catch strings like
                                         1238661:test@example.com:password
     Macro modules:
@@ -254,7 +255,7 @@ def clean_add_umlaut(line):
         return False, line
 
 
-def remove_punctuation(line):
+def remove_strip_punctuation(line):
     """Returns the line without start and end punctuation
 
     Param:
@@ -714,10 +715,10 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 log.append(f'Check_non_ascii; dropped line because non ascii char found; {line_decoded}{linesep}')
                 stop = True
 
-        if config.get('remove-punctuation') and not stop:
-            status, line_decoded = remove_punctuation(line_decoded)
+        if config.get('remove-strip-punctuation') and not stop:
+            status, line_decoded = remove_strip_punctuation(line_decoded)
             if status and config['verbose']:
-                log.append(f'Remove_punctuation; punctuation removed; {line_decoded}{linesep}')
+                log.append(f'Remove_strip_punctuation; punctuation removed; {line_decoded}{linesep}')
 
         # We ran all modules
         if not stop:
@@ -939,8 +940,8 @@ def main():
         config['add-umlaut'] = True
 
     # Remove modules
-    if arguments.get('--remove-punctuation'):
-        config['remove-punctuation'] = True
+    if arguments.get('--remove-strip-punctuation'):
+        config['remove-strip-punctuation'] = True
 
     if arguments.get('--remove-email'):
         config['remove-email'] = True
