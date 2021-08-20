@@ -179,7 +179,7 @@ def test_language_processing():
         'demeuk', '-i', 'testdata/input11', '-o', 'testdata/output11',
         '-l', 'testdata/log11',
         '--cut', '--delimiter', '/', '--cut-before', '--check-min-length', '2',
-        '--remove-punctuation', '--add-lower', '--add-latin-ligatures',
+        '--remove-strip-punctuation', '--add-lower', '--add-latin-ligatures',
         '--add-split',
     ]
     with patch.object(sys, 'argv', testargs):
@@ -445,12 +445,56 @@ def test_clean_non_ascii():
         assert 'mundster' in filecontent
 
 
-def test_glob():
+def test_remove_punctuation():
     testargs = [
-        'demeuk', '-i', 'testdata/input*', '-o', 'testdata/output27', '-l', 'testdata/log27',
-        '--verbose', '-c', '-d', ',;:',
+        'demeuk', '-i', 'testdata/input27', '-o', 'testdata/output27', '-l', 'testdata/log27',
+        '--verbose', '--remove-punctuation',
     ]
     with patch.object(sys, 'argv', testargs):
         main()
     with open('testdata/output27') as f:
+        filecontent = f.read()
+
+        assert 'ripitup' in filecontent
+        assert 'orangejuice' in filecontent
+
+
+def test_remove_different_punctuation():
+    testargs = [
+        'demeuk', '-i', 'testdata/input28', '-o', 'testdata/output28', '-l', 'testdata/log28',
+        '--verbose', '--remove-punctuation', '--punctuation', '_',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output28') as f:
+        filecontent = f.read()
+
+        assert 'standbyme' in filecontent
+        assert 'the clash' in filecontent
+
+
+def test_add_without_punctuation():
+    testargs = [
+        'demeuk', '-i', 'testdata/input29', '-o', 'testdata/output29', '-l', 'testdata/log29',
+        '--verbose', '--add-without-punctuation',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output29') as f:
+        filecontent = f.read()
+
+        assert 'stand_by_me' in filecontent
+        assert 'the clash' in filecontent
+        assert 'standbyme' in filecontent
+        assert 'theclash' in filecontent
+
+
+def test_glob():
+    testargs = [
+        'demeuk', '-i', 'testdata/input*', '-o', 'testdata/output30', '-l', 'testdata/log30',
+        '--verbose', '-c', '-d', ',;:',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output30') as f:
         assert len(f.readlines()) > 100

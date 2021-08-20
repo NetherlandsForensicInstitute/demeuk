@@ -9,8 +9,8 @@
 
     Examples:
         demeuk -i inputfile.tmp -o outputfile.dict -l logfile.txt
-        demeuk -i inputfile0*.txt -o outputfile.dict -l logfile.txt
-        demeuk -i inputdir/* -o outputfile.dict -l logfile.txt
+        demeuk -i "inputfile*.txt" -o outputfile.dict -l logfile.txt
+        demeuk -i "inputdir/*" -o outputfile.dict -l logfile.txt
         demeuk -i inputfile -o outputfile -j 24
         demeuk -i inputfile -o outputfile -c -e
         demeuk -i inputfile -o outputfile --threads all
@@ -28,6 +28,8 @@
         -v --verbose                    When set, the logfile will not only contain lines which caused an error, but
                                         also line which were modified.
         -n --limit <int>                Limit the number of lines per thread.
+        --punctuation <punctuation>     Use to set the punctuation that is use by options. Defaults to:
+                                        ! "#$%&'()*+,-./:;<=>?@[\]^_`{|}~
         --version                       Prints the version of demeuk.
 
     Separating Options:
@@ -71,9 +73,12 @@
         --add-split                     split on known chars like - and . and add those to the final dictionary.
         --add-umlaut                    In some spelling dicts, umlaut are sometimes written as: o" or i" and not as
                                         one char.
+        --add-without-punctuation       If a line contains punctuations, a variant will be added without the
+                                        punctuations
 
     Remove modules (remove specific parts of a line):
-        --remove-punctuation            Remove start and ending punctuation.
+        --remove-strip-punctuation      Remove starting and trailing punctuation
+        --remove-punctuation            Remove all punctuation in a line
         --remove-email                  Enable email filter, this will catch strings like
                                         1238661:test@example.com:password
     Macro modules:
@@ -93,7 +98,7 @@ from re import search
 from re import split as re_split
 from re import sub
 from shutil import rmtree
-from string import punctuation
+from string import punctuation as string_punctuation
 from unicodedata import category
 
 
@@ -107,7 +112,7 @@ from nltk.tokenize import WhitespaceTokenizer
 from unidecode import unidecode
 
 
-version = '3.6.1'
+version = '3.8.0'
 
 HEX_REGEX = re_compile(r'\$HEX\[([0-9a-f]+)\]')
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]*\\.){1,3}[a-zA-Z0-9_-]*'
@@ -172,7 +177,7 @@ def clean_googlengram(line):
             if len(token) > 1:
                 if tag != 'PUNCT' or tag != '.' or tag != '':
                     clean.append(token)
-            elif token not in punctuation:
+            elif token not in string_punctuation:
                 clean.append(token)
     return_line = ' '.join(clean)
     if return_line != line:
@@ -227,6 +232,23 @@ def add_latin_ligatures(line):
         return False
 
 
+def add_without_punctuation(line, punctuation):
+    """Returns the line cleaned of punctuation.
+
+    Param:
+        line (unicode)
+    Returns:
+        False if there are not any punctuation
+        Corrected line
+    """
+    cleaned_line = line.translate(str.maketrans('', '', punctuation))
+
+    if line != cleaned_line:
+        return cleaned_line
+    else:
+        return False
+
+
 def clean_add_umlaut(line):
     """Returns the line cleaned of incorrect umlauting
 
@@ -258,7 +280,23 @@ def clean_add_umlaut(line):
         return False, line
 
 
-def remove_punctuation(line):
+def remove_punctuation(line, punctuation):
+    """Returns the line without punctuation
+
+    Param:
+        line (unicode)
+        punctuation (unicode)
+    Returns:
+        line without start and end punctuation
+    """
+    return_line = line.translate(str.maketrans('', '', punctuation))
+    if return_line != line:
+        return True, return_line
+    else:
+        return False, line
+
+
+def remove_strip_punctuation(line, punctuation):
     """Returns the line without start and end punctuation
 
     Param:
@@ -730,9 +768,14 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 stop = True
 
         if config.get('remove-punctuation') and not stop:
-            status, line_decoded = remove_punctuation(line_decoded)
+            status, line_decoded = remove_punctuation(line_decoded, config.get('punctuation'))
             if status and config['verbose']:
-                log.append(f'Remove_punctuation; punctuation removed; {line_decoded}{linesep}')
+                log.append(f'Remove_punctuation; stripped punctuation; {line_decoded}{linesep}')
+
+        if config.get('remove-strip-punctuation') and not stop:
+            status, line_decoded = remove_strip_punctuation(line_decoded, config.get('punctuation'))
+            if status and config['verbose']:
+                log.append(f'Remove_strip_punctuation; stripped punctuation; {line_decoded}{linesep}')
 
         # We ran all modules
         if not stop:
@@ -766,6 +809,13 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 if status:
                     if config['verbose']:
                         log.append(f'Add_umlaut; new line; {modified_line}{linesep}')
+                    lines.append(modified_line.encode())
+
+            if config.get('add-without-punctuation'):
+                modified_line = add_without_punctuation(line_decoded, config.get('punctuation'))
+                if modified_line:
+                    if config['verbose']:
+                        log.append(f'Add_without_punctuation; new line; {modified_line}{linesep}')
                     lines.append(modified_line.encode())
 
             if config['verbose']:
@@ -874,8 +924,10 @@ def main():
         'add-latin-ligatures': False,
         'add-split': False,
         'add-umlaut': False,
+        'add-without-punctuation': False,
 
         # Remove
+        'remove-strip-punctuation': False,
         'remove-punctuation': False,
         'remove-email': False,
     }
@@ -894,6 +946,11 @@ def main():
         setlocale(LC_ALL, arguments.get('--output-encoding'))
     else:
         setlocale(LC_ALL, 'en_US.UTF-8')
+
+    if arguments.get('--punctuation'):
+        config['punctuation'] = arguments.get('--punctuation')
+    else:
+        config['punctuation'] = string_punctuation + ' '
 
     if arguments.get('--cut'):
         config['cut'] = True
@@ -961,12 +1018,18 @@ def main():
     if arguments.get('--add-umlaut'):
         config['add-umlaut'] = True
 
+    if arguments.get('--add-without-punctuation'):
+        config['add-without-punctuation'] = True
+
     # Remove modules
-    if arguments.get('--remove-punctuation'):
-        config['remove-punctuation'] = True
+    if arguments.get('--remove-strip-punctuation'):
+        config['remove-strip-punctuation'] = True
 
     if arguments.get('--remove-email'):
         config['remove-email'] = True
+
+    if arguments.get('--remove-punctuation'):
+        config['remove-punctuation'] = True
 
     # Negative modules
     # Test if there are any disable functions, they must always overrule any other option.

@@ -55,7 +55,8 @@ Standard Options
 -------------
 i input
 ~~~~~~~
-The input option can be used to select the input file.
+The input option can be used to select the input file. This can also be a glob
+pattern. For example: "testdir/*.txt".
 
 o output
 ~~~~~~~~
@@ -87,6 +88,14 @@ output-encoding
 Probably you do not want to change this option, it defaults to 'en_US.UTF-8'.
 But in case you want to change the output encoding, use this option.
 Note, this will change the internal python unicode encoding.
+
+punctuation
+~~~~~~~~~~~
+Use to set the punctuation that is use by options. For example used by the --remove-punctuation 
+option.
+
+Defaults to all ascci punctuation:
+! "#$%&'()*+,-./:;<=>?@[\]^_`{|}~
 
 verbose
 ~~~~~~~
@@ -248,10 +257,15 @@ tabs can be part of a password this option allows to disable this option.
 
 Remove modules
 --------------
+remove-strip-punctuation
+~~~~~~~~~~~~~~~~~~~~~~~~
+Remove starting and trailing punctuation. A line like: test- will be converted to
+test. This option is useful for language corpora.
+
 remove-punctuation
 ~~~~~~~~~~~~~~~~~~
-Remove start and end punctuation. A line like: test- will be converted to
-test. This option is useful for language corpora.
+Remove any punctuation from a line. A line like 'test - hi' will be converted to 'testhi'.
+What punctuation will be removed can be specified with the '--punctuation' option.
 
 remove-email
 ~~~~~~~~~~~~
@@ -293,6 +307,12 @@ Example: 3D-printer, add split will split the word and add: 3D, printer and 3D-p
 to the corpora. Note: Add-split will not perform a length check that was specified
 using the --min-length option. It only checks if the length of a split part is longer then
 1 unicode character.
+
+add-without-punctuation
+~~~~~~~~~~~~~~~~~~~~~~
+If a line contains punctuations, a variant will be added without the punctuations.
+Example a line like: 'test-123' will be kept, plus 'test123' will be added.
+Which punctuation will be removed can be specified with the --punctuation option.
 
 
 Macro modules
