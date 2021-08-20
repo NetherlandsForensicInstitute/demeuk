@@ -71,6 +71,8 @@
         --add-split                     split on known chars like - and . and add those to the final dictionary.
         --add-umlaut                    In some spelling dicts, umlaut are sometimes written as: o" or i" and not as
                                         one char.
+        --add-without-punctuation       If a line contains punctuations, a variant will be added without the
+                                        punctuations
 
     Remove modules (remove specific parts of a line):
         --remove-strip-punctuation      Remove starting and trailing punctuation
@@ -106,7 +108,7 @@ from nltk.tokenize import WhitespaceTokenizer
 from unidecode import unidecode
 
 
-version = '3.7.0'
+version = '3.7.1'
 
 HEX_REGEX = re_compile(r'\$HEX\[([0-9a-f]+)\]')
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]*\\.){1,3}[a-zA-Z0-9_-]*'
@@ -220,6 +222,23 @@ def add_latin_ligatures(line):
         Corrected line
     """
     cleaned_line = fix_latin_ligatures(line)
+    if line != cleaned_line:
+        return cleaned_line
+    else:
+        return False
+
+
+def add_without_punctuation(line, punctuation):
+    """Returns the line cleaned of punctuation.
+
+    Param:
+        line (unicode)
+    Returns:
+        False if there are not any punctuation
+        Corrected line
+    """
+    cleaned_line = line.translate(str.maketrans('', '', punctuation))
+
     if line != cleaned_line:
         return cleaned_line
     else:
@@ -777,6 +796,13 @@ def clean_up(filename, chunk_start, chunk_size, config):
                         log.append(f'Add_umlaut; new line; {modified_line}{linesep}')
                     lines.append(modified_line.encode())
 
+            if config.get('add-without-punctuation'):
+                modified_line = add_without_punctuation(line_decoded, config.get('punctuation'))
+                if modified_line:
+                    if config['verbose']:
+                        log.append(f'Add_without_punctuation; new line; {modified_line}{linesep}')
+                    lines.append(modified_line.encode())
+
             if config['verbose']:
                 log.append(f'----End---- {line_decoded}{linesep}{linesep}')
             results.append(f'{line_decoded}{linesep}')
@@ -875,6 +901,7 @@ def main():
         'add-latin-ligatures': False,
         'add-split': False,
         'add-umlaut': False,
+        'add-without-punctuation': False,
 
         # Remove
         'remove-strip-punctuation': False,
@@ -967,6 +994,9 @@ def main():
 
     if arguments.get('--add-umlaut'):
         config['add-umlaut'] = True
+
+    if arguments.get('--add-without-punctuation'):
+        config['add-without-punctuation'] = True
 
     # Remove modules
     if arguments.get('--remove-strip-punctuation'):

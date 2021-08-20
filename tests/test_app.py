@@ -471,3 +471,19 @@ def test_remove_different_punctuation():
 
         assert 'standbyme' in filecontent
         assert 'the clash' in filecontent
+
+
+def test_add_without_punctuation():
+    testargs = [
+        'demeuk', '-i', 'testdata/input29', '-o', 'testdata/output29', '-l', 'testdata/log29',
+        '--verbose', '--add-without-punctuation',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output29') as f:
+        filecontent = f.read()
+
+        assert 'stand_by_me' in filecontent
+        assert 'the clash' in filecontent
+        assert 'standbyme' in filecontent
+        assert 'theclash' in filecontent

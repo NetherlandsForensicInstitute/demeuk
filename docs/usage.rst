@@ -307,6 +307,12 @@ to the corpora. Note: Add-split will not perform a length check that was specifi
 using the --min-length option. It only checks if the length of a split part is longer then
 1 unicode character.
 
+add-without-punctuation
+~~~~~~~~~~~~~~~~~~~~~~
+If a line contains punctuations, a variant will be added without the punctuations.
+Example a line like: 'test-123' will be kept, plus 'test123' will be added.
+Which punctuation will be removed can be specified with the --punctuation option.
+
 
 Macro modules
 -------------

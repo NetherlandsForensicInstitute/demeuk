@@ -187,3 +187,7 @@ with open('testdata/input27', 'w') as file:
 with open('testdata/input28', 'w') as file:
     file.write(f'stand_by_me{linesep}')
     file.write(f'the clash{linesep}')
+
+with open('testdata/input29', 'w') as file:
+    file.write(f'stand_by_me{linesep}')
+    file.write(f'the clash{linesep}')
