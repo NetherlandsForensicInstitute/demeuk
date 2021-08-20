@@ -41,6 +41,7 @@ Examples:
 ```
     demeuk -i inputfile.tmp -o outputfile.dict -d droppedfile.txt
     demeuk -i inputfile -o outputfile -j 24 -l logfile.log
+    demeuk -i inputdir/*.txt -o outputfile.dict -l logfile.log
 ```
 
 ## Docs

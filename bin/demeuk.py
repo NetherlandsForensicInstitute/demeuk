@@ -9,12 +9,14 @@
 
     Examples:
         demeuk -i inputfile.tmp -o outputfile.dict -l logfile.txt
+        demeuk -i inputfile0*.txt -o outputfile.dict -l logfile.txt
+        demeuk -i inputdir/* -o outputfile.dict -l logfile.txt
         demeuk -i inputfile -o outputfile -j 24
         demeuk -i inputfile -o outputfile -c -e
         demeuk -i inputfile -o outputfile --threads all
 
     Standard Options:
-        -i --input <path to file>       Specify the input file to be clean
+        -i --input <path to file>       Specify the input file to be cleaned, or provide a glob pattern
         -o --output <path to file>      Specify the output file name.
         -l --log <path to file>         Optional, specify where the log file needs to be writen to
         -j --threads <threads>          Optional, demeuk doesn't use threads by default. Specify amount of threads to
@@ -79,6 +81,8 @@
 """
 
 from binascii import hexlify, unhexlify
+from glob import glob
+from hashlib import md5
 from html import unescape
 from inspect import cleandoc
 from locale import LC_ALL, setlocale
@@ -578,6 +582,7 @@ def clean_up(filename, chunk_start, chunk_size, config):
     log = []
 
     temp_folder = 'demeuk_tmp'
+    temp_file = md5(filename.encode()).hexdigest()
 
     with open(filename, 'rb') as f:
         f.seek(chunk_start)
@@ -759,35 +764,38 @@ def clean_up(filename, chunk_start, chunk_size, config):
 
         # We made it all the way here, check if we need to flush lines to disk
         if len(log) > 10000 or len(results) > 10000:
-            with open(path.join(temp_folder, f'{chunk_start}_result.txt'), 'a') as f:
+            with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_result.txt'), 'a') as f:
                 f.write(''.join(results))
             # Make sure list is deleted from memory
             del results[:]
-            with open(path.join(temp_folder, f'{chunk_start}_log.txt'), 'a') as f:
+            with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_log.txt'), 'a') as f:
                 f.write(''.join(log))
             # Make sure list is deleted from memory
             del log[:]
 
     # Processed all lines, flush everything
-    with open(path.join(temp_folder, f'{chunk_start}_result.txt'), 'a') as f:
+    with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_result.txt'), 'a') as f:
         f.write(''.join(results))
-    with open(path.join(temp_folder, f'{chunk_start}_log.txt'), 'a') as f:
+    with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_log.txt'), 'a') as f:
         f.write(''.join(log))
 
 
 def chunkify(fname, size=1024 * 1024):
     # based on: https://www.blopig.com/blog/2016/08/processing-large-files-using-python/
-    fileend = path.getsize(fname)
-    with open(fname, 'br') as f:
-        chunkend = f.tell()
-        while True:
-            chunkstart = chunkend
-            f.seek(size, 1)
-            f.readline()
+    for filename in glob(fname, recursive=True):
+        if not path.isfile(filename):
+            continue
+        fileend = path.getsize(filename)
+        with open(filename, 'br') as f:
             chunkend = f.tell()
-            yield chunkstart, chunkend - chunkstart
-            if chunkend > fileend:
-                break
+            while True:
+                chunkstart = chunkend
+                f.seek(size, 1)
+                f.readline()
+                chunkend = f.tell()
+                yield chunkstart, chunkend - chunkstart, filename
+                if chunkend > fileend:
+                    break
 
 
 def main():
@@ -978,8 +986,8 @@ def main():
     jobs = []
 
     print('Main: starting chunking file.')
-    for chunk_start, chunk_size in chunkify(input_file):
-        jobs.append(pool.apply_async(clean_up, (input_file, chunk_start, chunk_size, config)))
+    for chunk_start, chunk_size, filename in chunkify(input_file):
+        jobs.append(pool.apply_async(clean_up, (filename, chunk_start, chunk_size, config)))
     print('Main: done chunking file.')
 
     print('Main: starting threads.')

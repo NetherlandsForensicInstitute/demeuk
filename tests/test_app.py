@@ -443,3 +443,14 @@ def test_clean_non_ascii():
         assert 'mündster' not in filecontent
         assert 'polopac' in filecontent
         assert 'mundster' in filecontent
+
+
+def test_glob():
+    testargs = [
+        'demeuk', '-i', 'testdata/input*', '-o', 'testdata/output27', '-l', 'testdata/log27',
+        '--verbose', '-c', '-d', ',;:',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output27') as f:
+        assert len(f.readlines()) == 115
