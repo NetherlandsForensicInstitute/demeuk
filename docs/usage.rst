@@ -88,6 +88,14 @@ Probably you do not want to change this option, it defaults to 'en_US.UTF-8'.
 But in case you want to change the output encoding, use this option.
 Note, this will change the internal python unicode encoding.
 
+punctuation
+~~~~~~~~~~~
+Use to set the punctuation that is use by options. For example used by the --remove-punctuation 
+option.
+
+Defaults to all ascci punctuation:
+! "#$%&'()*+,-./:;<=>?@[\]^_`{|}~
+
 verbose
 ~~~~~~~
 Use the verbose option to log all the changes made to any line. Note that this will impact
@@ -248,10 +256,15 @@ tabs can be part of a password this option allows to disable this option.
 
 Remove modules
 --------------
+remove-strip-punctuation
+~~~~~~~~~~~~~~~~~~~~~~~~
+Remove starting and trailing punctuation. A line like: test- will be converted to
+test. This option is useful for language corpora.
+
 remove-punctuation
 ~~~~~~~~~~~~~~~~~~
-Remove start and end punctuation. A line like: test- will be converted to
-test. This option is useful for language corpora.
+Remove any punctuation from a line. A line like 'test - hi' will be converted to 'testhi'.
+What punctuation will be removed can be specified with the '--punctuation' option.
 
 remove-email
 ~~~~~~~~~~~~

@@ -443,3 +443,31 @@ def test_clean_non_ascii():
         assert 'mündster' not in filecontent
         assert 'polopac' in filecontent
         assert 'mundster' in filecontent
+
+
+def test_remove_punctuation():
+    testargs = [
+        'demeuk', '-i', 'testdata/input27', '-o', 'testdata/output27', '-l', 'testdata/log27',
+        '--verbose', '--remove-punctuation',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output27') as f:
+        filecontent = f.read()
+
+        assert 'ripitup' in filecontent
+        assert 'orangejuice' in filecontent
+
+
+def test_remove_different_punctuation():
+    testargs = [
+        'demeuk', '-i', 'testdata/input28', '-o', 'testdata/output28', '-l', 'testdata/log28',
+        '--verbose', '--remove-punctuation', '--punctuation', '_',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output28') as f:
+        filecontent = f.read()
+
+        assert 'standbyme' in filecontent
+        assert 'the clash' in filecontent

@@ -26,6 +26,8 @@
         -v --verbose                    When set, the logfile will not only contain lines which caused an error, but
                                         also line which were modified.
         -n --limit <int>                Limit the number of lines per thread.
+        --punctuation <punctuation>     Use to set the punctuation that is use by options. Defaults to:
+                                        ! "#$%&'()*+,-./:;<=>?@[\]^_`{|}~
         --version                       Prints the version of demeuk.
 
     Separating Options:
@@ -90,7 +92,7 @@ from re import search
 from re import split as re_split
 from re import sub
 from shutil import rmtree
-from string import punctuation
+from string import punctuation as string_punctuation
 from unicodedata import category
 
 
@@ -104,7 +106,7 @@ from nltk.tokenize import WhitespaceTokenizer
 from unidecode import unidecode
 
 
-version = '3.6.1'
+version = '3.7.0'
 
 HEX_REGEX = re_compile(r'\$HEX\[([0-9a-f]+)\]')
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]*\\.){1,3}[a-zA-Z0-9_-]*'
@@ -169,7 +171,7 @@ def clean_googlengram(line):
             if len(token) > 1:
                 if tag != 'PUNCT' or tag != '.' or tag != '':
                     clean.append(token)
-            elif token not in punctuation:
+            elif token not in string_punctuation:
                 clean.append(token)
     return_line = ' '.join(clean)
     if return_line != line:
@@ -255,7 +257,23 @@ def clean_add_umlaut(line):
         return False, line
 
 
-def remove_strip_punctuation(line):
+def remove_punctuation(line, punctuation):
+    """Returns the line without punctuation
+
+    Param:
+        line (unicode)
+        punctuation (unicode)
+    Returns:
+        line without start and end punctuation
+    """
+    return_line = line.translate(str.maketrans('', '', punctuation))
+    if return_line != line:
+        return True, return_line
+    else:
+        return False, line
+
+
+def remove_strip_punctuation(line, punctuation):
     """Returns the line without start and end punctuation
 
     Param:
@@ -715,10 +733,15 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 log.append(f'Check_non_ascii; dropped line because non ascii char found; {line_decoded}{linesep}')
                 stop = True
 
-        if config.get('remove-strip-punctuation') and not stop:
-            status, line_decoded = remove_strip_punctuation(line_decoded)
+        if config.get('remove-punctuation') and not stop:
+            status, line_decoded = remove_punctuation(line_decoded, config.get('punctuation'))
             if status and config['verbose']:
-                log.append(f'Remove_strip_punctuation; punctuation removed; {line_decoded}{linesep}')
+                log.append(f'Remove_punctuation; stripped punctuation; {line_decoded}{linesep}')
+
+        if config.get('remove-strip-punctuation') and not stop:
+            status, line_decoded = remove_strip_punctuation(line_decoded, config.get('punctuation'))
+            if status and config['verbose']:
+                log.append(f'Remove_strip_punctuation; stripped punctuation; {line_decoded}{linesep}')
 
         # We ran all modules
         if not stop:
@@ -854,6 +877,7 @@ def main():
         'add-umlaut': False,
 
         # Remove
+        'remove-strip-punctuation': False,
         'remove-punctuation': False,
         'remove-email': False,
     }
@@ -872,6 +896,11 @@ def main():
         setlocale(LC_ALL, arguments.get('--output-encoding'))
     else:
         setlocale(LC_ALL, 'en_US.UTF-8')
+
+    if arguments.get('--punctuation'):
+        config['punctuation'] = arguments.get('--punctuation')
+    else:
+        config['punctuation'] = string_punctuation + ' '
 
     if arguments.get('--cut'):
         config['cut'] = True
@@ -945,6 +974,9 @@ def main():
 
     if arguments.get('--remove-email'):
         config['remove-email'] = True
+
+    if arguments.get('--remove-punctuation'):
+        config['remove-punctuation'] = True
 
     # Negative modules
     # Test if there are any disable functions, they must always overrule any other option.
