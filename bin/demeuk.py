@@ -112,7 +112,7 @@ from nltk.tokenize import WhitespaceTokenizer
 from unidecode import unidecode
 
 
-version = '3.8.0'
+version = '3.8.1'
 
 HEX_REGEX = re_compile(r'\$HEX\[([0-9a-f]+)\]')
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]*\\.){1,3}[a-zA-Z0-9_-]*'
@@ -684,6 +684,17 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 # Aborting future processing of this line.
                 stop = True
 
+        # Check if there are html char in the line, decode them if there are
+        if config.get('html') and not stop:
+            status, line_decoded = clean_html(line_decoded)
+            if status:
+                # Line contains html string, because this can be binary data (linefeeds etc)
+                # convert back to binary string and add to queue again.
+                lines.append(line_decoded.encode())
+                if config['verbose']:
+                    log.append(f'Clean_html; replaced html, added to queue and quiting; {line_decoded}{linesep}')
+                stop = True
+
         # Checks if there are any mojibakes inside the line
         # You must mojibake before removing control chars! Some control chars
         # are part of a valid mojibake.
@@ -699,12 +710,6 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 # Control char detected
                 log.append(f'Check_controlchar; found controlchar {cc}; {line_decoded}{linesep}')
                 stop = True
-
-        # Check if there are html char in the line, decode them if there are
-        if config.get('html') and not stop:
-            status, line_decoded = clean_html(line_decoded)
-            if status and config['verbose']:
-                log.append(f'Clean_html; found html encode character, replaced; {line_decoded}{linesep}')
 
         # Check if there are named html chars in the line
         if config.get('html-named') and not stop:
