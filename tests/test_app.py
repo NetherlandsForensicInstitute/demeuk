@@ -498,3 +498,15 @@ def test_glob():
         main()
     with open('testdata/output30') as f:
         assert len(f.readlines()) > 100
+
+
+def test_bug_html_control():
+    testargs = [
+        'demeuk', '-i', 'testdata/input31', '-o', 'testdata/output31', '-l', 'testdata/log31',
+        '--verbose', '--html',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output31') as f:
+        filecontent = f.read()
+        assert '\x0c\x0c' not in filecontent
