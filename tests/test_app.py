@@ -510,3 +510,18 @@ def test_bug_html_control():
     with open('testdata/output31') as f:
         filecontent = f.read()
         assert '\x0c\x0c' not in filecontent
+
+
+def test_bug_dollar_line():
+    testargs = [
+        'demeuk', '-i', 'testdata/input32', '-o', 'testdata/output32', '-l', 'testdata/log32',
+        '--verbose', '--check-hash',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output32') as f:
+        filecontent = f.read()
+        assert '$1$2$3$4' in filecontent
+        assert '$1$money$1$' in filecontent
+        assert '$1$ilovepizza' in filecontent
+        assert '$1$1+l0l$aaaaaaaaaaaa./' not in filecontent

@@ -194,3 +194,9 @@ with open('testdata/input29', 'w') as file:
 
 with open('testdata/input31', 'w') as file:
     file.write(f'&#12;&#12;{linesep}')
+
+with open('testdata/input32', 'w') as file:
+    file.write(f'$1$2$3$4{linesep}')
+    file.write(f'$1$money$1${linesep}')
+    file.write(f'$1$ilovepizza{linesep}')
+    file.write(f'$1$1+l0l$aaaaaaaaaaaa./{linesep}')
