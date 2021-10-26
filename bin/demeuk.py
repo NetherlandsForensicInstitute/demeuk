@@ -126,8 +126,8 @@ HASH_BCRYPT_REGEX = '^\\$2[ayb]\\$[0-9]{1,}\\$[\\w\\.\\/]{4,}$'
 # $1$a-zA-Z0-9./ min length 12 to make sure we hit somthing like: a-zA-Z0-9./
 # this will cause string like $1$JAjdna./d to still be included.
 
-HASH_CRYPT_REGEX = '^\\$[0-9]\\$[\\w\\.\\/]{12,}$'
-HASH_CRYPT_SALT_REGEX = '^\\$[0-9]\\$[\\w\\.\\/\\+]{,16}\\$[\\w\\.\\/]{6,}$'
+HASH_CRYPT_REGEX = '^\\$[1356]\\$[\\w\\.\\/]{12,}$'
+HASH_CRYPT_SALT_REGEX = '^\\$[1356]\\$[\\w\\.\\/\\+]{,16}\\$[\\w\\.\\/]{6,}$'
 HASH_PHPBB_REGEX = '^\\$[hH]\\$[\\w\\.\\/]{6,}$'
 HASH_REGEX_LIST = [HASH_BCRYPT_REGEX, HASH_CRYPT_SALT_REGEX, HASH_CRYPT_REGEX, HASH_PHPBB_REGEX]
 

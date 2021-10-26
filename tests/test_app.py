@@ -525,3 +525,4 @@ def test_bug_dollar_line():
         assert '$1$money$1$' in filecontent
         assert '$1$ilovepizza' in filecontent
         assert '$1$1+l0l$aaaaaaaaaaaa./' not in filecontent
+        assert '$4$4$4pizza' in filecontent

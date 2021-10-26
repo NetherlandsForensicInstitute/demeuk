@@ -200,3 +200,4 @@ with open('testdata/input32', 'w') as file:
     file.write(f'$1$money$1${linesep}')
     file.write(f'$1$ilovepizza{linesep}')
     file.write(f'$1$1+l0l$aaaaaaaaaaaa./{linesep}')
+    file.write(f'$4$4$4pizza{linesep}')
