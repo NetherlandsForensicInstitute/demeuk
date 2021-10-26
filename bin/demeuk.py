@@ -112,12 +112,24 @@ from nltk.tokenize import WhitespaceTokenizer
 from unidecode import unidecode
 
 
-version = '3.8.1'
+version = '3.8.2'
 
 HEX_REGEX = re_compile(r'\$HEX\[([0-9a-f]+)\]')
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]*\\.){1,3}[a-zA-Z0-9_-]*'
 HASH_HEX_REGEX = '^[a-fA-F0-9]+$'
-HASH_LINUX_REGEX = '^\\$([0-9][aby]?|h)\\$[\\w\\.\\/]+(\\$[\\w\\.\\/]+)?'
+
+# Officiale bcrypt hashes hae a bit more fixed size, but saw some weird once:
+# $2a$10$demo as example
+HASH_BCRYPT_REGEX = '^\\$2[ayb]\\$[0-9]{1,}\\$[\\w\\.\\/]{4,}$'
+# Crypt hashes can look a lot like passwords. We do two options here
+# $1[$optional salt, max 16]$string of a-zA-Z0-9./ length 7 min till end of line
+# $1$a-zA-Z0-9./ min length 12 to make sure we hit somthing like: a-zA-Z0-9./
+# this will cause string like $1$JAjdna./d to still be included.
+
+HASH_CRYPT_REGEX = '^\\$[1356]\\$[\\w\\.\\/]{12,}$'
+HASH_CRYPT_SALT_REGEX = '^\\$[1356]\\$[\\w\\.\\/\\+]{,16}\\$[\\w\\.\\/]{6,}$'
+HASH_PHPBB_REGEX = '^\\$[hH]\\$[\\w\\.\\/]{6,}$'
+HASH_REGEX_LIST = [HASH_BCRYPT_REGEX, HASH_CRYPT_SALT_REGEX, HASH_CRYPT_REGEX, HASH_PHPBB_REGEX]
 
 
 def _unescape_fixup_named(match):
@@ -375,8 +387,9 @@ def check_hash(line):
             return False
     if len(line) > 0:
         if line[0] == '$':
-            if search(HASH_LINUX_REGEX, line):
-                return False
+            for hash_regex in HASH_REGEX_LIST:
+                if search(hash_regex, line):
+                    return False
     return True
 
 
