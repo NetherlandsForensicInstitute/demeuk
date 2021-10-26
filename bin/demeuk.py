@@ -53,6 +53,7 @@
         --check-hash                    Drop lines containing hashes.
         --check-non-ascii               If a line contain a non ascii char e.g. ü or ç (or everything outside ascii
                                         range) the line is dropped.
+        --check-replacement-character   Drop lines containing replacement characters '�'.
 
     Modify modules (modify a line in place):
         --hex                           Replace lines like: $HEX[41424344] with ABCD.
@@ -112,7 +113,7 @@ from nltk.tokenize import WhitespaceTokenizer
 from unidecode import unidecode
 
 
-version = '3.8.2'
+version = '3.8.3'
 
 HEX_REGEX = re_compile(r'\$HEX\[([0-9a-f]+)\]')
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]*\\.){1,3}[a-zA-Z0-9_-]*'
@@ -419,6 +420,21 @@ def check_non_ascii(line):
         line.encode('ascii')
         return True
     except UnicodeEncodeError:
+        return False
+
+
+def check_character(line, character):
+    """Checks if a line contains a specific character
+
+    Params:
+        line (unicode)
+    Returns:
+        true if line does contain the specific character
+
+    """
+    if character in line:
+        return True
+    else:
         return False
 
 
@@ -785,6 +801,11 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 log.append(f'Check_non_ascii; dropped line because non ascii char found; {line_decoded}{linesep}')
                 stop = True
 
+        if config.get('check-replacement-character') and not stop:
+            if check_character(line_decoded, '�'):
+                log.append(f'Check_replacement_character; dropped line because "�" found; {line_decoded}{linesep}')
+                stop = True
+
         if config.get('remove-punctuation') and not stop:
             status, line_decoded = remove_punctuation(line_decoded, config.get('punctuation'))
             if status and config['verbose']:
@@ -936,6 +957,7 @@ def main():
         'check-email': False,
         'check-hash': False,
         'check-non-ascii': False,
+        'check-replacement-character': False,
 
         # Add
         'add-lower': False,
@@ -1022,6 +1044,9 @@ def main():
 
     if arguments.get('--check-non-ascii'):
         config['check-non-ascii'] = True
+
+    if arguments.get('--check-replacement-character'):
+        config['check-replacement-character'] = True
 
     # Add modules
     if arguments.get('--add-lower'):

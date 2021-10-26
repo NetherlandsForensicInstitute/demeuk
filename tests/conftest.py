@@ -201,3 +201,7 @@ with open('testdata/input32', 'w') as file:
     file.write(f'$1$ilovepizza{linesep}')
     file.write(f'$1$1+l0l$aaaaaaaaaaaa./{linesep}')
     file.write(f'$4$4$4pizza{linesep}')
+
+with open('testdata/input33', 'w') as file:
+    file.write(f'invalidstring�{linesep}')
+    file.write(f'jungejunge{linesep}')

@@ -526,3 +526,16 @@ def test_bug_dollar_line():
         assert '$1$ilovepizza' in filecontent
         assert '$1$1+l0l$aaaaaaaaaaaa./' not in filecontent
         assert '$4$4$4pizza' in filecontent
+
+
+def test_check_replacement_character():
+    testargs = [
+        'demeuk', '-i', 'testdata/input33', '-o', 'testdata/output33', '-l', 'testdata/log33',
+        '--verbose', '--check-replacement-character',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output33') as f:
+        filecontent = f.read()
+        assert 'invalidstring�' not in filecontent
+        assert 'jungejunge' in filecontent
