@@ -194,3 +194,6 @@ with open('testdata/input29', 'w') as file:
 
 with open('testdata/input31', 'w') as file:
     file.write(f'&#12;&#12;{linesep}')
+
+with open('testdata/input33', 'w') as file:
+    file.write(f'invalidstring�{linesep}')

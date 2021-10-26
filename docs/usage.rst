@@ -196,6 +196,14 @@ check-non-ascii
 Checks if a line contains non-ascii chars. It does this by using the 'ascii' encoding
 builtin Python. If the line does not encode correctly the line is dropped.
 
+check-replacement-character
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Checks if a line contains the replacement character. This is the '�' Symbol. Mostly
+when a line contains this char this is an indication that some decoding error happend.
+The problem is that with this char all information is lost about the original character.
+So it is very complicated to repair this encoding error. With this option you can drop
+lines contain this char.
+
 Modify modules
 --------------
 hex

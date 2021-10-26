@@ -510,3 +510,15 @@ def test_bug_html_control():
     with open('testdata/output31') as f:
         filecontent = f.read()
         assert '\x0c\x0c' not in filecontent
+
+
+def test_check_replacement_character():
+    testargs = [
+        'demeuk', '-i', 'testdata/input33', '-o', 'testdata/output33', '-l', 'testdata/log33',
+        '--verbose', '--check-replacement-character',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output31') as f:
+        filecontent = f.read()
+        assert 'invalidstring�' not in filecontent
