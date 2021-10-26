@@ -802,7 +802,7 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 stop = True
 
         if config.get('check-replacement-character') and not stop:
-            if not check_character(line_decoded, '�'):
+            if check_character(line_decoded, '�'):
                 log.append(f'Check_replacement_character; dropped line because "�" found; {line_decoded}{linesep}')
                 stop = True
 

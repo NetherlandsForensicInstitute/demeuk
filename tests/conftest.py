@@ -204,3 +204,4 @@ with open('testdata/input32', 'w') as file:
 
 with open('testdata/input33', 'w') as file:
     file.write(f'invalidstring�{linesep}')
+    file.write(f'jungejunge{linesep}')

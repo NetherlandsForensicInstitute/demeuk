@@ -535,6 +535,7 @@ def test_check_replacement_character():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output31') as f:
+    with open('testdata/output33') as f:
         filecontent = f.read()
         assert 'invalidstring�' not in filecontent
+        assert 'jungejunge' in filecontent
