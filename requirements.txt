@@ -3,3 +3,4 @@ chardet
 nltk
 ftfy
 unidecode
+tqdm

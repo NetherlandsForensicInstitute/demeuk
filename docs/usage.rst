@@ -102,6 +102,11 @@ verbose
 Use the verbose option to log all the changes made to any line. Note that this will impact
 the performance of demeuk significantly. Also this will create a large log file.
 
+progress
+~~~~~~~~
+Use the progress option to enable the processbar. The processbar will be displayed for
+both the chunkify process as well as the demeuking process.
+
 n limit
 ~~~~~~~
 Limit the number of lines that will be processed. Useful when working with a large dataset
