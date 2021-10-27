@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: [3.7, 3.8, 3.9, 3.10]
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python
@@ -26,19 +26,6 @@ jobs:
     - name: Run tests
       run: |
         tox
-    - name: Create Release
-      if: github.ref == 'refs/heads/master'
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ env.NEW_VERSION }}
-        release_name: Release ${{ env.NEW_VERSION }}
-        body: |
-          Automated patch release
-        draft: false
-        prerelease: false
     - name: Install publishing dependencies
       if: github.ref == 'refs/heads/master'
       run: |
