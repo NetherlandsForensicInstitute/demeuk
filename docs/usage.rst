@@ -104,7 +104,7 @@ the performance of demeuk significantly. Also this will create a large log file.
 
 progress
 ~~~~~~~~
-Use the progress option to enable the processbar. The processbar will be displayed for
+Use the progress option to enable the progressbar. The progressbar will be displayed for
 both the chunkify process as well as the demeuking process.
 
 n limit
