@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""
+r"""
 .. code-block:: none
 
     Demeuk - a simple tool to clean up corpora
