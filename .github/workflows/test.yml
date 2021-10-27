@@ -40,6 +40,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install setuptools wheel twine
+      - name: Install package dependencies
+        if: github.ref == 'refs/heads/master'
+        # Temporary duplication of the dependency list
+        run: |
+          python -m pip install docopt chardet nltk ftfy unidecode tqdm
       - name: Build and publish
         if: github.ref == 'refs/heads/master'
         env:
