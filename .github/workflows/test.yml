@@ -42,9 +42,8 @@ jobs:
           pip install setuptools wheel twine
       - name: Install package dependencies
         if: github.ref == 'refs/heads/master'
-        # Temporary duplication of the dependency list
         run: |
-          python -m pip install docopt chardet nltk ftfy unidecode tqdm
+          python -m pip install -r requirements.txt
       - name: Build and publish
         if: github.ref == 'refs/heads/master'
         env:
