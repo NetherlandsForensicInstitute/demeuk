@@ -27,6 +27,7 @@
         --output-encoding <encoding>    Forces demeuk to encoding the output using this encoding (default: en_US.UTF-8).
         -v --verbose                    When set, the logfile will not only contain lines which caused an error, but
                                         also line which were modified.
+        --progress                      Prints out the progress of the demeuk process.
         -n --limit <int>                Limit the number of lines per thread.
         --punctuation <punctuation>     Use to set the punctuation that is use by options. Defaults to:
                                         ! "#$%&'()*+,-./:;<=>?@[\]^_`{|}~
@@ -110,10 +111,11 @@ from ftfy.chardata import HTML_ENTITIES, HTML_ENTITY_RE
 from ftfy.fixes import fix_latin_ligatures
 from nltk import str2tuple
 from nltk.tokenize import WhitespaceTokenizer
+from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '3.8.3'
+version = '3.9.0'
 
 HEX_REGEX = re_compile(r'\$HEX\[([0-9a-f]+)\]')
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]*\\.){1,3}[a-zA-Z0-9_-]*'
@@ -885,11 +887,11 @@ def clean_up(filename, chunk_start, chunk_size, config):
 
 def chunkify(fname, config, size=1024 * 1024):
     # based on: https://www.blopig.com/blog/2016/08/processing-large-files-using-python/
-    for filename in glob(fname, recursive=True):
+    for filename in tqdm(glob(fname, recursive=True), desc='Chunkify', mininterval=0.1, unit='files',
+                         disable=not config.get('progress')):
         if not path.isfile(filename):
             continue
         fileend = path.getsize(filename)
-        print(f'Chunkify: {filename}')
         with open(filename, 'br') as f:
             chunkend = f.tell()
             while True:
@@ -936,6 +938,7 @@ def main():
         'delimiter': ':',
         'cut-fields': '2-',
         'verbose': False,
+        'progress': False,
         'limit': False,
 
         # Modify
@@ -975,6 +978,9 @@ def main():
     # Default modules
     if arguments.get('--verbose'):
         config['verbose'] = True
+
+    if arguments.get('--progress'):
+        config['progress'] = True
 
     if arguments.get('--limit'):
         config['limit'] = int(arguments.get('--limit'))
@@ -1112,7 +1118,7 @@ def main():
     print('Main: done chunking file.')
 
     print('Main: waiting for threads to complete.')
-    for job in jobs:
+    for job in tqdm(jobs, desc='Main', mininterval=1, unit='chunks', disable=not config.get('progress')):
         job.get()
 
     pool.close()

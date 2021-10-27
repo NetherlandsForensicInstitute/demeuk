@@ -10,6 +10,7 @@ dependencies = [
     'nltk',
     'ftfy',
     'unidecode',
+    'tqdm',
 ]
 
 setup(
