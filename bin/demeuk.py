@@ -115,7 +115,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '3.9.0'
+version = '3.9.1'
 
 HEX_REGEX = re_compile(r'\$HEX\[([0-9a-f]+)\]')
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]*\\.){1,3}[a-zA-Z0-9_-]*'
@@ -326,7 +326,7 @@ def remove_strip_punctuation(line, punctuation):
         return False, line
 
 
-def add_split(line, punctuation=[' ', '-', r'\.']):
+def add_split(line, punctuation=(' ', '-', r'\.')):
     """Split the line on the punctuation and return elements longer then 1 char.
 
     Param:
@@ -340,7 +340,7 @@ def add_split(line, punctuation=[' ', '-', r'\.']):
     return False
 
 
-def check_case(line, ignored_chars=[' ', "'", '-']):
+def check_case(line, ignored_chars=(' ', "'", '-')):
     """Checks if an uppercase line is equal to a lowercase line.
 
     Param:
