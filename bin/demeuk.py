@@ -326,7 +326,7 @@ def remove_strip_punctuation(line, punctuation):
         return False, line
 
 
-def add_split(line, punctuation=[' ', '-', r'\.']):
+def add_split(line, punctuation=(' ', '-', r'\.')):
     """Split the line on the punctuation and return elements longer then 1 char.
 
     Param:
@@ -340,7 +340,7 @@ def add_split(line, punctuation=[' ', '-', r'\.']):
     return False
 
 
-def check_case(line, ignored_chars=[' ', "'", '-']):
+def check_case(line, ignored_chars=(' ', "'", '-')):
     """Checks if an uppercase line is equal to a lowercase line.
 
     Param:
