@@ -33,8 +33,6 @@ Virtual environment
 
 Installing from PyPi
 ~~~~~~~~~~~~~~~~~~~~
-.. note:: As for now, the demeuk application is not uploaded to the public
-    pypi server. Thus a private pypi is required for this method.
 
 .. code-block:: none
 

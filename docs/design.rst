@@ -23,7 +23,7 @@ the remaining byte to the end offset and starts processing the lines.
 
 Will processing the input file, the thread will create a temp file inside the folder
 'demeuk_tmp' inside the current working directory. Inside this temp file intermediate
-results will be written to reduce memory usages. Note: many thread will cause a significate
+results will be written to reduce memory usages. Note: many thread will cause a significant
 IO storm. If you see a lot of IO wait, reduce the amount of threads or replace you disks
 with faster disks.
 
@@ -100,6 +100,6 @@ Another note on the add modules and threading. Lines are dedicated to different
 threads based on a configured chunk size. When additional lines are added, all
 other modules will run again on the line. The thread that created the new line
 will also run those modules again. Meaning that if one thread creates a lot of
-diffrent new lines that thread might be busier then other threads. But because
+different new lines that thread might be busier then other threads. But because
 the chunksize is quite small, this will probably not be an issue. If this is an
 issue for someone please submit a bug.
