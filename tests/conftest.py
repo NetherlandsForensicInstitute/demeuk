@@ -205,3 +205,13 @@ with open('testdata/input32', 'w') as file:
 with open('testdata/input33', 'w') as file:
     file.write(f'invalidstring�{linesep}')
     file.write(f'jungejunge{linesep}')
+
+with open('testdata/input34', 'w') as file:
+    file.write(f'P@ssw0rd.1{linesep}')
+    file.write(f'bar@example.com{linesep}')
+    file.write(f'cr@ssT0rd{linesep}')
+    file.write(f'foo@example.com{linesep}')
+    file.write(f'p@..w0rd{linesep}')
+    file.write(f'p@..w0rd{linesep}')
+    file.write(f'p@ssW0rd.me@Home{linesep}')
+    file.write(f'w@ssB0rd.we{linesep}')
