@@ -266,6 +266,11 @@ no-tab
 Defaulty demeuk will replace tab characters with ':' to make splitting easier. But in case
 tabs can be part of a password this option allows to disable this option.
 
+no-newline
+~~~~~~~~~~
+Defaulty demeuk will remove newline characters from encoded html/hex entries. But in case
+newlines can be part of a password this option allows to disable this option.
+
 
 
 Remove modules

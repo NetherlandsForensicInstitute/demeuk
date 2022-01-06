@@ -215,3 +215,15 @@ with open('testdata/input34', 'w') as file:
     file.write(f'p@..w0rd{linesep}')
     file.write(f'p@ssW0rd.me@Home{linesep}')
     file.write(f'w@ssB0rd.we{linesep}')
+
+with open('testdata/input35', 'w') as file:
+    file.write(f'Avocado{linesep}')
+    file.write(f'Banana\\r\\n{linesep}')
+    file.write(f'Coconut\\n{linesep}')
+    file.write(f'$HEX[447261676f6e66727569740d0a]{linesep}')
+    file.write(f'$HEX[456c64657262657272790d]{linesep}')
+    file.write(f'Fig<br>{linesep}')
+    file.write(f'Grapefruit&#013;{linesep}')
+    file.write(f'Honeyberry&#010;{linesep}')
+    file.write(f'Icaco&#013;&#010;{linesep}')
+    file.write(f'&#013;Jambul{linesep}')
