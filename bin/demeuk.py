@@ -739,7 +739,7 @@ def clean_up(filename, chunk_start, chunk_size, config):
             status, cc = check_controlchar(line_decoded)
             if status:
                 # Control char detected
-                log.append(f'Check_controlchar; found controlchar {cc}; {line_decoded}{linesep}')
+                log.append(f'Check_controlchar; found controlchar {cc!r}; {line_decoded!r}{linesep}')
                 stop = True
 
         # Check if there are named html chars in the line
