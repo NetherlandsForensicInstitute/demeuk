@@ -1104,7 +1104,7 @@ def main():
         config['tab'] = False
         config['googlengram'] = True
 
-    print('Main: starting')
+    print(f'Main: starting demeuk - v{version}')
     if path.isdir('demeuk_tmp'):
         rmtree('demeuk_tmp')
     mkdir('demeuk_tmp')
