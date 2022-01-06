@@ -1104,7 +1104,7 @@ def main():
         config['tab'] = False
         config['googlengram'] = True
 
-    print(f'Main: starting demeuk - v{version}')
+    print(f'Main: running demeuk - v{version}')
     if path.isdir('demeuk_tmp'):
         rmtree('demeuk_tmp')
     mkdir('demeuk_tmp')
@@ -1112,19 +1112,19 @@ def main():
     pool = Pool(a_threads)
     jobs = []
 
-    print('Main: starting chunking file.')
+    print(f'Main: start chunking file {input_file}')
     for chunk_start, chunk_size, filename in chunkify(input_file, config):
         jobs.append(pool.apply_async(clean_up, (filename, chunk_start, chunk_size, config)))
     print('Main: done chunking file.')
 
-    print('Main: waiting for threads to complete.')
+    print(f'Main: start processing, running at {a_threads} thread(s).')
     for job in tqdm(jobs, desc='Main', mininterval=1, unit='chunks', disable=not config.get('progress')):
         job.get()
 
     pool.close()
+    print('Main: done processing.')
 
-    print('Main: threads done. Combining results.')
-
+    print('Main: start combining results.')
     p_output_file = open(output_file, 'w')
     p_log_file = open(log_file, 'w')
 
@@ -1139,6 +1139,7 @@ def main():
 
     p_output_file.close()
     p_log_file.close()
+    print(f'Main: done combining results. Output found in {output_file}, logs found in {log_file}')
 
     rmtree('demeuk_tmp')
 
