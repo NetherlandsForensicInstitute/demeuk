@@ -539,3 +539,21 @@ def test_check_replacement_character():
         filecontent = f.read()
         assert 'invalidstring�' not in filecontent
         assert 'jungejunge' in filecontent
+
+
+def test_email_detection():
+    testargs = [
+        'demeuk', '-i', 'testdata/input34', '-o', 'testdata/output34', '-l', 'testdata/log34',
+        '--verbose', '--check-email',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output34') as f:
+        filecontent = f.read()
+        assert 'bar@example.com' not in filecontent
+        assert 'foo@example.com' not in filecontent
+        assert 'p@ssW0rd.me@Home' not in filecontent
+        assert 'w@ssB0rd.we' not in filecontent
+        assert 'P@ssw0rd.1' in filecontent
+        assert 'cr@ssT0rd' in filecontent
+        assert 'p@..w0rd' in filecontent
