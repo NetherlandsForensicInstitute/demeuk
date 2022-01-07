@@ -115,7 +115,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '3.9.2'
+version = '3.9.3'
 
 HEX_REGEX = re_compile(r'\$HEX\[([0-9a-f]+)\]')
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]{1,63}\\.){1,3}[a-zA-Z]{2,6}'
@@ -1104,7 +1104,7 @@ def main():
         config['tab'] = False
         config['googlengram'] = True
 
-    print(f'Main: running demeuk - v{version}')
+    print(f'Main: running demeuk - {version}')
     if path.isdir('demeuk_tmp'):
         rmtree('demeuk_tmp')
     mkdir('demeuk_tmp')
@@ -1127,6 +1127,7 @@ def main():
     print('Main: start combining results.')
     p_output_file = open(output_file, 'w')
     p_log_file = open(log_file, 'w')
+    p_log_file.write(f'Running demeuk - {version}{linesep}')
 
     for root, directories, files in walk('demeuk_tmp'):
         for file_name in files:
