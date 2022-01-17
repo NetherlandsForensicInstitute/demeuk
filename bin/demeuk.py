@@ -65,6 +65,7 @@ r"""
         --no-mojibake                   disable fixing mojibakes, useful if you know the encoding.
         --no-encode                     disable guessing of encoding, this force to use the --input-encoding.
         --no-tab                        disable replacing tab char with ':'
+        --no-newline                    disable removing newline characters (\r\n) from end and beginning.
         --non-ascii                     Replace non ascii char with their replacement letters. For example ü
                                         becomes u, ç becomes c.
 
@@ -115,7 +116,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '3.9.4'
+version = '3.9.5'
 
 HEX_REGEX = re_compile(r'\$HEX\[([0-9a-f]+)\]')
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]{1,63}\\.){1,3}[a-zA-Z]{2,6}'
@@ -542,6 +543,21 @@ def clean_html_named(line):
         return False, line
 
 
+def clean_newline(line):
+    """Delete newline characters at start and end of line
+
+    Params:
+        line (Unicode)
+    Returns:
+        line (Unicode)
+    """
+    return_line = line.strip('\r\n')
+    if return_line != line:
+        return True, return_line
+    else:
+        return False, line
+
+
 def check_controlchar(line):
     """Detects control chars, returns True when detected
 
@@ -733,6 +749,12 @@ def clean_up(filename, chunk_start, chunk_size, config):
             status, line_decoded = clean_mojibake(line_decoded)
             if status and config['verbose']:
                 log.append(f'Clean_mojibake; found a mojibake; {line}{linesep}')
+
+        # Delete leading and trailing newline characters
+        if config.get('newline') and not stop:
+            status, line_decoded = clean_newline(line_decoded)
+            if status and config['verbose']:
+                log.append(f'Clean_newline; deleted newline characters; {line_decoded!r}{linesep}')
 
         # Checks if there are any control chars inside line
         if config.get('check-controlchar') and not stop:
@@ -945,6 +967,7 @@ def main():
         'encode': True,
         'mojibake': True,
         'tab': True,
+        'newline': True,
         'hex': False,
         'html': False,
         'html-named': False,
@@ -1093,6 +1116,9 @@ def main():
 
     if arguments.get('--no-tab'):
         config['tab'] = False
+
+    if arguments.get('--no-newline'):
+        config['newline'] = False
 
     # Some meta-modules, those overwrite settings
     if arguments.get('--googlengram'):

@@ -557,3 +557,24 @@ def test_email_detection():
         assert 'P@ssw0rd.1' in filecontent
         assert 'cr@ssT0rd' in filecontent
         assert 'p@..w0rd' in filecontent
+
+
+def test_newline_replacement():
+    testargs = [
+        'demeuk', '-i', 'testdata/input35', '-o', 'testdata/output35', '-l', 'testdata/log35',
+        '--verbose', '--hex', '--html',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output35') as f:
+        filecontent = f.read()
+        assert 'Avocado\n' in filecontent
+        assert '\nBanana\\r\\n\n' in filecontent
+        assert '\nCoconut\\n\n' in filecontent
+        assert '\nDragonfruit\n' in filecontent
+        assert '\nElderberry\n' in filecontent
+        assert '\nFig<br>\n' in filecontent
+        assert '\nGrapefruit\n' in filecontent
+        assert '\nHoneyberry\n' in filecontent
+        assert '\nIcaco\n' in filecontent
+        assert '\nJambul' in filecontent
