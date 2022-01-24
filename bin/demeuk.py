@@ -118,7 +118,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '3.9.5'
+version = '3.9.6'
 
 HEX_REGEX = re_compile(r'\$HEX\[([0-9a-f]+)\]')
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]{1,63}\\.){1,3}[a-zA-Z]{2,6}'
