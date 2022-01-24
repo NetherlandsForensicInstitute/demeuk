@@ -271,6 +271,13 @@ no-newline
 Defaulty demeuk will remove newline characters from encoded html/hex entries. But in case
 newlines can be part of a password this option allows to disable this option.
 
+no-trim
+~~~~~~~
+Defaulty demeuk will remove sequences which represent newline characters from
+beginning and of end of input entry. For example the Ascii sequence '\n' or
+Html sequence '<br />'. But in case this sequences are part of a password this
+option allows to disable this option.
+
 
 
 Remove modules
