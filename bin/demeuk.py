@@ -68,6 +68,8 @@ r"""
         --no-newline                    disable removing newline characters (\r\n) from end and beginning.
         --non-ascii                     Replace non ascii char with their replacement letters. For example ü
                                         becomes u, ç becomes c.
+        --no-trim                       disable removing newlines representations from end and beginning. Newline
+                                        representations detected are '\\n', '\\r', '\n', '\r', '<br>', and '<br />'.
 
     Add modules (Modify a line, but keep the original as well):
         --add-lower                     If a line contains a capital letter this will add the lower case variant
@@ -116,7 +118,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '3.9.5'
+version = '3.9.6'
 
 HEX_REGEX = re_compile(r'\$HEX\[([0-9a-f]+)\]')
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]{1,63}\\.){1,3}[a-zA-Z]{2,6}'
@@ -134,6 +136,8 @@ HASH_CRYPT_REGEX = '^\\$[1356]\\$[\\w\\.\\/]{12,}$'
 HASH_CRYPT_SALT_REGEX = '^\\$[1356]\\$[\\w\\.\\/\\+]{,16}\\$[\\w\\.\\/]{6,}$'
 HASH_PHPBB_REGEX = '^\\$[hH]\\$[\\w\\.\\/]{6,}$'
 HASH_REGEX_LIST = [HASH_BCRYPT_REGEX, HASH_CRYPT_SALT_REGEX, HASH_CRYPT_REGEX, HASH_PHPBB_REGEX]
+
+TRIM_BLOCKS = ('\\\\n', '\\\\r', '\\n', '\\r', '<br>', '<br />')
 
 
 def _unescape_fixup_named(match):
@@ -483,6 +487,37 @@ def clean_non_ascii(line):
         return False, line
 
 
+def clean_trim(line):
+    """Delete leading and trailing character sequences representing a newline
+    from beginning end end of line.
+
+    Params:
+        line (Unicode)
+    Returns:
+        line (Unicode)
+    """
+    cleaned_line = line
+    # Ensure removal of duplicated blocks
+    while True:
+        has_match = False
+        for x in TRIM_BLOCKS:
+            if cleaned_line.startswith(x):
+                cleaned_line = cleaned_line[len(x):]
+                has_match = True
+
+            if cleaned_line.endswith(x):
+                cleaned_line = cleaned_line[:-len(x)]
+                has_match = True
+
+        if has_match is False:
+            break
+
+    if line != cleaned_line:
+        return True, cleaned_line
+    else:
+        return False, line
+
+
 def clean_tab(line):
     """Replace tab character with ':' greedy
 
@@ -770,6 +805,12 @@ def clean_up(filename, chunk_start, chunk_size, config):
             if status and config['verbose']:
                 log.append(f'Clean_html_named; found named html character; {line_decoded}{linesep}')
 
+        # Delete leading and trailing character sequences representing a newline
+        if config.get('trim') and not stop:
+            status, line_decoded = clean_trim(line_decoded)
+            if status and config['verbose']:
+                log.append(f'Clean_trim; found trim sequence; {line_decoded!r}{linesep}')
+
         # Should we do the cut?
         if config.get('cut') and not stop:
             status, line_decoded = clean_cut(line_decoded, config['delimiter'], config['cut-fields'])
@@ -967,6 +1008,7 @@ def main():
         'encode': True,
         'mojibake': True,
         'tab': True,
+        'trim': True,
         'newline': True,
         'hex': False,
         'html': False,
@@ -1119,6 +1161,9 @@ def main():
 
     if arguments.get('--no-newline'):
         config['newline'] = False
+
+    if arguments.get('--no-trim'):
+        config['trim'] = False
 
     # Some meta-modules, those overwrite settings
     if arguments.get('--googlengram'):

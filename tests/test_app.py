@@ -562,7 +562,7 @@ def test_email_detection():
 def test_newline_replacement():
     testargs = [
         'demeuk', '-i', 'testdata/input35', '-o', 'testdata/output35', '-l', 'testdata/log35',
-        '--verbose', '--hex', '--html',
+        '--verbose', '--hex', '--html', '--no-trim',
     ]
     with patch.object(sys, 'argv', testargs):
         main()
@@ -578,3 +578,31 @@ def test_newline_replacement():
         assert '\nHoneyberry\n' in filecontent
         assert '\nIcaco\n' in filecontent
         assert '\nJambul' in filecontent
+
+
+def test_trim():
+    testargs = [
+        'demeuk', '-i', 'testdata/input36', '-o', 'testdata/output36', '-l', 'testdata/log36',
+        '--verbose', '--hex', '--html',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output36') as f:
+        filecontent = f.read()
+        assert 'angleball\n' in filecontent
+        assert '\nbadminton\n' in filecontent
+        assert '\ncrossminton\n' in filecontent
+        assert '\ndodgeball\n' in filecontent
+        assert '\nfrontenis\n' in filecontent
+        assert '\ngoalball\n' in filecontent
+        assert '\nhandball\n' in filecontent
+        assert '\ninter<br>crosse\n' in filecontent
+        assert '\njok\\ngu\n' in filecontent
+        assert '\nkickball\n' in filecontent
+        assert '\nlacrosse\n' in filecontent
+        assert '\nnetball\n' in filecontent
+        assert '\npadbol\n' in filecontent
+        assert '\nroque\n' in filecontent
+        assert '\nsnooker\n' in filecontent
+        assert '\ntchoukball\n' in filecontent
+        assert '\nvigoro' in filecontent
