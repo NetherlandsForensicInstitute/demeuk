@@ -606,3 +606,23 @@ def test_trim():
         assert '\nsnooker\n' in filecontent
         assert '\ntchoukball\n' in filecontent
         assert '\nvigoro' in filecontent
+
+
+def test_invalid_unhex():
+    testargs = [
+        'demeuk', '-i', 'testdata/input37', '-o', 'testdata/output37', '-l', 'testdata/log37',
+        '--verbose', '--hex',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output37') as f:
+        filecontent = f.read()
+        # Invalid hex string, leaving at as is.
+        assert '$HEX[e]tiredofwaiting\n' in filecontent
+        # Invalid hex string, leaving at as is.
+        assert '\n$HEX[eee]\n' in filecontent
+        # This is a valid hash, but it is not a hex string from start to end.
+        assert '\n$HEX[6C657469746B69636B696E]123!\n' in filecontent
+        # Valid upcase test
+        assert '\nlosingtouch\n' in filecontent
