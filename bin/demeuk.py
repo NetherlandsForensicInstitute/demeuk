@@ -99,7 +99,6 @@ from locale import LC_ALL, setlocale
 from multiprocessing import cpu_count, current_process, Pool
 from os import linesep, mkdir, path, walk
 from re import compile as re_compile
-from re import IGNORECASE
 from re import search
 from re import split as re_split
 from re import sub
@@ -123,7 +122,7 @@ version = '3.9.7'
 
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.
-HEX_REGEX = re_compile(r"^\$HEX\[(([0-9a-f][0-9a-f])+)\]$", IGNORECASE)
+HEX_REGEX = re_compile(r"^\$(?:HEX|hex)\[((?:[0-9a-fA-F]{2})+)\]$")
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]{1,63}\\.){1,3}[a-zA-Z]{2,6}'
 HASH_HEX_REGEX = '^[a-fA-F0-9]+$'
 
