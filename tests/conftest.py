@@ -246,3 +246,9 @@ with open('testdata/input36', 'w') as file:
     file.write(f'<br>snooker\\r{linesep}')
     file.write(f'<br><br />tchoukball{linesep}')
     file.write(f'vigoro{linesep}')
+
+with open('testdata/input37', 'w') as file:
+    file.write(f'$HEX[e]tiredofwaiting{linesep}')
+    file.write(f'$hex[6C6F73696E67746F756368]{linesep}')
+    file.write(f'$HEX[6C657469746B69636B696E]123!{linesep}')
+    file.write(f'$HEX[eee]{linesep}')
