@@ -124,6 +124,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-.vscode/
 testdata/
 demeuk_tmp/
