@@ -115,6 +115,10 @@ that if you set the limit to 5 and create 2 threads, 10 lines will be processed.
 entirely true, if the input file is too small (minimal chunk size) to spawn two threads the
 limit will only apply to the only thread that could be spawned.
 
+n skip
+~~~~~~
+Skip n lines starting from the start of the file.
+
 
 Separating options
 ------------------

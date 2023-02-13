@@ -252,3 +252,9 @@ with open('testdata/input37', 'w') as file:
     file.write(f'$hex[6C6F73696E67746F756368]{linesep}')
     file.write(f'$HEX[6C657469746B69636B696E]123!{linesep}')
     file.write(f'$HEX[eee]{linesep}')
+
+with open('testdata/input38', 'w') as file:
+    file.write(f'112345678{linesep}')
+    file.write(f'#firstlovesong{linesep}')
+    file.write(f'{linesep}')
+    file.write(f'lastlovesong{linesep}')

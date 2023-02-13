@@ -29,6 +29,7 @@ r"""
                                         also line which were modified.
         --progress                      Prints out the progress of the demeuk process.
         -n --limit <int>                Limit the number of lines per thread.
+        -s --skip <int>                 Skip <int> amount of lines per thread.
         --punctuation <punctuation>     Use to set the punctuation that is use by options. Defaults to:
                                         ! "#$%&'()*+,-./:;<=>?@[\]^_`{|}~
         --version                       Prints the version of demeuk.
@@ -737,7 +738,6 @@ def clean_up(filename, chunk_start, chunk_size, config):
             status, line = clean_tab(line)
             if status and config['verbose']:
                 log.append(f'Clean_tab; replaced tab characters; {line}{linesep}')
-
         # Converting enoding to UTF-8
         if config.get('encode') and not stop:
             status, line_decoded = clean_encode(line, config.get('input_encoding'))
@@ -958,6 +958,8 @@ def chunkify(fname, config, size=1024 * 1024):
             continue
         fileend = path.getsize(filename)
         with open(filename, 'br') as f:
+            for x in range(0, config.get('skip')):
+                f.readline()
             chunkend = f.tell()
             while True:
                 chunkstart = chunkend
@@ -1005,6 +1007,7 @@ def main():
         'verbose': False,
         'progress': False,
         'limit': False,
+        'skip': False,
 
         # Modify
         'encode': True,
@@ -1051,6 +1054,9 @@ def main():
 
     if arguments.get('--limit'):
         config['limit'] = int(arguments.get('--limit'))
+
+    if arguments.get('--skip'):
+        config['skip'] = int(arguments.get('--skip'))
 
     if arguments.get('--input-encoding'):
         config['input_encoding'] = arguments.get('--input-encoding').split(',')
