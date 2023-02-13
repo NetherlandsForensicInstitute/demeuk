@@ -1,7 +1,7 @@
 import sys
 from unittest.mock import patch
 
-from demeuk import main
+from bin.demeuk import main
 from pytest import raises
 
 
