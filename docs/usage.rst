@@ -213,6 +213,13 @@ The problem is that with this char all information is lost about the original ch
 So it is very complicated to repair this encoding error. With this option you can drop
 lines contain this char.
 
+check-starting-with
+~~~~~~~~~~~~~~~~~~~
+Checks if a line start with the argument of checking-starting-with. If the line starts
+with this, it will be dropped. The string to check can be multiple strings. multiple
+values are comma-seperated. Example: #,// would skip lines starting with '#' and with 
+'//'.
+
 Modify modules
 --------------
 hex

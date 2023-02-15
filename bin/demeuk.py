@@ -56,6 +56,8 @@ r"""
         --check-non-ascii               If a line contain a non ascii char e.g. ü or ç (or everything outside ascii
                                         range) the line is dropped.
         --check-replacement-character   Drop lines containing replacement characters '�'.
+        --check-starting-with <string>  Drop lines starting with string, can be multiple strings. Specify multiple
+                                        with as comma-seperated list.
 
     Modify modules (modify a line in place):
         --hex                           Replace lines like: $HEX[41424344] with ABCD.
@@ -446,6 +448,22 @@ def check_character(line, character):
         return True
     else:
         return False
+
+
+def check_starting_with(line, strings):
+    """Checks if a line start with a specific strings
+
+    Params:
+        line (unicode)
+        strings[str]
+    Returns:
+        true if line does start with one of the strings
+
+    """
+    for string in strings:
+        if line.startswith(string):
+            return True
+    return False
 
 
 def clean_cut(line, delimiters, fields):
@@ -873,6 +891,12 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 log.append(f'Check_replacement_character; dropped line because "�" found; {line_decoded}{linesep}')
                 stop = True
 
+        if config.get('check-starting-with') and not stop:
+            to_check = config.get("check-starting-with")
+            if check_starting_with(line_decoded, to_check):
+                log.append(f'Check_starting_with; dropped line because {to_check} found; {line_decoded}{linesep}')
+                stop = True
+
         if config.get('remove-punctuation') and not stop:
             status, line_decoded = remove_punctuation(line_decoded, config.get('punctuation'))
             if status and config['verbose']:
@@ -1031,6 +1055,7 @@ def main():
         'check-hash': False,
         'check-non-ascii': False,
         'check-replacement-character': False,
+        'check-starting-with': False,
 
         # Add
         'add-lower': False,
@@ -1126,6 +1151,12 @@ def main():
 
     if arguments.get('--check-replacement-character'):
         config['check-replacement-character'] = True
+
+    if arguments.get('--check-starting-with'):
+        if ',' in arguments.get('--check-starting-with'):
+            config['check-starting-with'] = arguments.get('--check-starting-with').split(',')
+        else:
+            config['check-starting-with'] = [arguments.get('--check-starting-with')]
 
     # Add modules
     if arguments.get('--add-lower'):

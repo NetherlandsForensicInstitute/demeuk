@@ -642,3 +642,16 @@ def test_skip():
     assert '112345678' not in filecontent
 
 
+def test_remove_starting_with():
+    testargs = [
+        'demeuk', '-i', 'testdata/input38', '-o', 'testdata/output38', '-l', 'testdata/log38',
+        '--verbose', '--check-starting-with', '/,#'
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output38') as f:
+        filecontent = f.read()
+
+    assert 'firstlovesong' not in filecontent
+    assert 'secondlovesong' not in filecontent

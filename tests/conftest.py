@@ -256,5 +256,13 @@ with open('testdata/input37', 'w') as file:
 with open('testdata/input38', 'w') as file:
     file.write(f'112345678{linesep}')
     file.write(f'#firstlovesong{linesep}')
+    file.write(f'/secondlovesong{linesep}')
+    file.write(f'{linesep}')
+    file.write(f'lastlovesong{linesep}')
+
+with open('testdata/input39', 'w') as file:
+    file.write(f'112345678{linesep}')
+    file.write(f'#firstlovesong{linesep}')
+    file.write(f'/secondlovesong{linesep}')
     file.write(f'{linesep}')
     file.write(f'lastlovesong{linesep}')
