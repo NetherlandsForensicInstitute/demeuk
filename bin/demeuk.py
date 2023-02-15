@@ -58,6 +58,7 @@ r"""
         --check-replacement-character   Drop lines containing replacement characters '�'.
         --check-starting-with <string>  Drop lines starting with string, can be multiple strings. Specify multiple
                                         with as comma-seperated list.
+        --check-empty-line              Drop lines that are empty or only contain whitespace characters
 
     Modify modules (modify a line in place):
         --hex                           Replace lines like: $HEX[41424344] with ABCD.
@@ -463,6 +464,21 @@ def check_starting_with(line, strings):
     for string in strings:
         if line.startswith(string):
             return True
+    return False
+
+
+def check_empty_line(line):
+    """Checks if a line is empty or only contains whitespace chars
+
+    Params:
+        line (unicode)
+    Returns:
+        true of line is empty or only contains whitespace chars
+    """
+    if line == '':
+        return True
+    elif line.isspace():
+        return True
     return False
 
 
@@ -897,6 +913,12 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 log.append(f'Check_starting_with; dropped line because {to_check} found; {line_decoded}{linesep}')
                 stop = True
 
+        if config.get('check-empty-line') and not stop:
+            if check_empty_line(line_decoded):
+                log_line = "Check_empty_line; dropped line because is empty or only contains whitespace;"
+                log.append(f'{log_line} {line_decoded}{linesep}')
+                stop = True
+
         if config.get('remove-punctuation') and not stop:
             status, line_decoded = remove_punctuation(line_decoded, config.get('punctuation'))
             if status and config['verbose']:
@@ -1056,6 +1078,7 @@ def main():
         'check-non-ascii': False,
         'check-replacement-character': False,
         'check-starting-with': False,
+        'check-empty-line': False,
 
         # Add
         'add-lower': False,
@@ -1157,6 +1180,9 @@ def main():
             config['check-starting-with'] = arguments.get('--check-starting-with').split(',')
         else:
             config['check-starting-with'] = [arguments.get('--check-starting-with')]
+
+    if arguments.get('--check-empty-line'):
+        config['check-empty-line'] = True
 
     # Add modules
     if arguments.get('--add-lower'):

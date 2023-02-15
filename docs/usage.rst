@@ -220,6 +220,15 @@ with this, it will be dropped. The string to check can be multiple strings. mult
 values are comma-seperated. Example: #,// would skip lines starting with '#' and with 
 '//'.
 
+If you want to drop a line starting with a tab, add ':' to the list of strings to
+check. '--check starting-with :'. By default tab characters are transfered to ':'.
+To disable this behavior use the --no-tab option.
+
+check-empty-line
+~~~~~~~~~~~~~~~~
+Checks if a line only contains whitespace characters or is empty. If this is true,
+the line will be dropped.
+
 Modify modules
 --------------
 hex
