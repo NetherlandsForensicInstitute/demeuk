@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": ["-i", "testdata/input1", "-o", "testdata/output1"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
