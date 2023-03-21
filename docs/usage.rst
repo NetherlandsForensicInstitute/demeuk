@@ -115,6 +115,10 @@ that if you set the limit to 5 and create 2 threads, 10 lines will be processed.
 entirely true, if the input file is too small (minimal chunk size) to spawn two threads the
 limit will only apply to the only thread that could be spawned.
 
+n skip
+~~~~~~
+Skip n lines starting from the start of the file.
+
 
 Separating options
 ------------------
@@ -208,6 +212,22 @@ when a line contains this char this is an indication that some decoding error ha
 The problem is that with this char all information is lost about the original character.
 So it is very complicated to repair this encoding error. With this option you can drop
 lines contain this char.
+
+check-starting-with
+~~~~~~~~~~~~~~~~~~~
+Checks if a line start with the argument of checking-starting-with. If the line starts
+with this, it will be dropped. The string to check can be multiple strings. multiple
+values are comma-seperated. Example: #,// would skip lines starting with '#' and with 
+'//'.
+
+If you want to drop a line starting with a tab, add ':' to the list of strings to
+check. '--check starting-with :'. By default tab characters are transfered to ':'.
+To disable this behavior use the --no-tab option.
+
+check-empty-line
+~~~~~~~~~~~~~~~~
+Checks if a line only contains whitespace characters or is empty. If this is true,
+the line will be dropped.
 
 Modify modules
 --------------

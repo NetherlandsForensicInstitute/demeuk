@@ -626,3 +626,48 @@ def test_invalid_unhex():
         assert '\n$HEX[6C657469746B69636B696E]123!\n' in filecontent
         # Valid upcase test
         assert '\nlosingtouch\n' in filecontent
+
+
+def test_skip():
+    testargs = [
+        'demeuk', '-i', 'testdata/input38', '-o', 'testdata/output38', '-l', 'testdata/log38',
+        '--verbose', '--skip', '1'
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output38') as f:
+        filecontent = f.read()
+
+    assert '112345678' not in filecontent
+
+
+def test_check_starting_with():
+    testargs = [
+        'demeuk', '-i', 'testdata/input39', '-o', 'testdata/output39', '-l', 'testdata/log39',
+        '--verbose', '--check-starting-with', '/,#,:'
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output39') as f:
+        filecontent = f.read()
+
+    assert 'firstlovesong' not in filecontent
+    assert 'secondlovesong' not in filecontent
+    assert 'californiastars' not in filecontent
+    assert '\n\n' in filecontent
+
+
+def test_check_empty_line():
+    testargs = [
+        'demeuk', '-i', 'testdata/input40', '-o', 'testdata/output40', '-l', 'testdata/log40',
+        '--verbose', '--check-empty-line',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output40') as f:
+        filecontent = f.read()
+
+    assert '\n\n' not in filecontent

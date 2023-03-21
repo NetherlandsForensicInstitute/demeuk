@@ -29,6 +29,7 @@ r"""
                                         also line which were modified.
         --progress                      Prints out the progress of the demeuk process.
         -n --limit <int>                Limit the number of lines per thread.
+        -s --skip <int>                 Skip <int> amount of lines per thread.
         --punctuation <punctuation>     Use to set the punctuation that is use by options. Defaults to:
                                         ! "#$%&'()*+,-./:;<=>?@[\]^_`{|}~
         --version                       Prints the version of demeuk.
@@ -55,6 +56,9 @@ r"""
         --check-non-ascii               If a line contain a non ascii char e.g. ü or ç (or everything outside ascii
                                         range) the line is dropped.
         --check-replacement-character   Drop lines containing replacement characters '�'.
+        --check-starting-with <string>  Drop lines starting with string, can be multiple strings. Specify multiple
+                                        with as comma-seperated list.
+        --check-empty-line              Drop lines that are empty or only contain whitespace characters
 
     Modify modules (modify a line in place):
         --hex                           Replace lines like: $HEX[41424344] with ABCD.
@@ -118,7 +122,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '3.9.7'
+version = '3.10.0'
 
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.
@@ -447,6 +451,37 @@ def check_character(line, character):
         return False
 
 
+def check_starting_with(line, strings):
+    """Checks if a line start with a specific strings
+
+    Params:
+        line (unicode)
+        strings[str]
+    Returns:
+        true if line does start with one of the strings
+
+    """
+    for string in strings:
+        if line.startswith(string):
+            return True
+    return False
+
+
+def check_empty_line(line):
+    """Checks if a line is empty or only contains whitespace chars
+
+    Params:
+        line (unicode)
+    Returns:
+        true of line is empty or only contains whitespace chars
+    """
+    if line == '':
+        return True
+    elif line.isspace():
+        return True
+    return False
+
+
 def clean_cut(line, delimiters, fields):
     """Finds the first delimiter and returns the remaining string either after
     or before the delimiter.
@@ -737,7 +772,6 @@ def clean_up(filename, chunk_start, chunk_size, config):
             status, line = clean_tab(line)
             if status and config['verbose']:
                 log.append(f'Clean_tab; replaced tab characters; {line}{linesep}')
-
         # Converting enoding to UTF-8
         if config.get('encode') and not stop:
             status, line_decoded = clean_encode(line, config.get('input_encoding'))
@@ -873,6 +907,18 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 log.append(f'Check_replacement_character; dropped line because "�" found; {line_decoded}{linesep}')
                 stop = True
 
+        if config.get('check-starting-with') and not stop:
+            to_check = config.get("check-starting-with")
+            if check_starting_with(line_decoded, to_check):
+                log.append(f'Check_starting_with; dropped line because {to_check} found; {line_decoded}{linesep}')
+                stop = True
+
+        if config.get('check-empty-line') and not stop:
+            if check_empty_line(line_decoded):
+                log_line = "Check_empty_line; dropped line because is empty or only contains whitespace;"
+                log.append(f'{log_line} {line_decoded}{linesep}')
+                stop = True
+
         if config.get('remove-punctuation') and not stop:
             status, line_decoded = remove_punctuation(line_decoded, config.get('punctuation'))
             if status and config['verbose']:
@@ -958,6 +1004,8 @@ def chunkify(fname, config, size=1024 * 1024):
             continue
         fileend = path.getsize(filename)
         with open(filename, 'br') as f:
+            for x in range(0, config.get('skip')):
+                f.readline()
             chunkend = f.tell()
             while True:
                 chunkstart = chunkend
@@ -1005,6 +1053,7 @@ def main():
         'verbose': False,
         'progress': False,
         'limit': False,
+        'skip': False,
 
         # Modify
         'encode': True,
@@ -1028,6 +1077,8 @@ def main():
         'check-hash': False,
         'check-non-ascii': False,
         'check-replacement-character': False,
+        'check-starting-with': False,
+        'check-empty-line': False,
 
         # Add
         'add-lower': False,
@@ -1051,6 +1102,9 @@ def main():
 
     if arguments.get('--limit'):
         config['limit'] = int(arguments.get('--limit'))
+
+    if arguments.get('--skip'):
+        config['skip'] = int(arguments.get('--skip'))
 
     if arguments.get('--input-encoding'):
         config['input_encoding'] = arguments.get('--input-encoding').split(',')
@@ -1120,6 +1174,15 @@ def main():
 
     if arguments.get('--check-replacement-character'):
         config['check-replacement-character'] = True
+
+    if arguments.get('--check-starting-with'):
+        if ',' in arguments.get('--check-starting-with'):
+            config['check-starting-with'] = arguments.get('--check-starting-with').split(',')
+        else:
+            config['check-starting-with'] = [arguments.get('--check-starting-with')]
+
+    if arguments.get('--check-empty-line'):
+        config['check-empty-line'] = True
 
     # Add modules
     if arguments.get('--add-lower'):
