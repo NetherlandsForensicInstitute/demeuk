@@ -671,3 +671,16 @@ def test_check_empty_line():
         filecontent = f.read()
 
     assert '\n\n' not in filecontent
+
+def test_check_title_case():
+    testargs = [
+        'demeuk', '-i', 'testdata/input41', '-o', 'testdata/output41', '-l', 'testdata/log41',
+        '--verbose', '--title-case',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output41') as f:
+        filecontent = f.read()
+
+    assert '3 Doors Down' in filecontent

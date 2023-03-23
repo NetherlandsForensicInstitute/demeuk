@@ -276,3 +276,6 @@ with open('testdata/input40', 'w') as file:
     file.write(f'{linesep}')
     file.write(f'\tcaliforniastars{linesep}')
     file.write(f'lastlovesong{linesep}')
+
+with open('testdata/input41', 'w') as file:
+    file.write(f'3 doors down{linesep}')
