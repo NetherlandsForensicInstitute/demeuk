@@ -672,6 +672,7 @@ def test_check_empty_line():
 
     assert '\n\n' not in filecontent
 
+
 def test_check_title_case():
     testargs = [
         'demeuk', '-i', 'testdata/input41', '-o', 'testdata/output41', '-l', 'testdata/log41',
