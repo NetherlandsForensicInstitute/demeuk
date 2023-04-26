@@ -671,3 +671,18 @@ def test_check_empty_line():
         filecontent = f.read()
 
     assert '\n\n' not in filecontent
+
+
+def test_check_mac_address():
+    testargs = [
+        'demeuk', '-i', 'testdata/input42', '-o', 'testdata/output42', '-l', 'testdata/log42',
+        '--verbose', '--check-mac-address',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output42') as f:
+        filecontent = f.read()
+
+    assert '2C:C5:D3:70:78' not in filecontent
+    assert 'ee:dd:cc:bb:aa' not in filecontent
