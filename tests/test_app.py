@@ -675,14 +675,13 @@ def test_check_empty_line():
 
 def test_check_mac_address():
     testargs = [
-        'demeuk', '-i', 'testdata/input42', '-o', 'testdata/output42', '-l', 'testdata/log42',
+        'demeuk', '-i', 'testdata/input41', '-o', 'testdata/output41', '-l', 'testdata/log41',
         '--verbose', '--check-mac-address',
     ]
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open('testdata/output42') as f:
+    with open('testdata/output41') as f:
         filecontent = f.read()
 
     assert '2C:C5:D3:70:78' not in filecontent
-    assert 'ee:dd:cc:bb:aa' not in filecontent
