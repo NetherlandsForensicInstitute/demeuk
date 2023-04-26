@@ -478,7 +478,7 @@ def check_uuid(line):
     Returns true if line does not contain a UUID
     """
     if search(UUID_REGEX, line):
-            return False
+        return False
 
     return True
 
