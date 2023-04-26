@@ -671,3 +671,18 @@ def test_check_empty_line():
         filecontent = f.read()
 
     assert '\n\n' not in filecontent
+
+
+def test_check_uuid():
+    testargs = [
+        'demeuk', '-i', 'testdata/input41', '-o', 'testdata/output41', '-l', 'testdata/log41',
+        '--verbose', '--check-uuid',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output41') as f:
+        filecontent = f.read()
+
+    assert 'd4662e44-00f1-4ef6-857e-76e3c61604cd' not in filecontent
+    assert 'D4662E44-00F1-4EF6-857E-76E3C61604CD' not in filecontent
