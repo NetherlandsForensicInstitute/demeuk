@@ -53,6 +53,7 @@ r"""
         --no-check-controlchar          Disable the dropping of lines containing control chars.
         --check-email                   Drop lines containing e-mail addresses.
         --check-hash                    Drop lines containing hashes.
+        --check-mac-address             Drop lines containing only MAC-addresses.
         --check-non-ascii               If a line contain a non ascii char e.g. ü or ç (or everything outside ascii
                                         range) the line is dropped.
         --check-replacement-character   Drop lines containing replacement characters '�'.
@@ -129,6 +130,7 @@ version = '3.10.0'
 HEX_REGEX = re_compile(r"^\$(?:HEX|hex)\[((?:[0-9a-fA-F]{2})+)\]$")
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]{1,63}\\.){1,3}[a-zA-Z]{2,6}'
 HASH_HEX_REGEX = '^[a-fA-F0-9]+$'
+MAC_REGEX = '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$'
 
 # Officiale bcrypt hashes hae a bit more fixed size, but saw some weird once:
 # $2a$10$demo as example
@@ -404,6 +406,20 @@ def check_hash(line):
             for hash_regex in HASH_REGEX_LIST:
                 if search(hash_regex, line):
                     return False
+    return True
+
+
+def check_mac_address(line):
+    """Check if a line contains a MAC-address
+
+    Params:
+        line (unicode)
+
+    Returns true if line does not contain a MAC-address
+    """
+    if search(MAC_REGEX, line):
+        return False
+
     return True
 
 
@@ -897,6 +913,11 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 log.append(f'Check_hash; dropped line because found a hash; {line_decoded}{linesep}')
                 stop = True
 
+        if config.get('check-mac-address') and not stop:
+            if not check_mac_address(line_decoded):
+                log.append(f'Check_mac_address; dropped line because found a MAC address; {line_decoded}{linesep}')
+                stop = True
+
         if config.get('check-non-ascii') and not stop:
             if not check_non_ascii(line_decoded):
                 log.append(f'Check_non_ascii; dropped line because non ascii char found; {line_decoded}{linesep}')
@@ -1075,6 +1096,7 @@ def main():
         'check-case': False,
         'check-email': False,
         'check-hash': False,
+        'check-mac-address': False,
         'check-non-ascii': False,
         'check-replacement-character': False,
         'check-starting-with': False,
@@ -1168,6 +1190,9 @@ def main():
 
     if arguments.get('--check-hash'):
         config['check-hash'] = True
+
+    if arguments.get('--check-mac-address'):
+        config['--check-mac-address'] = True
 
     if arguments.get('--check-non-ascii'):
         config['check-non-ascii'] = True
