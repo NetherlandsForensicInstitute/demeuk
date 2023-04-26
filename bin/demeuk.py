@@ -1192,7 +1192,7 @@ def main():
         config['check-hash'] = True
 
     if arguments.get('--check-mac-address'):
-        config['--check-mac-address'] = True
+        config['check-mac-address'] = True
 
     if arguments.get('--check-non-ascii'):
         config['check-non-ascii'] = True
