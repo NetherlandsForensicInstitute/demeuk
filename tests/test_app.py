@@ -671,3 +671,18 @@ def test_check_empty_line():
         filecontent = f.read()
 
     assert '\n\n' not in filecontent
+
+
+def test_check_ending_with():
+    testargs = [
+        'demeuk', '-i', 'testdata/input43', '-o', 'testdata/output43', '-l', 'testdata/log43',
+        '--verbose', '--check-ending-with', '.jpg,@whatsapp.com',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output43') as f:
+        filecontent = f.read()
+
+    assert 'test.jpg' not in filecontent
+    assert 'hello@whatsapp.com' not in filecontent

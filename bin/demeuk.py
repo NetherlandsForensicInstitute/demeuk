@@ -58,6 +58,8 @@ r"""
         --check-replacement-character   Drop lines containing replacement characters '�'.
         --check-starting-with <string>  Drop lines starting with string, can be multiple strings. Specify multiple
                                         with as comma-seperated list.
+        --check-ending-with <string>    Drop lines ending with string, can be multiple strings. Specify multiple
+                                        with as comma-seperated list.
         --check-empty-line              Drop lines that are empty or only contain whitespace characters
 
     Modify modules (modify a line in place):
@@ -463,6 +465,22 @@ def check_starting_with(line, strings):
     """
     for string in strings:
         if line.startswith(string):
+            return True
+    return False
+
+
+def check_ending_with(line, strings):
+    """Checks if a line ends with specific strings
+
+    Params:
+        line (unicode)
+        strings[str]
+    Returns:
+        true if line does end with one of the strings
+
+    """
+    for string in strings:
+        if line.endswith(string):
             return True
     return False
 
@@ -913,6 +931,12 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 log.append(f'Check_starting_with; dropped line because {to_check} found; {line_decoded}{linesep}')
                 stop = True
 
+        if config.get('check-ending-with') and not stop:
+            to_check = config.get("check-ending-with")
+            if check_ending_with(line_decoded, to_check):
+                log.append(f'Check_ending_with; dropped line because {to_check} found; {line_decoded}{linesep}')
+                stop = True
+
         if config.get('check-empty-line') and not stop:
             if check_empty_line(line_decoded):
                 log_line = "Check_empty_line; dropped line because is empty or only contains whitespace;"
@@ -1078,6 +1102,7 @@ def main():
         'check-non-ascii': False,
         'check-replacement-character': False,
         'check-starting-with': False,
+        'check-ending-with': False,
         'check-empty-line': False,
 
         # Add
@@ -1180,6 +1205,12 @@ def main():
             config['check-starting-with'] = arguments.get('--check-starting-with').split(',')
         else:
             config['check-starting-with'] = [arguments.get('--check-starting-with')]
+
+    if arguments.get('--check-ending-with'):
+        if ',' in arguments.get('--check-ending-with'):
+            config['check-ending-with'] = arguments.get('--check-ending-with').split(',')
+        else:
+            config['check-ending-with'] = [arguments.get('--check-ending-with')]
 
     if arguments.get('--check-empty-line'):
         config['check-empty-line'] = True

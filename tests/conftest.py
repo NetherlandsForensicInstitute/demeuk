@@ -276,3 +276,8 @@ with open('testdata/input40', 'w') as file:
     file.write(f'{linesep}')
     file.write(f'\tcaliforniastars{linesep}')
     file.write(f'lastlovesong{linesep}')
+
+with open('testdata/input43', 'w') as file:
+    file.write(f'dummy{linesep}')
+    file.write(f'test.jpg{linesep}')
+    file.write(f'hello@whatsapp.com{linesep}')
