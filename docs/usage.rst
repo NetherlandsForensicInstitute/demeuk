@@ -209,7 +209,7 @@ The following line will be dropped:
 
 00:11:22:33:44:55
 
-but a line line:
+but a line like:
 
 Dummy:00:11:22:33:44:55
 
