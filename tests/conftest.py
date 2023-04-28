@@ -279,4 +279,4 @@ with open('testdata/input40', 'w') as file:
 
 with open('testdata/input41', 'w') as file:
     file.write(f'dummy{linesep}')
-    file.write(f'2C:C5:D3:70:78{linesep}')
+    file.write(f'2C:C5:D3:70:78:2c{linesep}')

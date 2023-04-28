@@ -684,4 +684,5 @@ def test_check_mac_address():
     with open('testdata/output41') as f:
         filecontent = f.read()
 
-    assert '2C:C5:D3:70:78' not in filecontent
+    assert '2C:C5:D3:70:78:2c' not in filecontent
+    assert 'dummy' in filecontent
