@@ -58,6 +58,7 @@ r"""
         --check-replacement-character   Drop lines containing replacement characters '�'.
         --check-starting-with <string>  Drop lines starting with string, can be multiple strings. Specify multiple
                                         with as comma-seperated list.
+        --check-uuid                    Drop lines containing only UUID.
         --check-ending-with <string>    Drop lines ending with string, can be multiple strings. Specify multiple
                                         with as comma-seperated list.
         --check-empty-line              Drop lines that are empty or only contain whitespace characters
@@ -131,6 +132,7 @@ version = '3.10.0'
 HEX_REGEX = re_compile(r"^\$(?:HEX|hex)\[((?:[0-9a-fA-F]{2})+)\]$")
 EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]{1,63}\\.){1,3}[a-zA-Z]{2,6}'
 HASH_HEX_REGEX = '^[a-fA-F0-9]+$'
+UUID_REGEX = '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
 
 # Officiale bcrypt hashes hae a bit more fixed size, but saw some weird once:
 # $2a$10$demo as example
@@ -467,6 +469,20 @@ def check_starting_with(line, strings):
         if line.startswith(string):
             return True
     return False
+
+
+def check_uuid(line):
+    """Check if a line contains a UUID
+
+    Params:
+        line (unicode)
+
+    Returns true if line does not contain a UUID
+    """
+    if search(UUID_REGEX, line):
+        return False
+
+    return True
 
 
 def check_ending_with(line, strings):
@@ -931,6 +947,11 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 log.append(f'Check_starting_with; dropped line because {to_check} found; {line_decoded}{linesep}')
                 stop = True
 
+        if config.get('check-uuid') and not stop:
+            if not check_uuid(line_decoded):
+                log.append(f'Check_uuid; dropped line because found a uuid; {line_decoded}{linesep}')
+                stop = True
+
         if config.get('check-ending-with') and not stop:
             to_check = config.get("check-ending-with")
             if check_ending_with(line_decoded, to_check):
@@ -1102,6 +1123,7 @@ def main():
         'check-non-ascii': False,
         'check-replacement-character': False,
         'check-starting-with': False,
+        'check-uuid': False,
         'check-ending-with': False,
         'check-empty-line': False,
 
@@ -1205,6 +1227,9 @@ def main():
             config['check-starting-with'] = arguments.get('--check-starting-with').split(',')
         else:
             config['check-starting-with'] = [arguments.get('--check-starting-with')]
+
+    if arguments.get('--check-uuid'):
+        config['check-uuid'] = True
 
     if arguments.get('--check-ending-with'):
         if ',' in arguments.get('--check-ending-with'):
