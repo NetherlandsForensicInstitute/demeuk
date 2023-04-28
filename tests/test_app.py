@@ -673,15 +673,62 @@ def test_check_empty_line():
     assert '\n\n' not in filecontent
 
 
-def test_check_title_case():
+def test_check_mac_address():
     testargs = [
         'demeuk', '-i', 'testdata/input41', '-o', 'testdata/output41', '-l', 'testdata/log41',
-        '--verbose', '--title-case',
+        '--verbose', '--check-mac-address',
     ]
     with patch.object(sys, 'argv', testargs):
         main()
 
     with open('testdata/output41') as f:
+        filecontent = f.read()
+
+    assert '2C:C5:D3:70:78:2c' not in filecontent
+    assert 'dummy' in filecontent
+
+
+def test_check_uuid():
+    testargs = [
+        'demeuk', '-i', 'testdata/input42', '-o', 'testdata/output42', '-l', 'testdata/log42',
+        '--verbose', '--check-uuid',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output42') as f:
+        filecontent = f.read()
+
+    assert 'd4662e44-00f1-4ef6-857e-76e3c61604cd' not in filecontent
+    assert 'D4662E44-00F1-4EF6-857E-76E3C61604CD' not in filecontent
+    assert 'dummy' in filecontent
+
+
+def test_check_ending_with():
+    testargs = [
+        'demeuk', '-i', 'testdata/input43', '-o', 'testdata/output43', '-l', 'testdata/log43',
+        '--verbose', '--check-ending-with', '.jpg,@whatsapp.com',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output43') as f:
+        filecontent = f.read()
+
+    assert 'test.jpg' not in filecontent
+    assert 'hello@whatsapp.com' not in filecontent
+    assert 'dummy' in filecontent
+
+
+def test_check_title_case():
+    testargs = [
+        'demeuk', '-i', 'testdata/input44', '-o', 'testdata/output44', '-l', 'testdata/log44',
+        '--verbose', '--title-case',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output44') as f:
         filecontent = f.read()
 
     assert '3 Doors Down' in filecontent

@@ -278,4 +278,18 @@ with open('testdata/input40', 'w') as file:
     file.write(f'lastlovesong{linesep}')
 
 with open('testdata/input41', 'w') as file:
+    file.write(f'dummy{linesep}')
+    file.write(f'2C:C5:D3:70:78:2c{linesep}')
+
+with open('testdata/input42', 'w') as file:
+    file.write(f'dummy{linesep}')
+    file.write(f'd4662e44-00f1-4ef6-857e-76e3c61604cd{linesep}')
+    file.write(f'D4662E44-00F1-4EF6-857E-76E3C61604CD{linesep}')
+
+with open('testdata/input43', 'w') as file:
+    file.write(f'dummy{linesep}')
+    file.write(f'test.jpg{linesep}')
+    file.write(f'hello@whatsapp.com{linesep}')
+
+with open('testdata/input44', 'w') as file:
     file.write(f'3 doors down{linesep}')
