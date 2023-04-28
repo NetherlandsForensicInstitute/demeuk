@@ -193,12 +193,44 @@ is a every simple regex. Also it is the same regex used for remove-email.
 
 check-hash
 ~~~~~~~~~~
-Checks if a line contains an hash. If so the line is dropped. The regex used are quite
+Checks if a line is an hash. If so the line is dropped. The regex used are quite
 simple. One regex check if a line, from start to finish, contains a-f and 0-9's only.
 The other checks if the line contains a structure which looks like linux hash. Something
 like
 
 $1$fjdfh$qwertyuiopjfsdf
+
+check-mac-address
+~~~~~~~~~~~~~~~~~
+Checks if a line is a mac address. If so the line is dropped.
+The line has to be a mac-address from start to finish.
+
+The following line will be dropped:
+
+00:11:22:33:44:55
+
+but a line line:
+
+Dummy:00:11:22:33:44:55
+
+will not be dropped
+
+check-uuid
+~~~~~~~~~~
+Checks if a line is an UUID. If this line is a UUID, it will be dropped.
+The line has to be an UUID from start to finish.
+
+Example
+
+d4662e44-00f1-4ef6-857e-76e3c61604cd
+
+will be dropped
+
+Example
+
+dummy-d4662e44-00f1-4ef6-857e-76e3c61604cd
+
+will not be dropped
 
 check-non-ascii
 ~~~~~~~~~~~~~~~
@@ -215,12 +247,23 @@ lines contain this char.
 
 check-starting-with
 ~~~~~~~~~~~~~~~~~~~
-Checks if a line start with the argument of checking-starting-with. If the line starts
-with this, it will be dropped. The string to check can be multiple strings. multiple
+Checks if a line starts with the argument of check-starting-with. If the line starts
+with this, the line will be dropped. The string to check can be multiple strings. multiple
 values are comma-seperated. Example: #,// would skip lines starting with '#' and with 
 '//'.
 
 If you want to drop a line starting with a tab, add ':' to the list of strings to
+check. '--check starting-with :'. By default tab characters are transfered to ':'.
+To disable this behavior use the --no-tab option.
+
+check-ending-with
+~~~~~~~~~~~~~~~~~~~
+Checks if a line ends with the argument of check-ending-with. If the line ends
+with this, the line will be dropped. The string to check can be multiple strings. multiple
+values are comma-seperated. Example: #,// would skip lines ending with '#' and with 
+'//'.
+
+If you want to drop a line ending with a tab, add ':' to the list of strings to
 check. '--check starting-with :'. By default tab characters are transfered to ':'.
 To disable this behavior use the --no-tab option.
 

@@ -52,14 +52,14 @@ r"""
         --check-case                    Drop lines where the uppercase line is not equal to the lowercase line
         --no-check-controlchar          Disable the dropping of lines containing control chars.
         --check-email                   Drop lines containing e-mail addresses.
-        --check-hash                    Drop lines containing hashes.
-        --check-mac-address             Drop lines containing only MAC-addresses.
+        --check-hash                    Drop lines which are hashes.
+        --check-mac-address             Drop lines which are MAC-addresses.
+        --check-uuid                    Drop lines which are UUID.
         --check-non-ascii               If a line contain a non ascii char e.g. ü or ç (or everything outside ascii
                                         range) the line is dropped.
         --check-replacement-character   Drop lines containing replacement characters '�'.
         --check-starting-with <string>  Drop lines starting with string, can be multiple strings. Specify multiple
                                         with as comma-seperated list.
-        --check-uuid                    Drop lines containing only UUID.
         --check-ending-with <string>    Drop lines ending with string, can be multiple strings. Specify multiple
                                         with as comma-seperated list.
         --check-empty-line              Drop lines that are empty or only contain whitespace characters
@@ -127,7 +127,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '3.10.1'
+version = '3.11.0'
 
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.
