@@ -272,6 +272,11 @@ https://pypi.org/project/Unidecode/
 
 For example a line like 'kožušček' is replaced to kozuscek.
 
+title-case
+~~~~~~~~~~
+Replace lines like 'test test test' to 'Test Test Test'. Basically uppercasing all
+words in a line. This uses 
+
 no-mojibake
 ~~~~~~~~~~~
 Use this option to disable the default behavior of trying to fix encoding issues.

@@ -290,3 +290,6 @@ with open('testdata/input43', 'w') as file:
     file.write(f'dummy{linesep}')
     file.write(f'test.jpg{linesep}')
     file.write(f'hello@whatsapp.com{linesep}')
+
+with open('testdata/input44', 'w') as file:
+    file.write(f'3 doors down{linesep}')

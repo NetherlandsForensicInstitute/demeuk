@@ -718,3 +718,17 @@ def test_check_ending_with():
     assert 'test.jpg' not in filecontent
     assert 'hello@whatsapp.com' not in filecontent
     assert 'dummy' in filecontent
+
+
+def test_check_title_case():
+    testargs = [
+        'demeuk', '-i', 'testdata/input44', '-o', 'testdata/output44', '-l', 'testdata/log44',
+        '--verbose', '--title-case',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output44') as f:
+        filecontent = f.read()
+
+    assert '3 Doors Down' in filecontent

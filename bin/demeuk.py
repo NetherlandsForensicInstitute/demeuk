@@ -69,6 +69,7 @@ r"""
         --html                          Replace lines like: &#351;ifreyok with şifreyok.
         --html-named                    Replace lines like: &#alpha; Those structures are more like passwords, so
                                         be careful to enable this option.
+        --title-case                         Replace line like 'this test string' to 'This Test String'
         --umlaut                        Replace lines like ko"ffie with an o with an umlaut.
         --no-mojibake                   disable fixing mojibakes, useful if you know the encoding.
         --no-encode                     disable guessing of encoding, this force to use the --input-encoding.
@@ -126,7 +127,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '3.10.0'
+version = '3.10.1'
 
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.
@@ -574,6 +575,22 @@ def clean_non_ascii(line):
         return False, line
 
 
+def clean_title_case(line):
+    """Replace words to title word (uppercasing first letter)
+
+    Params:
+        line (Unicode)
+    Returns:
+        line (Unicode)
+
+    """
+    cleaned_line = line.title()
+    if line != cleaned_line:
+        return True, cleaned_line
+    else:
+        return False, line
+
+
 def clean_trim(line):
     """Delete leading and trailing character sequences representing a newline
     from beginning end end of line.
@@ -915,6 +932,12 @@ def clean_up(filename, chunk_start, chunk_size, config):
             if status and config['verbose']:
                 log.append(f'Clean_non_ascii; non-ascii replaced; {line_decoded}{linesep}')
 
+        # Replace first letter of a word to a uppercase letter
+        if config.get('title-case') and not stop:
+            status, line_decoded = clean_title_case(line_decoded)
+            if status and config['verbose']:
+                log.append(f'Clean_title_case; non-ascii replaced; {line_decoded}{linesep}')
+
         # Should we remove emails?
         if config.get('remove-email') and not stop:
             status, line_decoded = remove_email(line_decoded)
@@ -1132,6 +1155,7 @@ def main():
         'html-named': False,
         'umlaut': False,
         'non-ascii': False,
+        'title_case': False,
 
         # Check
         'length': False,
@@ -1219,6 +1243,9 @@ def main():
 
     if arguments.get('--non-ascii'):
         config['non-ascii'] = True
+
+    if arguments.get('--title-case'):
+        config['title-case'] = True
 
     # Check modules
     if arguments.get('--check-min-length'):
