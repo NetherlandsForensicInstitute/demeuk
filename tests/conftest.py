@@ -281,3 +281,8 @@ with open('testdata/input41', 'w') as file:
     file.write(f'dummy{linesep}')
     file.write(f'd4662e44-00f1-4ef6-857e-76e3c61604cd{linesep}')
     file.write(f'D4662E44-00F1-4EF6-857E-76E3C61604CD{linesep}')
+
+with open('testdata/input43', 'w') as file:
+    file.write(f'dummy{linesep}')
+    file.write(f'test.jpg{linesep}')
+    file.write(f'hello@whatsapp.com{linesep}')
