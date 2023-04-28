@@ -686,3 +686,35 @@ def test_check_mac_address():
 
     assert '2C:C5:D3:70:78:2c' not in filecontent
     assert 'dummy' in filecontent
+
+
+def test_check_uuid():
+    testargs = [
+        'demeuk', '-i', 'testdata/input42', '-o', 'testdata/output42', '-l', 'testdata/log42',
+        '--verbose', '--check-uuid',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output42') as f:
+        filecontent = f.read()
+
+    assert 'd4662e44-00f1-4ef6-857e-76e3c61604cd' not in filecontent
+    assert 'D4662E44-00F1-4EF6-857E-76E3C61604CD' not in filecontent
+    assert 'dummy' in filecontent
+
+
+def test_check_ending_with():
+    testargs = [
+        'demeuk', '-i', 'testdata/input43', '-o', 'testdata/output43', '-l', 'testdata/log43',
+        '--verbose', '--check-ending-with', '.jpg,@whatsapp.com',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output43') as f:
+        filecontent = f.read()
+
+    assert 'test.jpg' not in filecontent
+    assert 'hello@whatsapp.com' not in filecontent
+    assert 'dummy' in filecontent
