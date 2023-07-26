@@ -293,3 +293,29 @@ with open('testdata/input43', 'w') as file:
 
 with open('testdata/input44', 'w') as file:
     file.write(f'3 doors down{linesep}')
+
+with open('testdata/input45', 'wb') as file:
+    # test for mojibake
+    file.write(b'\x63\x6F\x75\x70\xC3\x89' + f'{linesep}'.encode('utf-8'))
+    # test for encode
+    file.write(f'!!!ееместной%%@!{linesep}'.encode('WINDOWS-1251'))
+    # test for control-char
+    file.write(b'\x01' + f'{linesep}'.encode('utf-8'))
+    # Test for newline and html
+    file.write(f'&#10;newline{linesep}'.encode('utf-8'))
+    # Test for hex
+    file.write(f'$HEX[456c64657262657272790d]{linesep}'.encode('utf-8'))
+    # Test for html named
+    file.write(f'&lt;html_named&gt;{linesep}'.encode('utf-8'))
+    # Test for md5 hash
+    file.write(f'919c7e5fe31e73c7acbad69af9dbc4f5{linesep}'.encode('utf-8'))
+    # Test for mac-address
+    file.write(f'00:11:22:33:44:55{linesep}'.encode('utf-8'))
+    # Test for uuid
+    file.write(f'123e4567-e89b-12d3-a456-426655440000{linesep}'.encode('utf-8'))
+    # Test for removing e-mail
+    file.write(f'demeuk@example.com{linesep}'.encode('utf-8'))
+    # Test for replacement character
+    file.write(f'�{linesep}'.encode('utf-8'))
+    # Test for empty line
+    file.write(f'{linesep}'.encode('utf-8'))

@@ -39,8 +39,8 @@ Now you can run bin/demeuk.py:
 
 Examples:
 ```
-    demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt
-    demeuk -i inputfile -o outputfile -j 24 -l logfile.log
+    demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt --leak
+    demeuk -i inputfile -o outputfile -j 24 -l logfile.log --leak-full
     demeuk -i inputdir/*.txt -o outputfile.dict -l logfile.log
 ```
 

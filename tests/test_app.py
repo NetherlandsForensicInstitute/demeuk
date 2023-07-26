@@ -14,7 +14,7 @@ def calculate_line_numbers(file_name):
 
 
 def test_demeuk():
-    testargs = ['demeuk', '-i', 'testdata/input1', '-o', 'testdata/output1', '-l', 'testdata/log1']
+    testargs = ['demeuk', '-i', 'testdata/input1', '-o', 'testdata/output1', '-l', 'testdata/log1', '--leak']
     with patch.object(sys, 'argv', testargs):
         main()
 
@@ -66,7 +66,7 @@ def test_newline():
 
 
 def test_tabchar():
-    testargs = ['demeuk', '-i', 'testdata/input4', '-o', 'testdata/output4']
+    testargs = ['demeuk', '-i', 'testdata/input4', '-o', 'testdata/output4', '--tab']
     with patch.object(sys, 'argv', testargs):
         main()
 
@@ -109,7 +109,7 @@ def test_googlengram():
 
 
 def test_coupe():
-    testargs = ['demeuk', '-i', 'testdata/input7', '-o', 'testdata/output7', '-l', 'testdata/log7']
+    testargs = ['demeuk', '-i', 'testdata/input7', '-o', 'testdata/output7', '-l', 'testdata/log7', '--mojibake']
     with patch.object(sys, 'argv', testargs):
         main()
 
@@ -137,14 +137,15 @@ def test_split():
 
 
 def test_output_encoding():
-    testargs = ['demeuk', '-i', 'testdata/input1', '-o', 'testdata/output1', '--output-encoding', 'C']
+    testargs = ['demeuk', '-i', 'testdata/input1', '-o', 'testdata/output1', '--output-encoding', 'C', '--encode']
     with patch.object(sys, 'argv', testargs):
         with raises(UnicodeEncodeError):
             main()
 
 
 def test_input_encoding():
-    testargs = ['demeuk', '-i', 'testdata/input9', '-o', 'testdata/output9', '--input-encoding', 'windows-1251,UTF-16']
+    testargs = ['demeuk', '-i', 'testdata/input9', '-o', 'testdata/output9',
+                '--input-encoding', 'windows-1251,UTF-16', '--encode']
     with patch.object(sys, 'argv', testargs):
         main()
     line_num_output = calculate_line_numbers('testdata/output9')
@@ -206,7 +207,8 @@ def test_language_processing():
 
 
 def test_fries():
-    testargs = ['demeuk', '-i', 'testdata/input12', '-o', 'testdata/output12', '-l', 'testdata/log12', '--no-mojibake']
+    testargs = ['demeuk', '-i', 'testdata/input12', '-o', 'testdata/output12',
+                '-l', 'testdata/log12', '--encode', '--check-controlchar']
     with patch.object(sys, 'argv', testargs):
         main()
     with open('testdata/log12') as f:
@@ -246,7 +248,7 @@ def test_cut_fields_single():
 def test_unhex():
     testargs = [
         'demeuk', '-i', 'testdata/input15', '-o', 'testdata/output15', '-l', 'testdata/log15',
-        '--hex',
+        '--hex', '--encode',
     ]
     with patch.object(sys, 'argv', testargs):
         main()
@@ -318,7 +320,7 @@ def test_limit():
 def test_clean_add_umlaut():
     testargs = [
         'demeuk', '-i', 'testdata/input20', '-o', 'testdata/output20', '-l', 'testdata/log20',
-        '--add-umlaut', '--verbose',
+        '--add-umlaut', '--verbose', '--encode'
     ]
     with patch.object(sys, 'argv', testargs):
         main()
@@ -503,7 +505,7 @@ def test_glob():
 def test_bug_html_control():
     testargs = [
         'demeuk', '-i', 'testdata/input31', '-o', 'testdata/output31', '-l', 'testdata/log31',
-        '--verbose', '--html',
+        '--verbose', '--html', '--check-controlchar'
     ]
     with patch.object(sys, 'argv', testargs):
         main()
@@ -562,7 +564,7 @@ def test_email_detection():
 def test_newline_replacement():
     testargs = [
         'demeuk', '-i', 'testdata/input35', '-o', 'testdata/output35', '-l', 'testdata/log35',
-        '--verbose', '--hex', '--html', '--no-trim',
+        '--verbose', '--hex', '--html',
     ]
     with patch.object(sys, 'argv', testargs):
         main()
@@ -583,7 +585,7 @@ def test_newline_replacement():
 def test_trim():
     testargs = [
         'demeuk', '-i', 'testdata/input36', '-o', 'testdata/output36', '-l', 'testdata/log36',
-        '--verbose', '--hex', '--html',
+        '--verbose', '--hex', '--html', '--trim',
     ]
     with patch.object(sys, 'argv', testargs):
         main()
@@ -645,7 +647,7 @@ def test_skip():
 def test_check_starting_with():
     testargs = [
         'demeuk', '-i', 'testdata/input39', '-o', 'testdata/output39', '-l', 'testdata/log39',
-        '--verbose', '--check-starting-with', '/,#,:'
+        '--verbose', '--check-starting-with', '/,#,:', '--tab'
     ]
     with patch.object(sys, 'argv', testargs):
         main()
@@ -732,3 +734,40 @@ def test_check_title_case():
         filecontent = f.read()
 
     assert '3 Doors Down' in filecontent
+
+
+def test_leak_full():
+    testargs = [
+        'demeuk', '-i', 'testdata/input45', '-o', 'testdata/output45', '-l', 'testdata/log45',
+        '--verbose', '--leak-full',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output45') as f:
+        filecontent = f.read()
+
+    # Test for mojibake
+    assert 'coupÉ' in filecontent
+    # Test for encode
+    assert '!!!ееместной%%@!' in filecontent
+    # Test for control-char
+    assert '\x01' not in filecontent
+    # Test for newline and html
+    assert '\nnewline\n' in filecontent
+    # Test for html named
+    assert '<html_named>' in filecontent
+    # Test for md5 hash
+    assert '919c7e5fe31e73c7acbad69af9dbc4f5' not in filecontent
+    # Test for hex
+    assert 'Elderberry' in filecontent
+    # Test for mac-address
+    assert '00:11:22:33:44:55' not in filecontent
+    # Test for uuid
+    assert '123e4567-e89b-12d3-a456-426655440000' not in filecontent
+    # Test for removing e-mail
+    assert 'demeuk@example.com' not in filecontent
+    # Test for replacement character
+    assert '�' not in filecontent
+    # Test for empty line
+    assert '\n\n' not in filecontent

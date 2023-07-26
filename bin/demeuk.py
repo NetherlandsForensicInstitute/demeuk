@@ -50,7 +50,7 @@ r"""
         --check-min-length <length>     Requires that entries have a minimal requirement of <length> unicode chars
         --check-max-length <length>     Requires that entries have a maximal requirement of <length> unicode chars
         --check-case                    Drop lines where the uppercase line is not equal to the lowercase line
-        --no-check-controlchar          Disable the dropping of lines containing control chars.
+        --check-controlchar             Drop lines containing control chars.
         --check-email                   Drop lines containing e-mail addresses.
         --check-hash                    Drop lines which are hashes.
         --check-mac-address             Drop lines which are MAC-addresses.
@@ -69,15 +69,15 @@ r"""
         --html                          Replace lines like: &#351;ifreyok with şifreyok.
         --html-named                    Replace lines like: &#alpha; Those structures are more like passwords, so
                                         be careful to enable this option.
-        --title-case                         Replace line like 'this test string' to 'This Test String'
+        --title-case                    Replace line like 'this test string' to 'This Test String'
         --umlaut                        Replace lines like ko"ffie with an o with an umlaut.
-        --no-mojibake                   disable fixing mojibakes, useful if you know the encoding.
-        --no-encode                     disable guessing of encoding, this force to use the --input-encoding.
-        --no-tab                        disable replacing tab char with ':'
-        --no-newline                    disable removing newline characters (\r\n) from end and beginning.
+        --mojibake                      Fixes mojibakes, which means lines like SmˆrgÂs will be fixed to Smörgås.
+        --encode                        Enabled guessing of encoding, based on chardet and custom implementation.
+        --tab                           Enables replacing tab char with ':', sometimes leaks contain both ':' and '\t'.
+        --newline                       Enables removing newline characters (\r\n) from end and beginning of lines.
         --non-ascii                     Replace non ascii char with their replacement letters. For example ü
                                         becomes u, ç becomes c.
-        --no-trim                       disable removing newlines representations from end and beginning. Newline
+        --trim                          Enables removing newlines representations from end and beginning. Newline
                                         representations detected are '\\n', '\\r', '\n', '\r', '<br>', and '<br />'.
 
     Add modules (Modify a line, but keep the original as well):
@@ -97,6 +97,15 @@ r"""
                                         1238661:test@example.com:password
     Macro modules:
         -g --googlengram                When set, demeuk will strip universal pos tags: like _NOUN_ or _ADJ
+        --leak                          When set, demeuk will run the following modules:
+                                            mojibake, encode, newline, check-controlchar
+                                        This is recommended when working with leaks and was the default bevarior in
+                                        demeuk version 3.11.0 and below.
+        --leak-full                     When set, demeuk will run the following modules:
+                                            mojibake, encode, newline, check-controlchar,
+                                            hex, html, html-named,
+                                            check-hash, check-mac-address, check-uuid, check-email,
+                                            check-replacement-character, check-empty-line
 """
 
 from binascii import hexlify, unhexlify
@@ -127,7 +136,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '3.11.0'
+version = '4.0.0'
 
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.
@@ -536,6 +545,7 @@ def check_empty_line(line):
 def clean_cut(line, delimiters, fields):
     """Finds the first delimiter and returns the remaining string either after
     or before the delimiter.
+
     Params:
         line (unicode)
         delimiters list(unicode)
@@ -1145,11 +1155,11 @@ def main():
         'skip': False,
 
         # Modify
-        'encode': True,
-        'mojibake': True,
-        'tab': True,
-        'trim': True,
-        'newline': True,
+        'encode': False,
+        'mojibake': False,
+        'tab': False,
+        'trim': False,
+        'newline': False,
         'hex': False,
         'html': False,
         'html-named': False,
@@ -1161,7 +1171,7 @@ def main():
         'length': False,
         'check-min-length': 0,
         'check-max-length': 0,
-        'check-controlchar': True,
+        'check-controlchar': False,
         'check-case': False,
         'check-email': False,
         'check-hash': False,
@@ -1247,6 +1257,21 @@ def main():
     if arguments.get('--title-case'):
         config['title-case'] = True
 
+    if arguments.get('--mojibake'):
+        config['mojibake'] = True
+
+    if arguments.get('--encode'):
+        config['encode'] = True
+
+    if arguments.get('--tab'):
+        config['tab'] = True
+
+    if arguments.get('--newline'):
+        config['newline'] = True
+
+    if arguments.get('--trim'):
+        config['trim'] = True
+
     # Check modules
     if arguments.get('--check-min-length'):
         config['check-length'] = True
@@ -1292,6 +1317,9 @@ def main():
     if arguments.get('--check-empty-line'):
         config['check-empty-line'] = True
 
+    if arguments.get('--check-controlchar'):
+        config['check-controlchar'] = True
+
     # Add modules
     if arguments.get('--add-lower'):
         config['add-lower'] = True
@@ -1318,26 +1346,6 @@ def main():
     if arguments.get('--remove-punctuation'):
         config['remove-punctuation'] = True
 
-    # Negative modules
-    # Test if there are any disable functions, they must always overrule any other option.
-    if arguments.get('--no-mojibake'):
-        config['mojibake'] = False
-
-    if arguments.get('--no-encode'):
-        config['encode'] = False
-
-    if arguments.get('--no-check-controlchar'):
-        config['check-controlchar'] = False
-
-    if arguments.get('--no-tab'):
-        config['tab'] = False
-
-    if arguments.get('--no-newline'):
-        config['newline'] = False
-
-    if arguments.get('--no-trim'):
-        config['trim'] = False
-
     # Some meta-modules, those overwrite settings
     if arguments.get('--googlengram'):
         config['cut'] = False
@@ -1347,6 +1355,34 @@ def main():
         config['check-controlchar'] = False
         config['tab'] = False
         config['googlengram'] = True
+
+    # Meta-module for leak files. Set the following defaults:
+    # mojibake, encode, newline, check-controlchar
+    if arguments.get('--leak'):
+        config['mojibake'] = True
+        config['encode'] = True
+        config['newline'] = True
+        config['check-controlchar'] = True
+
+    # Meta-module for leak fils, but more modules. Set the following defaults:
+    # --mojibake, --encode, --newline, --check-controlchar,
+    # --hex, --html, --html-named,
+    # --check-hash, --check-mac-address, --check-uuid, --check-email,
+    # --check-replacement-character, --check-empty-line
+    if arguments.get('--leak-full'):
+        config['mojibake'] = False
+        config['encode'] = True
+        config['newline'] = True
+        config['check-controlchar'] = True
+        config['hex'] = True
+        config['html'] = True
+        config['html-named'] = True
+        config['check-hash'] = True
+        config['check-mac-address'] = True
+        config['check-uuid'] = True
+        config['check-email'] = True
+        config['check-replacement-character'] = True
+        config['check-empty-line'] = True
 
     print(f'Main: running demeuk - {version}')
     if path.isdir('demeuk_tmp'):
