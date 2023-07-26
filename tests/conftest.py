@@ -319,3 +319,17 @@ with open('testdata/input45', 'wb') as file:
     file.write(f'�{linesep}'.encode('utf-8'))
     # Test for empty line
     file.write(f'{linesep}'.encode('utf-8'))
+
+
+with open('testdata/input46', 'w') as file:
+    file.write(f'abc{linesep}')
+    file.write(f'abcd{linesep}')
+    file.write(f'a{linesep}')
+    file.write(f'ab{linesep}')
+    file.write(f'aBc{linesep}')
+    file.write(f'123{linesep}')
+
+with open('testdata/input47', 'w') as file:
+    file.write(f'alpha{linesep}')
+    file.write(f'alpha123{linesep}')
+    file.write(f'alpha1234!{linesep}')

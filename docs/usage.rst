@@ -288,6 +288,13 @@ check-empty-line
 Checks if a line only contains whitespace characters or is empty. If this is true,
 the line will be dropped.
 
+check-regex
+~~~~~~~~~~~
+Checks if a line matches a list of regexes. Regexes are comma-seperated. If the line does not
+matches all of the regexes, the line will be dropped.
+Example: --check-regex '[a-z],[0-9]' will drop lines
+that do not atleast contain one lowercase char and one number.
+
 Modify modules
 --------------
 hex

@@ -771,3 +771,39 @@ def test_leak_full():
     assert '�' not in filecontent
     # Test for empty line
     assert '\n\n' not in filecontent
+
+
+def test_check_regex():
+    testargs = [
+        'demeuk', '-i', 'testdata/input46', '-o', 'testdata/output46', '-l', 'testdata/log46',
+        '--verbose', '--check-regex', '^[a-z]{3}$',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output46') as f:
+        filecontent = f.read()
+
+    assert 'abc' in filecontent
+    assert 'abcd' not in filecontent
+    assert 'a\n' not in filecontent
+    assert 'ab\n' not in filecontent
+    assert 'aBc' not in filecontent
+    assert '123' not in filecontent
+
+
+def test_check_multiple_regexes():
+    testargs = [
+        'demeuk', '-i', 'testdata/input47', '-o', 'testdata/output47', '-l', 'testdata/log47',
+        '--verbose', '--check-regex', '\\d,\\w',
+    ]
+
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output47') as f:
+        filecontent = f.read()
+
+    assert 'alpha\n' not in filecontent
+    assert 'alpha123\n' in filecontent
+    assert 'alpha1234!' in filecontent

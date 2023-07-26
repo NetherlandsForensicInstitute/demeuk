@@ -63,6 +63,8 @@ r"""
         --check-ending-with <string>    Drop lines ending with string, can be multiple strings. Specify multiple
                                         with as comma-seperated list.
         --check-empty-line              Drop lines that are empty or only contain whitespace characters
+        --check-regex <string>          Drop lines that do not match the regex. Regex is a comma seperated list of
+                                        regexes. Example: [a-z]{1,8},[0-9]{1,8}
 
     Modify modules (modify a line in place):
         --hex                           Replace lines like: $HEX[41424344] with ABCD.
@@ -136,7 +138,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '4.0.0'
+version = '4.0.1'
 
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.
@@ -729,6 +731,25 @@ def check_controlchar(line):
     return False, None
 
 
+def check_regex(line, regex):
+    """Checks if a line matches a list of regexes
+
+    Params:
+        line (unicode)
+        regex (list)
+
+    Returns:
+        true if all regexes match
+        false if line does not match regex
+    """
+    for regex in regex:
+        if search(regex, line):
+            continue
+        else:
+            return False
+    return True
+
+
 def try_encoding(line, encoding):
     """Tries to decode a line using supplied encoding
 
@@ -995,6 +1016,11 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 log.append(f'Check_replacement_character; dropped line because "�" found; {line_decoded}{linesep}')
                 stop = True
 
+        if config.get('check-regex') and not stop:
+            if not check_regex(line_decoded, config.get('check-regex')):
+                log.append(f'Check_regex; dropped line because it does not match the regex; {line_decoded}{linesep}')
+                stop = True
+
         if config.get('check-starting-with') and not stop:
             to_check = config.get("check-starting-with")
             if check_starting_with(line_decoded, to_check):
@@ -1182,6 +1208,7 @@ def main():
         'check-uuid': False,
         'check-ending-with': False,
         'check-empty-line': False,
+        'check-regex': False,
 
         # Add
         'add-lower': False,
@@ -1319,6 +1346,9 @@ def main():
 
     if arguments.get('--check-controlchar'):
         config['check-controlchar'] = True
+
+    if arguments.get('--check-regex'):
+        config['check-regex'] = arguments.get('--check-regex').split(',')
 
     # Add modules
     if arguments.get('--add-lower'):
