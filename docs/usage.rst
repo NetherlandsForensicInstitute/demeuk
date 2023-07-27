@@ -72,7 +72,7 @@ Standard Options
 i input
 ~~~~~~~
 The input option can be used to select the input file. This can also be a glob
-pattern. For example: "testdir/*.txt".
+pattern. For example: "testdir/\*.txt".
 
 o output
 ~~~~~~~~
