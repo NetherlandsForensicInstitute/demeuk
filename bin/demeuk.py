@@ -23,7 +23,7 @@ r"""
                                         spawn. Specify the string 'all' to make demeuk auto detect the amount of threads
                                         to start based on the CPU's.
                                         Note: threading will cost some setup time. Only speeds up for larger files.
-        --input-encoding <encoding>     Forces demeuk to decode the input using this encoding.
+        --input-encoding <encoding>     Forces demeuk to decode the input using this encoding (default: en_US.UTF-8).
         --output-encoding <encoding>    Forces demeuk to encoding the output using this encoding (default: en_US.UTF-8).
         -v --verbose                    When set, the logfile will not only contain lines which caused an error, but
                                         also line which were modified.
@@ -74,7 +74,7 @@ r"""
         --title-case                    Replace line like 'this test string' to 'This Test String'
         --umlaut                        Replace lines like ko"ffie with an o with an umlaut.
         --mojibake                      Fixes mojibakes, which means lines like SmˆrgÂs will be fixed to Smörgås.
-        --encode                        Enabled guessing of encoding, based on chardet and custom implementation.
+        --encode                        Enables guessing of encoding, based on chardet and custom implementation.
         --tab                           Enables replacing tab char with ':', sometimes leaks contain both ':' and '\t'.
         --newline                       Enables removing newline characters (\r\n) from end and beginning of lines.
         --non-ascii                     Replace non ascii char with their replacement letters. For example ü
