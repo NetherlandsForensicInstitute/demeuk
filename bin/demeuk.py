@@ -204,6 +204,7 @@ def clean_googlengram(line):
 
     Param:
         line (unicode)
+
     Returns:
         line (unicode)
     """
@@ -235,6 +236,7 @@ def remove_email(line):
 
     Params:
         line (unicode)
+
     Returns:
         line (unicode)
     """
@@ -249,6 +251,7 @@ def add_lower(line):
 
     Param:
         line (unicode)
+
     Returns:
         False if they are the same
         Lowered string if they are not
@@ -265,6 +268,7 @@ def add_latin_ligatures(line):
 
     Param:
         line (unicode)
+
     Returns:
         False if there are not any latin ligatures
         Corrected line
@@ -281,6 +285,7 @@ def add_without_punctuation(line, punctuation):
 
     Param:
         line (unicode)
+
     Returns:
         False if there are not any punctuation
         Corrected line
@@ -298,6 +303,7 @@ def clean_add_umlaut(line):
 
     Param:
         line (unicode)
+
     Returns:
         Corrected line
     """
@@ -330,6 +336,7 @@ def remove_punctuation(line, punctuation):
     Param:
         line (unicode)
         punctuation (unicode)
+
     Returns:
         line without start and end punctuation
     """
@@ -345,6 +352,7 @@ def remove_strip_punctuation(line, punctuation):
 
     Param:
         line (unicode)
+
     Returns:
         line without start and end punctuation
     """
@@ -360,6 +368,7 @@ def add_split(line, punctuation=(' ', '-', r'\.')):
 
     Param:
         line (unicode)
+
     Returns:
         split line
     """
@@ -375,6 +384,7 @@ def check_case(line, ignored_chars=(' ', "'", '-')):
     Param:
         line (unicode)
         ignored_chars list(string)
+
     Returns:
         true if uppercase line is equal to uppercase line
     """
@@ -395,7 +405,8 @@ def check_length(line, min=0, max=0):
         line (unicode)
         min (int)
         max (int)
-    Returns
+
+    Returns:
         true if length is ok
     """
     status = True
@@ -412,7 +423,8 @@ def check_hash(line):
     Params:
         line (unicode)
 
-    Returns true if line does not contain hash
+    Returns:
+        true if line does not contain hash
     """
     if search(HASH_HEX_REGEX, line):
         if len(line) in [32, 40, 64]:
@@ -431,7 +443,8 @@ def check_mac_address(line):
     Params:
         line (unicode)
 
-    Returns true if line does not contain a MAC-address
+    Returns:
+        true if line does not contain a MAC-address
     """
     if search(MAC_REGEX, line):
         return False
@@ -444,7 +457,8 @@ def check_email(line):
 
     Params:
         line (unicode)
-    Returns
+
+    Returns:
         true is line does not contain email
     """
     if search(EMAIL_REGEX, line):
@@ -458,6 +472,7 @@ def check_non_ascii(line):
 
     Params:
         line (unicode)
+
     Returns:
         true if line does not contain non ascii chars
     """
@@ -473,6 +488,7 @@ def check_character(line, character):
 
     Params:
         line (unicode)
+
     Returns:
         true if line does contain the specific character
 
@@ -489,6 +505,7 @@ def check_starting_with(line, strings):
     Params:
         line (unicode)
         strings[str]
+
     Returns:
         true if line does start with one of the strings
 
@@ -505,7 +522,8 @@ def check_uuid(line):
     Params:
         line (unicode)
 
-    Returns true if line does not contain a UUID
+    Returns:
+        true if line does not contain a UUID
     """
     if search(UUID_REGEX, line):
         return False
@@ -519,6 +537,7 @@ def check_ending_with(line, strings):
     Params:
         line (unicode)
         strings[str]
+
     Returns:
         true if line does end with one of the strings
 
@@ -534,6 +553,7 @@ def check_empty_line(line):
 
     Params:
         line (unicode)
+
     Returns:
         true of line is empty or only contains whitespace chars
     """
@@ -552,6 +572,7 @@ def clean_cut(line, delimiters, fields):
         line (unicode)
         delimiters list(unicode)
         fields (unicode)
+
     Returns:
         line (unicode)
     """
@@ -577,6 +598,7 @@ def clean_non_ascii(line):
 
     Params:
         line (Unicode)
+
     Returns:
         line (Unicode)
     """
@@ -592,6 +614,7 @@ def clean_title_case(line):
 
     Params:
         line (Unicode)
+
     Returns:
         line (Unicode)
 
@@ -609,6 +632,7 @@ def clean_trim(line):
 
     Params:
         line (Unicode)
+
     Returns:
         line (Unicode)
     """
@@ -639,6 +663,7 @@ def clean_tab(line):
 
     Params:
         line (bytes)
+
     Returns:
         line (bytes)
     """
@@ -654,7 +679,8 @@ def clean_hex(line):
 
     Params:
         line (bytes)
-    Returns
+
+    Returns:
         line (bytes)
     """
     match = HEX_REGEX.search(line)
@@ -669,6 +695,7 @@ def clean_html(line):
 
     Params:
         line (Unicode)
+
     Returns:
         line (Unicode)
     """
@@ -684,6 +711,7 @@ def clean_html_named(line):
 
     Params:
         line (Unicode)
+
     Returns:
         line (Unicode)
     """
@@ -699,6 +727,7 @@ def clean_newline(line):
 
     Params:
         line (Unicode)
+
     Returns:
         line (Unicode)
     """
@@ -714,6 +743,7 @@ def check_controlchar(line):
 
     Params:
         line (Unicode)
+
     Returns:
         Status, String
     """
@@ -756,6 +786,7 @@ def try_encoding(line, encoding):
     Params:
         line (Byte): byte variable that will be decoded
         encoding (string): the encoding to be tried
+
     Returns:
         False if decoding failed
         String if decoding worked
@@ -783,6 +814,7 @@ def clean_mojibake(line):
 
     Param:
         line (str)
+
     Returns:
         Cleaned string
     """
@@ -798,6 +830,7 @@ def clean_encode(line, input_encoding):
 
     Params:
         line (bytes)
+
     Returns:
         Decoded UTF-8 string
     """
