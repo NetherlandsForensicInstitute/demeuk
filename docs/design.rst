@@ -38,15 +38,15 @@ function. This means the line will be splitted on: line feed, carriage return,
 LF + CR, formfeeds, file separator, etc. See https://docs.python.org/3/library/stdtypes.html
 for more information.
 
-Next, all tabs will be converted to ':' greedy. This is to have a single cut/splitting char.
-This is done on binary level.
+Next, when '--tab' is enabled all tabs will be converted to ':' greedy. This is to have
+a single cut/splitting char. This is done on binary level.
 
-Next, we arrive at one of the most important things of this application. That is the
-detection of encoding. Some dataset are a combination of different sources. This means
+Next, we arrive at one of the most important things of this application. The encoding detecting
+enable this with '--encode'. Some dataset are a combination of different sources. This means
 EVERY line can have a different encoding. People or applications tend to make a lot
 of errors in encoding, as does this application. Demeuk tries its best to detect
 and correct as much as possible, but there will for sure be some weird case where it fails
-to do so.
+to do so. By default the application will try to decode the data using UTF-8.
 
 So we start by checking if we have a default encoding to try. This is either
 UTF-8 or supplied by the user. If the line decodes and there does not appear to be
@@ -63,7 +63,8 @@ please run the tests to verify that you have not broken something.
 If it managed detect any encoding, it will try to decode this line. If no unicode
 error happens we assume that we got some result.
 
-Next we try to fix mojibakes, basically, we might have decoded the string incorrectly
+Next we try to fix mojibakes, for this enable the --mojibake option
+basically, we might have decoded the string incorrectly
 and now correct some of the common errors. For this we use the FTFY library.
 
 Modules
@@ -86,7 +87,7 @@ Demeuk consist of 4 different type of modules.
 
 The name that a module has on the commandline will mean that the function inside the
 source code must also has the exact same name. Only clean module will start with the
-'clean_' prefix to prevent name clashes with default functions.
+'clean\_' prefix to prevent name clashes with default functions.
 
 Note that when any add option is used, any other modules (like clean, check, remove
 AND even add) will be ran on the modified line again. This might result in creating

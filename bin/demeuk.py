@@ -23,7 +23,7 @@ r"""
                                         spawn. Specify the string 'all' to make demeuk auto detect the amount of threads
                                         to start based on the CPU's.
                                         Note: threading will cost some setup time. Only speeds up for larger files.
-        --input-encoding <encoding>     Forces demeuk to decode the input using this encoding.
+        --input-encoding <encoding>     Forces demeuk to decode the input using this encoding (default: en_US.UTF-8).
         --output-encoding <encoding>    Forces demeuk to encoding the output using this encoding (default: en_US.UTF-8).
         -v --verbose                    When set, the logfile will not only contain lines which caused an error, but
                                         also line which were modified.
@@ -50,7 +50,7 @@ r"""
         --check-min-length <length>     Requires that entries have a minimal requirement of <length> unicode chars
         --check-max-length <length>     Requires that entries have a maximal requirement of <length> unicode chars
         --check-case                    Drop lines where the uppercase line is not equal to the lowercase line
-        --no-check-controlchar          Disable the dropping of lines containing control chars.
+        --check-controlchar             Drop lines containing control chars.
         --check-email                   Drop lines containing e-mail addresses.
         --check-hash                    Drop lines which are hashes.
         --check-mac-address             Drop lines which are MAC-addresses.
@@ -63,21 +63,23 @@ r"""
         --check-ending-with <string>    Drop lines ending with string, can be multiple strings. Specify multiple
                                         with as comma-seperated list.
         --check-empty-line              Drop lines that are empty or only contain whitespace characters
+        --check-regex <string>          Drop lines that do not match the regex. Regex is a comma seperated list of
+                                        regexes. Example: [a-z]{1,8},[0-9]{1,8}
 
     Modify modules (modify a line in place):
         --hex                           Replace lines like: $HEX[41424344] with ABCD.
         --html                          Replace lines like: &#351;ifreyok with şifreyok.
         --html-named                    Replace lines like: &#alpha; Those structures are more like passwords, so
                                         be careful to enable this option.
-        --title-case                         Replace line like 'this test string' to 'This Test String'
+        --title-case                    Replace line like 'this test string' to 'This Test String'
         --umlaut                        Replace lines like ko"ffie with an o with an umlaut.
-        --no-mojibake                   disable fixing mojibakes, useful if you know the encoding.
-        --no-encode                     disable guessing of encoding, this force to use the --input-encoding.
-        --no-tab                        disable replacing tab char with ':'
-        --no-newline                    disable removing newline characters (\r\n) from end and beginning.
+        --mojibake                      Fixes mojibakes, which means lines like SmˆrgÂs will be fixed to Smörgås.
+        --encode                        Enables guessing of encoding, based on chardet and custom implementation.
+        --tab                           Enables replacing tab char with ':', sometimes leaks contain both ':' and '\t'.
+        --newline                       Enables removing newline characters (\r\n) from end and beginning of lines.
         --non-ascii                     Replace non ascii char with their replacement letters. For example ü
                                         becomes u, ç becomes c.
-        --no-trim                       disable removing newlines representations from end and beginning. Newline
+        --trim                          Enables removing newlines representations from end and beginning. Newline
                                         representations detected are '\\n', '\\r', '\n', '\r', '<br>', and '<br />'.
 
     Add modules (Modify a line, but keep the original as well):
@@ -97,6 +99,15 @@ r"""
                                         1238661:test@example.com:password
     Macro modules:
         -g --googlengram                When set, demeuk will strip universal pos tags: like _NOUN_ or _ADJ
+        --leak                          When set, demeuk will run the following modules:
+                                            mojibake, encode, newline, check-controlchar
+                                        This is recommended when working with leaks and was the default bevarior in
+                                        demeuk version 3.11.0 and below.
+        --leak-full                     When set, demeuk will run the following modules:
+                                            mojibake, encode, newline, check-controlchar,
+                                            hex, html, html-named,
+                                            check-hash, check-mac-address, check-uuid, check-email,
+                                            check-replacement-character, check-empty-line
 """
 
 from binascii import hexlify, unhexlify
@@ -127,7 +138,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '3.11.0'
+version = '4.0.1'
 
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.
@@ -193,6 +204,7 @@ def clean_googlengram(line):
 
     Param:
         line (unicode)
+
     Returns:
         line (unicode)
     """
@@ -224,6 +236,7 @@ def remove_email(line):
 
     Params:
         line (unicode)
+
     Returns:
         line (unicode)
     """
@@ -238,6 +251,7 @@ def add_lower(line):
 
     Param:
         line (unicode)
+
     Returns:
         False if they are the same
         Lowered string if they are not
@@ -254,6 +268,7 @@ def add_latin_ligatures(line):
 
     Param:
         line (unicode)
+
     Returns:
         False if there are not any latin ligatures
         Corrected line
@@ -270,6 +285,7 @@ def add_without_punctuation(line, punctuation):
 
     Param:
         line (unicode)
+
     Returns:
         False if there are not any punctuation
         Corrected line
@@ -287,6 +303,7 @@ def clean_add_umlaut(line):
 
     Param:
         line (unicode)
+
     Returns:
         Corrected line
     """
@@ -319,6 +336,7 @@ def remove_punctuation(line, punctuation):
     Param:
         line (unicode)
         punctuation (unicode)
+
     Returns:
         line without start and end punctuation
     """
@@ -334,6 +352,7 @@ def remove_strip_punctuation(line, punctuation):
 
     Param:
         line (unicode)
+
     Returns:
         line without start and end punctuation
     """
@@ -349,6 +368,7 @@ def add_split(line, punctuation=(' ', '-', r'\.')):
 
     Param:
         line (unicode)
+
     Returns:
         split line
     """
@@ -364,6 +384,7 @@ def check_case(line, ignored_chars=(' ', "'", '-')):
     Param:
         line (unicode)
         ignored_chars list(string)
+
     Returns:
         true if uppercase line is equal to uppercase line
     """
@@ -384,7 +405,8 @@ def check_length(line, min=0, max=0):
         line (unicode)
         min (int)
         max (int)
-    Returns
+
+    Returns:
         true if length is ok
     """
     status = True
@@ -401,7 +423,8 @@ def check_hash(line):
     Params:
         line (unicode)
 
-    Returns true if line does not contain hash
+    Returns:
+        true if line does not contain hash
     """
     if search(HASH_HEX_REGEX, line):
         if len(line) in [32, 40, 64]:
@@ -420,7 +443,8 @@ def check_mac_address(line):
     Params:
         line (unicode)
 
-    Returns true if line does not contain a MAC-address
+    Returns:
+        true if line does not contain a MAC-address
     """
     if search(MAC_REGEX, line):
         return False
@@ -433,7 +457,8 @@ def check_email(line):
 
     Params:
         line (unicode)
-    Returns
+
+    Returns:
         true is line does not contain email
     """
     if search(EMAIL_REGEX, line):
@@ -447,6 +472,7 @@ def check_non_ascii(line):
 
     Params:
         line (unicode)
+
     Returns:
         true if line does not contain non ascii chars
     """
@@ -462,6 +488,7 @@ def check_character(line, character):
 
     Params:
         line (unicode)
+
     Returns:
         true if line does contain the specific character
 
@@ -478,6 +505,7 @@ def check_starting_with(line, strings):
     Params:
         line (unicode)
         strings[str]
+
     Returns:
         true if line does start with one of the strings
 
@@ -494,7 +522,8 @@ def check_uuid(line):
     Params:
         line (unicode)
 
-    Returns true if line does not contain a UUID
+    Returns:
+        true if line does not contain a UUID
     """
     if search(UUID_REGEX, line):
         return False
@@ -508,6 +537,7 @@ def check_ending_with(line, strings):
     Params:
         line (unicode)
         strings[str]
+
     Returns:
         true if line does end with one of the strings
 
@@ -523,6 +553,7 @@ def check_empty_line(line):
 
     Params:
         line (unicode)
+
     Returns:
         true of line is empty or only contains whitespace chars
     """
@@ -536,10 +567,12 @@ def check_empty_line(line):
 def clean_cut(line, delimiters, fields):
     """Finds the first delimiter and returns the remaining string either after
     or before the delimiter.
+
     Params:
         line (unicode)
         delimiters list(unicode)
         fields (unicode)
+
     Returns:
         line (unicode)
     """
@@ -565,6 +598,7 @@ def clean_non_ascii(line):
 
     Params:
         line (Unicode)
+
     Returns:
         line (Unicode)
     """
@@ -580,6 +614,7 @@ def clean_title_case(line):
 
     Params:
         line (Unicode)
+
     Returns:
         line (Unicode)
 
@@ -597,6 +632,7 @@ def clean_trim(line):
 
     Params:
         line (Unicode)
+
     Returns:
         line (Unicode)
     """
@@ -627,6 +663,7 @@ def clean_tab(line):
 
     Params:
         line (bytes)
+
     Returns:
         line (bytes)
     """
@@ -642,7 +679,8 @@ def clean_hex(line):
 
     Params:
         line (bytes)
-    Returns
+
+    Returns:
         line (bytes)
     """
     match = HEX_REGEX.search(line)
@@ -657,6 +695,7 @@ def clean_html(line):
 
     Params:
         line (Unicode)
+
     Returns:
         line (Unicode)
     """
@@ -672,6 +711,7 @@ def clean_html_named(line):
 
     Params:
         line (Unicode)
+
     Returns:
         line (Unicode)
     """
@@ -687,6 +727,7 @@ def clean_newline(line):
 
     Params:
         line (Unicode)
+
     Returns:
         line (Unicode)
     """
@@ -702,6 +743,7 @@ def check_controlchar(line):
 
     Params:
         line (Unicode)
+
     Returns:
         Status, String
     """
@@ -719,12 +761,32 @@ def check_controlchar(line):
     return False, None
 
 
+def check_regex(line, regex):
+    """Checks if a line matches a list of regexes
+
+    Params:
+        line (unicode)
+        regex (list)
+
+    Returns:
+        true if all regexes match
+        false if line does not match regex
+    """
+    for regex in regex:
+        if search(regex, line):
+            continue
+        else:
+            return False
+    return True
+
+
 def try_encoding(line, encoding):
     """Tries to decode a line using supplied encoding
 
     Params:
         line (Byte): byte variable that will be decoded
         encoding (string): the encoding to be tried
+
     Returns:
         False if decoding failed
         String if decoding worked
@@ -752,6 +814,7 @@ def clean_mojibake(line):
 
     Param:
         line (str)
+
     Returns:
         Cleaned string
     """
@@ -767,6 +830,7 @@ def clean_encode(line, input_encoding):
 
     Params:
         line (bytes)
+
     Returns:
         Decoded UTF-8 string
     """
@@ -985,6 +1049,11 @@ def clean_up(filename, chunk_start, chunk_size, config):
                 log.append(f'Check_replacement_character; dropped line because "�" found; {line_decoded}{linesep}')
                 stop = True
 
+        if config.get('check-regex') and not stop:
+            if not check_regex(line_decoded, config.get('check-regex')):
+                log.append(f'Check_regex; dropped line because it does not match the regex; {line_decoded}{linesep}')
+                stop = True
+
         if config.get('check-starting-with') and not stop:
             to_check = config.get("check-starting-with")
             if check_starting_with(line_decoded, to_check):
@@ -1145,11 +1214,11 @@ def main():
         'skip': False,
 
         # Modify
-        'encode': True,
-        'mojibake': True,
-        'tab': True,
-        'trim': True,
-        'newline': True,
+        'encode': False,
+        'mojibake': False,
+        'tab': False,
+        'trim': False,
+        'newline': False,
         'hex': False,
         'html': False,
         'html-named': False,
@@ -1161,7 +1230,7 @@ def main():
         'length': False,
         'check-min-length': 0,
         'check-max-length': 0,
-        'check-controlchar': True,
+        'check-controlchar': False,
         'check-case': False,
         'check-email': False,
         'check-hash': False,
@@ -1172,6 +1241,7 @@ def main():
         'check-uuid': False,
         'check-ending-with': False,
         'check-empty-line': False,
+        'check-regex': False,
 
         # Add
         'add-lower': False,
@@ -1247,6 +1317,21 @@ def main():
     if arguments.get('--title-case'):
         config['title-case'] = True
 
+    if arguments.get('--mojibake'):
+        config['mojibake'] = True
+
+    if arguments.get('--encode'):
+        config['encode'] = True
+
+    if arguments.get('--tab'):
+        config['tab'] = True
+
+    if arguments.get('--newline'):
+        config['newline'] = True
+
+    if arguments.get('--trim'):
+        config['trim'] = True
+
     # Check modules
     if arguments.get('--check-min-length'):
         config['check-length'] = True
@@ -1292,6 +1377,12 @@ def main():
     if arguments.get('--check-empty-line'):
         config['check-empty-line'] = True
 
+    if arguments.get('--check-controlchar'):
+        config['check-controlchar'] = True
+
+    if arguments.get('--check-regex'):
+        config['check-regex'] = arguments.get('--check-regex').split(',')
+
     # Add modules
     if arguments.get('--add-lower'):
         config['add-lower'] = True
@@ -1318,26 +1409,6 @@ def main():
     if arguments.get('--remove-punctuation'):
         config['remove-punctuation'] = True
 
-    # Negative modules
-    # Test if there are any disable functions, they must always overrule any other option.
-    if arguments.get('--no-mojibake'):
-        config['mojibake'] = False
-
-    if arguments.get('--no-encode'):
-        config['encode'] = False
-
-    if arguments.get('--no-check-controlchar'):
-        config['check-controlchar'] = False
-
-    if arguments.get('--no-tab'):
-        config['tab'] = False
-
-    if arguments.get('--no-newline'):
-        config['newline'] = False
-
-    if arguments.get('--no-trim'):
-        config['trim'] = False
-
     # Some meta-modules, those overwrite settings
     if arguments.get('--googlengram'):
         config['cut'] = False
@@ -1347,6 +1418,34 @@ def main():
         config['check-controlchar'] = False
         config['tab'] = False
         config['googlengram'] = True
+
+    # Meta-module for leak files. Set the following defaults:
+    # mojibake, encode, newline, check-controlchar
+    if arguments.get('--leak'):
+        config['mojibake'] = True
+        config['encode'] = True
+        config['newline'] = True
+        config['check-controlchar'] = True
+
+    # Meta-module for leak fils, but more modules. Set the following defaults:
+    # --mojibake, --encode, --newline, --check-controlchar,
+    # --hex, --html, --html-named,
+    # --check-hash, --check-mac-address, --check-uuid, --check-email,
+    # --check-replacement-character, --check-empty-line
+    if arguments.get('--leak-full'):
+        config['mojibake'] = False
+        config['encode'] = True
+        config['newline'] = True
+        config['check-controlchar'] = True
+        config['hex'] = True
+        config['html'] = True
+        config['html-named'] = True
+        config['check-hash'] = True
+        config['check-mac-address'] = True
+        config['check-uuid'] = True
+        config['check-email'] = True
+        config['check-replacement-character'] = True
+        config['check-empty-line'] = True
 
     print(f'Main: running demeuk - {version}')
     if path.isdir('demeuk_tmp'):

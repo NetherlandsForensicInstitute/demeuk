@@ -14,7 +14,8 @@ works very well. Next you'll run demeuk on the data to clean it up.
 
 .. code-block:: none
 
-    $ demeuk.py -i <input file> -o <output file> -l <log file> -c -j 8 -remove-email
+    $ demeuk.py -i <input file> -o <output file> -l <log file> 
+    -c -j 8 --leak --remove-email
 
 So what do all the parameters do? The -i selects the input file. The -o specifies
 the output file. The -l will specify the log file, by default the log file will only
@@ -24,8 +25,17 @@ detailed logging, also include the -v option (verbose logging). The -c
 specifies that there will be cut based on the first ':' found in a string. The -j
 indicates that we will be using multithreading and we'll be creating 8 threads.
 Demeuk has been tested with as many as 48 cores and all cores will be fully used,
-if IO is not a problem (for example on a fast SSD setup). The --remove-email option
-will remove simple email addresses from a line. It is useful when a dataset
+if IO is not a problem (for example on a fast SSD setup).
+
+The --leak option indicates the enabledment of the following modules: 
+--mojibake, --encode, --newline, --check-controlchar. 
+--mojibake will try to detect and fix encoding issues known as mojibakes. Example of a Mojibake is
+SmˆrgÂs (Smörgås). This is a very common encoding issue. --encode will enable the encoding detection of
+demeuk. --newline will remove newlines from lines. --check-controlchar will drop lines containg control-chars.
+
+This set of options was the default for demeuk version 3 and lower.
+
+The --remove-email option will remove simple email addresses from a line. It is useful when a dataset
 contained line like  <something>:<email>:password.
 
 Some datasets contain encoded strings like hex strings (HEX[] format). Those can be 
@@ -51,12 +61,18 @@ To take the password using demeuk run the following command:
 
 The -c option tells demeuk to cut, and -f4 tell demeuk to select the 4-th field.
 
+Have totally no idea and just what a leak to be fully demeaked? Use the following command:
+
+.. code-block:: none
+
+    $ demeuk.py -i <input file> -o <output file> -l <log file> -j all --leak-full
+
 Standard Options
--------------
+----------------
 i input
 ~~~~~~~
 The input option can be used to select the input file. This can also be a glob
-pattern. For example: "testdir/*.txt".
+pattern. For example: "testdir/\*.txt".
 
 o output
 ~~~~~~~~
@@ -132,7 +148,7 @@ For example to correctly get the password from the line:
 <username>:mypassword:is:very:interesting.
 
 f cut-fields
-~~~~~~~~~~~
+~~~~~~~~~~~~
 When specifying the --cut command, the cut-fields command can be used to specify
 which fields needs to be cut. The same syntax as the -f command in the cut binary
 can be used. This means:
@@ -181,10 +197,10 @@ up language corpora.
 A side effect is that also number will be removed. The check case will ignore
 some punctuation by default. It will ignore: " ", "'" and "-".
 
-no-check-controlchar
-~~~~~~~~~~~~~~~~~~~~
-Disable to option to not drop lines containing control chars. This can be handy to speed
-up demeuk if you are 100% sure about the input encoding.
+check-controlchar
+~~~~~~~~~~~~~~~~~
+Enable this option to drop lines containg control-chars. Mostly lines containing
+control-chars are invalid lines, for example lines which are decoded incorrectly.
 
 check-email
 ~~~~~~~~~~~
@@ -252,25 +268,32 @@ with this, the line will be dropped. The string to check can be multiple strings
 values are comma-seperated. Example: #,// would skip lines starting with '#' and with 
 '//'.
 
-If you want to drop a line starting with a tab, add ':' to the list of strings to
-check. '--check starting-with :'. By default tab characters are transfered to ':'.
-To disable this behavior use the --no-tab option.
+If you enabled the '--tab' option and you want to drop lines starting with a tab, add 
+':' to the list of strings to check. '--check starting-with :'. When using --tab tab
+characters are transfered to ':'.
 
 check-ending-with
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 Checks if a line ends with the argument of check-ending-with. If the line ends
 with this, the line will be dropped. The string to check can be multiple strings. multiple
 values are comma-seperated. Example: #,// would skip lines ending with '#' and with 
 '//'.
 
-If you want to drop a line ending with a tab, add ':' to the list of strings to
-check. '--check starting-with :'. By default tab characters are transfered to ':'.
-To disable this behavior use the --no-tab option.
+If you enabled the '--tab' option and you want to drop lines ending with a tab, add
+':' to the list of strings to check. '--check ending-with :'. When using --tab tab
+characters are transfered to ':'.
 
 check-empty-line
 ~~~~~~~~~~~~~~~~
 Checks if a line only contains whitespace characters or is empty. If this is true,
 the line will be dropped.
+
+check-regex
+~~~~~~~~~~~
+Checks if a line matches a list of regexes. Regexes are comma-seperated. If the line does not
+matches all of the regexes, the line will be dropped.
+Example: --check-regex '[a-z],[0-9]' will drop lines
+that do not atleast contain one lowercase char and one number.
 
 Modify modules
 --------------
@@ -320,29 +343,34 @@ title-case
 Replace lines like 'test test test' to 'Test Test Test'. Basically uppercasing all
 words in a line. This uses 
 
-no-mojibake
-~~~~~~~~~~~
-Use this option to disable the default behavior of trying to fix encoding issues.
+mojibake
+~~~~~~~~
+Use this option to enable trying encoding issues known as mojibakes. Example of a Mojibake is
+SmˆrgÂs (Smörgås). This is a very common encoding issue. This option will try to detect
+and fix this issue.
 
-no-encode
-~~~~~~~~~
-Use this option to disable the encoding guessing of demeuk. This force to decode
+encode
+~~~~~~
+Use this option to enable the encoding guessing of demeuk. This force to decode
 using the --input-encoding option. Only use this if you are 100% of the input encoding.
 
-no-tab
+tab
 ~~~~~~
-Defaulty demeuk will replace tab characters with ':' to make splitting easier. But in case
-tabs can be part of a password this option allows to disable this option.
+If you enable this, demeuk will replace tab characters with ':'. 
+This is useful when cleaning up data from collection leaks. They might
+contain tab characters and ':' as seperator in the same file.
 
-no-newline
-~~~~~~~~~~
-Defaulty demeuk will remove newline characters from encoded html/hex entries. But in case
-newlines can be part of a password this option allows to disable this option.
-
-no-trim
+newline
 ~~~~~~~
-Defaulty demeuk will remove sequences which represent newline characters from
-beginning and of end of input entry. For example the Ascii sequence '\n' or
+Enable this option to remove newlines from lines. This can be extra important 
+when using --html or --hex, the decoded lines may contain newline characters.
+To remove those newline characters, enable this option.
+
+
+trim
+~~~~
+Enable this to let demeuk trim lines. Demuk will removes remove sequences which represent 
+newline characters from beginning and of end of input entry. For example the Ascii sequence '\n' or
 Html sequence '<br />'. But in case this sequences are part of a password this
 option allows to disable this option.
 
@@ -402,7 +430,7 @@ using the --min-length option. It only checks if the length of a split part is l
 1 unicode character.
 
 add-without-punctuation
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
 If a line contains punctuations, a variant will be added without the punctuations.
 Example a line like: 'test-123' will be kept, plus 'test123' will be added.
 Which punctuation will be removed can be specified with the --punctuation option.
@@ -422,3 +450,31 @@ In case you are working with the googlengram's, this option is a macro for:
 When using --googlengram, don't using any other options.
 
 Basically it will strip the tags like: _NOUN_ or _ADJ
+
+leak
+~~~~
+The leak option will enable the following modules:
+    
+ - mojibake
+ - encode
+ - newline
+ - check-controlchar
+
+
+leak-full
+~~~~~~~~~
+The leak-full option will enable the following modules:
+
+ - mojibake
+ - encode
+ - newline
+ - check-controlchar
+ - hex
+ - html
+ - html-named
+ - check-email
+ - check-hash
+ - check-mac-address
+ - check-uuid
+ - check-replacement-character
+ - check-empty-line
