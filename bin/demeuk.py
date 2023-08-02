@@ -126,6 +126,7 @@ from re import sub
 from shutil import rmtree
 from string import punctuation as string_punctuation
 from sys import stdin
+from select import select
 from unicodedata import category
 
 
@@ -879,9 +880,6 @@ def clean_up(chunk_start, chunk_size, config, filename = '', lines = []):
 
     pid = current_process().pid
 
-    if config.get('verbose'):
-        print(f'Clean_up ({pid}): starting {filename}, {chunk_start}, {chunk_size}')
-
     if filename:
         with open(filename, 'rb') as f:
             if config.get('verbose'):
@@ -892,7 +890,7 @@ def clean_up(chunk_start, chunk_size, config, filename = '', lines = []):
             lines = f.read(chunk_size).splitlines()
         if config.get('verbose'):
             print(f'Clean_up ({pid}): processing {filename}, {chunk_start}, {chunk_size}')
-    else:
+    elif config.get('verbose'):
         print(f'Clean_up ({pid}): processing stdin, {chunk_start}, {chunk_size}')
 
     for line in lines:
@@ -928,7 +926,6 @@ def clean_up(chunk_start, chunk_size, config, filename = '', lines = []):
             except (UnicodeDecodeError) as e: # noqa F841
                 log.append(f'Clean_up; decoding error with unknown; {line}{linesep}')
                 stop = True
-
         # From here it is expected that line is correctly decoded!
         # Check if some lines contain a hex string like $HEX[41424344]
         if config.get('hex') and not stop:
@@ -1477,26 +1474,28 @@ def main():
         for chunk_start, chunk_size, filename in chunkify(input_file, config):
             jobs.append(pool.apply_async(clean_up, (chunk_start, chunk_size, config, dict(filename=filename))))
         print('Main: done chunking file.')
+        print('Main: processing started.')
 
     # Ready for stdin and collect 50000 lines, then append that line to the pool
-    if not input_file:
+    elif not input_file:
+        print('Main: reading stdin.')
         chunk = []
         chunk_start = 0
         chunk_size = 50000
         while True:
-            input_data = stdin.readline()
+            input_data = stdin.buffer.readline()
             if input_data:
-                chunk.append(input_data.encode())
+                chunk.append(input_data.rstrip(b'\n'))
                 if len(chunk) >= chunk_size:
                     jobs.append(pool.apply_async(clean_up, (chunk_start, chunk_size, config), {'lines': chunk}))
                     chunk = []
                     chunk_start += chunk_size
             else:
-                if len(chunk) > 0:
-                    jobs.append(pool.apply_async(clean_up, (chunk_start, chunk_size, config), {'lines': chunk}))
                 break
-    
-    print(f'Main: start processing, running at {a_threads} thread(s).')
+        if len(chunk) > 0:
+            jobs.append(pool.apply_async(clean_up, (chunk_start, chunk_size, config), {'lines': chunk}))
+
+    print(f'Main: done submitting jobs, waiting for threads to finish')
     for job in tqdm(jobs, desc='Main', mininterval=1, unit='chunks', disable=not config.get('progress')):
         job.get()
 
