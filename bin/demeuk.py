@@ -126,7 +126,6 @@ from re import sub
 from shutil import rmtree
 from string import punctuation as string_punctuation
 from sys import stdin
-from select import select
 from unicodedata import category
 
 
@@ -141,7 +140,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '4.0.1'
+version = '4.1.0'
 
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.
@@ -860,7 +859,7 @@ def clean_encode(line, input_encoding):
     return True, line_decoded
 
 
-def clean_up(chunk_start, chunk_size, config, filename = '', lines = []):
+def clean_up(chunk_start, chunk_size, config, filename='', lines=[]):
     """Main clean loop, this calls all the other clean functions.
 
     Args:
@@ -1472,7 +1471,7 @@ def main():
     if input_file:
         print(f'Main: start chunking file {input_file}')
         for chunk_start, chunk_size, filename in chunkify(input_file, config):
-            jobs.append(pool.apply_async(clean_up, (chunk_start, chunk_size, config, dict(filename=filename))))
+            jobs.append(pool.apply_async(clean_up, (chunk_start, chunk_size, config), {'filename': filename}))
         print('Main: done chunking file.')
         print('Main: processing started.')
 
@@ -1495,7 +1494,7 @@ def main():
         if len(chunk) > 0:
             jobs.append(pool.apply_async(clean_up, (chunk_start, chunk_size, config), {'lines': chunk}))
 
-    print(f'Main: done submitting jobs, waiting for threads to finish')
+    print('Main: done submitting jobs, waiting for threads to finish')
     for job in tqdm(jobs, desc='Main', mininterval=1, unit='chunks', disable=not config.get('progress')):
         job.get()
 
