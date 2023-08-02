@@ -17,6 +17,7 @@ r"""
 
     Standard Options:
         -i --input <path to file>       Specify the input file to be cleaned, or provide a glob pattern
+        --stdin                         Read from stdin and not from an input file
         -o --output <path to file>      Specify the output file name.
         -l --log <path to file>         Optional, specify where the log file needs to be writen to
         -j --threads <threads>          Optional, demeuk doesn't use threads by default. Specify amount of threads to
@@ -124,6 +125,7 @@ from re import split as re_split
 from re import sub
 from shutil import rmtree
 from string import punctuation as string_punctuation
+from sys import stdin
 from unicodedata import category
 
 
@@ -857,7 +859,7 @@ def clean_encode(line, input_encoding):
     return True, line_decoded
 
 
-def clean_up(filename, chunk_start, chunk_size, config):
+def clean_up(chunk_start, chunk_size, config, filename = '', lines = []):
     """Main clean loop, this calls all the other clean functions.
 
     Args:
@@ -870,22 +872,29 @@ def clean_up(filename, chunk_start, chunk_size, config):
     log = []
 
     temp_folder = 'demeuk_tmp'
-    temp_file = md5(filename.encode()).hexdigest()
+    if filename:
+        temp_file = md5(filename.encode()).hexdigest()
+    else:
+        temp_file = md5('stdin'.encode()).hexdigest()
 
     pid = current_process().pid
 
     if config.get('verbose'):
         print(f'Clean_up ({pid}): starting {filename}, {chunk_start}, {chunk_size}')
 
-    with open(filename, 'rb') as f:
+    if filename:
+        with open(filename, 'rb') as f:
+            if config.get('verbose'):
+                print(f'Clean_up ({pid}): seeking {filename}, {chunk_start}, {chunk_size}')
+            f.seek(chunk_start)
+            if config.get('verbose'):
+                print(f'Clean_up ({pid}): splitting {filename}, {chunk_start}, {chunk_size}')
+            lines = f.read(chunk_size).splitlines()
         if config.get('verbose'):
-            print(f'Clean_up ({pid}): seeking {filename}, {chunk_start}, {chunk_size}')
-        f.seek(chunk_start)
-        if config.get('verbose'):
-            print(f'Clean_up ({pid}): splitting {filename}, {chunk_start}, {chunk_size}')
-        lines = f.read(chunk_size).splitlines()
-    if config.get('verbose'):
-        print(f'Clean_up ({pid}): processing {filename}, {chunk_start}, {chunk_size}')
+            print(f'Clean_up ({pid}): processing {filename}, {chunk_start}, {chunk_size}')
+    else:
+        print(f'Clean_up ({pid}): processing stdin, {chunk_start}, {chunk_size}')
+
     for line in lines:
         # Check if the limit is set, if so minus 1 and if 0 is reached lets quit.
         if type(config['limit']) is int:
@@ -1144,14 +1153,14 @@ def clean_up(filename, chunk_start, chunk_size, config):
             del log[:]
 
     if config.get('verbose'):
-        print(f'Clean_up ({pid}): stopping {filename}, {chunk_start}, {chunk_size}')
+        print(f'Clean_up ({pid}): stopping {filename}, {chunk_start}')
     # Processed all lines, flush everything
     with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_result.txt'), 'a') as f:
         f.write(''.join(results))
     with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_log.txt'), 'a') as f:
         f.write(''.join(log))
     if config.get('verbose'):
-        print(f'Clean_up ({pid}): done {filename}, {chunk_start}, {chunk_size}')
+        print(f'Clean_up ({pid}): done {filename}, {chunk_start}')
 
 
 def chunkify(fname, config, size=1024 * 1024):
@@ -1182,12 +1191,20 @@ def main():
         print(f'demeuk - {version}')
         exit()
 
-    if arguments.get('--input') and arguments.get('--output'):
+    if arguments.get('--input'):
         input_file = arguments.get('--input')
+    elif arguments.get('--stdin'):
+        input_file = False
+    else:
+        print('No input file given or not reading from stdin. Use --input or --stdin')
+        exit(1)
+
+    if arguments.get('--output'):
         output_file = arguments.get('--output')
     else:
-        print(cleandoc('\n'.join(__doc__.split('\n')[2:])))
-        exit()
+        print('No output file given, use --output')
+        exit(1)
+
     if arguments.get('--log'):
         log_file = arguments.get('--log')
     else:
@@ -1455,11 +1472,30 @@ def main():
     pool = Pool(a_threads)
     jobs = []
 
-    print(f'Main: start chunking file {input_file}')
-    for chunk_start, chunk_size, filename in chunkify(input_file, config):
-        jobs.append(pool.apply_async(clean_up, (filename, chunk_start, chunk_size, config)))
-    print('Main: done chunking file.')
+    if input_file:
+        print(f'Main: start chunking file {input_file}')
+        for chunk_start, chunk_size, filename in chunkify(input_file, config):
+            jobs.append(pool.apply_async(clean_up, (chunk_start, chunk_size, config, dict(filename=filename))))
+        print('Main: done chunking file.')
 
+    # Ready for stdin and collect 50000 lines, then append that line to the pool
+    if not input_file:
+        chunk = []
+        chunk_start = 0
+        chunk_size = 50000
+        while True:
+            input_data = stdin.readline()
+            if input_data:
+                chunk.append(input_data.encode())
+                if len(chunk) >= chunk_size:
+                    jobs.append(pool.apply_async(clean_up, (chunk_start, chunk_size, config), {'lines': chunk}))
+                    chunk = []
+                    chunk_start += chunk_size
+            else:
+                if len(chunk) > 0:
+                    jobs.append(pool.apply_async(clean_up, (chunk_start, chunk_size, config), {'lines': chunk}))
+                break
+    
     print(f'Main: start processing, running at {a_threads} thread(s).')
     for job in tqdm(jobs, desc='Main', mininterval=1, unit='chunks', disable=not config.get('progress')):
         job.get()
