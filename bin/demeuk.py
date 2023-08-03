@@ -126,7 +126,7 @@ from re import sub
 from shutil import rmtree
 from string import punctuation as string_punctuation
 from time import sleep
-from sys import stdin
+from sys import stderr, stdin
 from unicodedata import category
 
 
@@ -1133,6 +1133,11 @@ def chunkify(filename, config, size=1024 * 1024):
             if len(lines) == 0:
                 break
 
+# Quick to default logging to stderr instead
+def stderr_print(*args, **kwargs):
+    kwargs.setdefault('file', stderr)
+    print(*args, **kwargs)
+
 
 def main():
     #
@@ -1140,7 +1145,7 @@ def main():
     arguments = docopt(cleandoc('\n'.join(__doc__.split('\n')[2:])))
 
     if arguments.get('--version'):
-        print(f'demeuk - {version}')
+        stderr_print(f'demeuk - {version}')
         exit()
 
     if arguments.get('--input'):
@@ -1148,13 +1153,13 @@ def main():
     elif arguments.get('--stdin'):
         input_file = False
     else:
-        print('No input file given or not reading from stdin. Use --input or --stdin')
+        stderr_print('No input file given or not reading from stdin. Use --input or --stdin')
         exit(1)
 
     if arguments.get('--output'):
         output_file = arguments.get('--output')
     else:
-        print('No output file given, use --output')
+        stderr_print('No output file given, use --output')
         exit(1)
 
     if arguments.get('--log'):
@@ -1419,14 +1424,14 @@ def main():
 
     #
     #  Main worker
-    print(f'Main: running demeuk - {version}')
+    stderr_print(f'Main: running demeuk - {version}')
 
-    print(f'Main: start chunking file {input_file}')
-    print(f'Main: output found in {output_file}')
-    print(f'Main: logs found in {log_file}')
+    stderr_print(f'Main: start chunking file {input_file}')
+    stderr_print(f'Main: output found in {output_file}')
+    stderr_print(f'Main: logs found in {log_file}')
 
-    print('Main: done chunking file.')
-    print('Main: processing started.')
+    stderr_print('Main: done chunking file.')
+    stderr_print('Main: processing started.')
 
     p_output_file = open(output_file, 'a')
     p_log_file = open(log_file, 'a')
@@ -1478,13 +1483,13 @@ def main():
                         # Wait a little while for available spacing within Pool
                         sleep(1)
 
-        print('Main: done submitting all jobs, waiting for threads to finish')
+        stderr_print('Main: done submitting all jobs, waiting for threads to finish')
         while len(jobs) > 0:
             job = jobs.pop(0)
             job.wait()
             write_results_and_log(job.get())
 
-    print(f'Main: all done')
+    stderr_print(f'Main: all done')
 
 if __name__ == "__main__":
     main()
