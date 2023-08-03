@@ -117,7 +117,7 @@ from html import unescape
 from inspect import cleandoc
 from locale import LC_ALL, setlocale
 from multiprocessing import cpu_count, current_process, Pool
-from os import linesep, mkdir, path, walk, access, R_OK
+from os import linesep, mkdir, path, walk, access, R_OK, W_OK
 from re import compile as re_compile
 from re import search
 from re import split as re_split
@@ -1150,6 +1150,15 @@ def main():
     input_file = arguments.get('--input') or '/dev/stdin'
     output_file = arguments.get('--output') or '/dev/stdout'
     log_file = arguments.get('--log') or '/dev/stderr'
+
+    if not access(output_file, W_OK):
+        stderr_print(f"ERROR: Output file '{output_file}' not writeable!")
+        exit(2)
+
+    if not access(log_file, W_OK):
+        stderr_print(f"ERROR: Logfile '{log_file}' not writeable!")
+        exit(2)
+
 
     if arguments.get('--threads'):
         a_threads = arguments.get('--threads')
