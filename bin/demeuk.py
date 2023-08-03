@@ -114,22 +114,20 @@ r"""
 
 from binascii import hexlify, unhexlify
 from glob import glob
-from hashlib import md5
 from html import unescape
 from inspect import cleandoc
 from locale import LC_ALL, setlocale
 from multiprocessing import cpu_count, current_process, Pool
-from os import linesep, mkdir, path, walk, access, stat as os_stat, R_OK, W_OK, X_OK
+from os import linesep, access, stat as os_stat, R_OK, W_OK, X_OK
 from os.path import exists as os_path_exists, dirname
 from re import compile as re_compile
 from re import search
 from re import split as re_split
 from re import sub
-from shutil import rmtree
 from stat import S_ISFIFO, S_ISCHR
 from string import punctuation as string_punctuation
 from time import sleep
-from sys import stderr, stdin
+from sys import stderr
 from unicodedata import category
 
 
@@ -863,7 +861,7 @@ def clean_encode(line, input_encoding):
     return True, line_decoded
 
 
-def clean_up(lines, chunk_start, config):
+def clean_up(lines, config):
     """Main clean loop, this calls all the other clean functions.
 
     Args:
@@ -1498,7 +1496,7 @@ def main():
                     # Find out which jobs are running
                     running_jobs = sum([not job.ready() for job in jobs])
                     if running_jobs < a_threads:
-                        job = pool.apply_async(clean_up, (chunk, chunk_start, config))
+                        job = pool.apply_async(clean_up, (chunk, config))
                         chunk_start += len(chunk)
                         jobs.append(job)
                         break
