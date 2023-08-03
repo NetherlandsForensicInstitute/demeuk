@@ -16,10 +16,9 @@ r"""
         demeuk -i inputfile -o outputfile --threads all
 
     Standard Options:
-        -i --input <path to file>       Specify the input file to be cleaned, or provide a glob pattern
-        --stdin                         Read from stdin and not from an input file
-        -o --output <path to file>      Specify the output file name.
-        -l --log <path to file>         Optional, specify where the log file needs to be writen to
+        -i --input <path to file>       Specify the input file to be cleaned, or provide a glob pattern. (default: /dev/stdin)
+        -o --output <path to file>      Specify the output file name. (default: /dev/stdout)
+        -l --log <path to file>         Optional, specify where the log file needs to be writen to (default: /dev/stderr)
         -j --threads <threads>          Optional, demeuk doesn't use threads by default. Specify amount of threads to
                                         spawn. Specify the string 'all' to make demeuk auto detect the amount of threads
                                         to start based on the CPU's.
@@ -1148,24 +1147,9 @@ def main():
         stderr_print(f'demeuk - {version}')
         exit()
 
-    if arguments.get('--input'):
-        input_file = arguments.get('--input')
-    elif arguments.get('--stdin'):
-        input_file = False
-    else:
-        stderr_print('No input file given or not reading from stdin. Use --input or --stdin')
-        exit(1)
-
-    if arguments.get('--output'):
-        output_file = arguments.get('--output')
-    else:
-        stderr_print('No output file given, use --output')
-        exit(1)
-
-    if arguments.get('--log'):
-        log_file = arguments.get('--log')
-    else:
-        log_file = '/dev/null'
+    input_file = arguments.get('--input') or '/dev/stdin'
+    output_file = arguments.get('--output') or '/dev/stdout'
+    log_file = arguments.get('--log') or '/dev/stderr'
 
     if arguments.get('--threads'):
         a_threads = arguments.get('--threads')
