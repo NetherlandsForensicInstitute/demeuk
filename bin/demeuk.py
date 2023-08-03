@@ -21,9 +21,8 @@ r"""
         -l --log <path to file>         Optional, specify where the log file needs to be writen to (default: /dev/stderr)
         --force                         Overwrite existing log or output files (default: False)
 
-        -j --threads <threads>          Optional, demeuk doesn't use threads by default. Specify amount of threads to
-                                        spawn. Specify the string 'all' to make demeuk auto detect the amount of threads
-                                        to start based on the CPU's.
+        -j --threads <threads>          Optional, specify amount of threads to spawn. Specify the string 'all' to make
+                                        demeuk auto detect the amount of threads to start based on the CPU's. [default: 50%].
                                         Note: threading will cost some setup time. Only speeds up for larger files.
         --input-encoding <encoding>     Forces demeuk to decode the input using this encoding (default: en_US.UTF-8).
         --output-encoding <encoding>    Forces demeuk to encoding the output using this encoding (default: en_US.UTF-8).
@@ -117,6 +116,7 @@ from glob import glob
 from html import unescape
 from inspect import cleandoc
 from locale import LC_ALL, setlocale
+from math import floor
 from multiprocessing import cpu_count, current_process, Pool
 from os import linesep, access, stat as os_stat, R_OK, W_OK, X_OK
 from os.path import exists as os_path_exists, dirname
@@ -1158,10 +1158,10 @@ def main():
         a_threads = arguments.get('--threads')
         if a_threads == 'all':
             a_threads = cpu_count()
+        if '%' in a_threads:
+            a_threads = max(floor(cpu_count() * (float(a_threads.rstrip(' %')) / 100)), 1)
         else:
             a_threads = int(a_threads)
-    else:
-        a_threads = 1
 
     # Lets create the default config
     config = {
@@ -1447,6 +1447,8 @@ def main():
     #
     #  Main worker
     stderr_print(f'Main: running demeuk - {version}')
+
+    stderr_print(f'Main: Using {a_threads} core(s) of total available cores: {cpu_count()}')
 
     stderr_print(f'Main: start chunking file {input_file}')
     stderr_print(f'Main: output found in {output_file}')
