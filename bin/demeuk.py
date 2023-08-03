@@ -124,6 +124,7 @@ from re import compile as re_compile
 from re import search
 from re import split as re_split
 from re import sub
+from signal import signal, SIGINT, SIG_IGN
 from stat import S_ISFIFO, S_ISCHR
 from string import punctuation as string_punctuation
 from time import sleep
@@ -1470,8 +1471,11 @@ def main():
         write_results(async_result['results'])
         write_log(async_result['log'])
 
+    def init_worker():
+        signal(SIGINT, SIG_IGN)
+
     write_log(f'Running demeuk - {version}{linesep}')
-    with Pool(a_threads) as pool:
+    with Pool(a_threads, init_worker) as pool:
         jobs = []
         # chunk_start will be the started value of the combined output lines
         chunk_start = 0
@@ -1513,4 +1517,8 @@ def main():
     stderr_print(f'Main: all done')
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt as e:
+        stderr_print("ERROR: Process terminated by user! (CTRL+C)")
+        exit(3)
