@@ -19,6 +19,8 @@ r"""
         -i --input <path to file>       Specify the input file to be cleaned, or provide a glob pattern. (default: /dev/stdin)
         -o --output <path to file>      Specify the output file name. (default: /dev/stdout)
         -l --log <path to file>         Optional, specify where the log file needs to be writen to (default: /dev/stderr)
+        --force                         Overwrite existing log or output files (default: False)
+
         -j --threads <threads>          Optional, demeuk doesn't use threads by default. Specify amount of threads to
                                         spawn. Specify the string 'all' to make demeuk auto detect the amount of threads
                                         to start based on the CPU's.
@@ -117,12 +119,14 @@ from html import unescape
 from inspect import cleandoc
 from locale import LC_ALL, setlocale
 from multiprocessing import cpu_count, current_process, Pool
-from os import linesep, mkdir, path, walk, access, R_OK, W_OK
+from os import linesep, mkdir, path, walk, access, stat as os_stat, R_OK, W_OK, X_OK
+from os.path import exists as os_path_exists, dirname
 from re import compile as re_compile
 from re import search
 from re import split as re_split
 from re import sub
 from shutil import rmtree
+from stat import S_ISFIFO, S_ISCHR
 from string import punctuation as string_punctuation
 from time import sleep
 from sys import stderr, stdin
@@ -1151,15 +1155,6 @@ def main():
     output_file = arguments.get('--output') or '/dev/stdout'
     log_file = arguments.get('--log') or '/dev/stderr'
 
-    if not access(output_file, W_OK):
-        stderr_print(f"ERROR: Output file '{output_file}' not writeable!")
-        exit(2)
-
-    if not access(log_file, W_OK):
-        stderr_print(f"ERROR: Logfile '{log_file}' not writeable!")
-        exit(2)
-
-
     if arguments.get('--threads'):
         a_threads = arguments.get('--threads')
         if a_threads == 'all':
@@ -1229,6 +1224,9 @@ def main():
 
     if arguments.get('--progress'):
         config['progress'] = True
+
+    if arguments.get('--force'):
+        config['force'] = True
 
     if arguments.get('--limit'):
         config['limit'] = int(arguments.get('--limit'))
@@ -1416,6 +1414,38 @@ def main():
 
 
     #
+    # Check file permissions and existence
+    def file_safety_check(filepath, name):
+        file_errno = 0
+        if os_path_exists(filepath):
+            # Check if file is write-able
+            try:
+                open(filepath, 'a')
+            except Exception as e:
+                stderr_print(f"ERROR: {name} file '{filepath}' not write-able ({e})!")
+                file_errno += 1
+
+            # Safeguard against overwriting regular files
+            is_fifo = lambda path: S_ISFIFO(os_stat(path).st_mode)
+            is_chr = lambda path: S_ISCHR(os_stat(path).st_mode)
+            if not is_fifo(filepath) and not is_chr(filepath):
+                if arguments.get('--force'):
+                    stderr_print(f"WARNING: {name} file '{filepath}' already exists, "
+                                 "overwriting due to --force argument")
+                else:
+                    stderr_print(f"ERROR: {name} file '{filepath}' already exists!")
+                    file_errno += 1
+        # Return final results
+        return file_errno
+
+
+    retval_errno = file_safety_check(output_file, "Output")
+    retval_errno += file_safety_check(log_file, "Log")
+    if retval_errno > 0:
+        exit(2)
+
+
+    #
     #  Main worker
     stderr_print(f'Main: running demeuk - {version}')
 
@@ -1426,8 +1456,8 @@ def main():
     stderr_print('Main: done chunking file.')
     stderr_print('Main: processing started.')
 
-    p_output_file = open(output_file, 'a')
-    p_log_file = open(log_file, 'a')
+    p_output_file = open(output_file, 'w')
+    p_log_file = open(log_file, 'w')
 
     def write_results(results):
         p_output_file.writelines(results)
