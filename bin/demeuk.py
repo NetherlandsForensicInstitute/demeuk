@@ -118,13 +118,14 @@ from html import unescape
 from inspect import cleandoc
 from locale import LC_ALL, setlocale
 from multiprocessing import cpu_count, current_process, Pool
-from os import linesep, mkdir, path, walk
+from os import linesep, mkdir, path, walk, access, R_OK
 from re import compile as re_compile
 from re import search
 from re import split as re_split
 from re import sub
 from shutil import rmtree
 from string import punctuation as string_punctuation
+from time import sleep
 from sys import stdin
 from unicodedata import category
 
@@ -859,7 +860,7 @@ def clean_encode(line, input_encoding):
     return True, line_decoded
 
 
-def clean_up(chunk_start, chunk_size, config, filename='', lines=[]):
+def clean_up(lines, chunk_start, config):
     """Main clean loop, this calls all the other clean functions.
 
     Args:
@@ -871,26 +872,7 @@ def clean_up(chunk_start, chunk_size, config, filename='', lines=[]):
     results = []
     log = []
 
-    temp_folder = 'demeuk_tmp'
-    if filename:
-        temp_file = md5(filename.encode()).hexdigest()
-    else:
-        temp_file = md5('stdin'.encode()).hexdigest()
-
     pid = current_process().pid
-
-    if filename:
-        with open(filename, 'rb') as f:
-            if config.get('verbose'):
-                print(f'Clean_up ({pid}): seeking {filename}, {chunk_start}, {chunk_size}')
-            f.seek(chunk_start)
-            if config.get('verbose'):
-                print(f'Clean_up ({pid}): splitting {filename}, {chunk_start}, {chunk_size}')
-            lines = f.read(chunk_size).splitlines()
-        if config.get('verbose'):
-            print(f'Clean_up ({pid}): processing {filename}, {chunk_start}, {chunk_size}')
-    elif config.get('verbose'):
-        print(f'Clean_up ({pid}): processing stdin, {chunk_start}, {chunk_size}')
 
     for line in lines:
         # Check if the limit is set, if so minus 1 and if 0 is reached lets quit.
@@ -1137,50 +1119,24 @@ def clean_up(chunk_start, chunk_size, config, filename='', lines=[]):
                 log.append(f'----End---- {line_decoded}{linesep}{linesep}')
             results.append(f'{line_decoded}{linesep}')
 
-        # We made it all the way here, check if we need to flush lines to disk
-        if len(log) > 10000 or len(results) > 10000:
-            with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_result.txt'), 'a') as f:
-                f.write(''.join(results))
-            # Make sure list is deleted from memory
-            del results[:]
-            with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_log.txt'), 'a') as f:
-                f.write(''.join(log))
-            # Make sure list is deleted from memory
-            del log[:]
-
-    if config.get('verbose'):
-        print(f'Clean_up ({pid}): stopping {filename}, {chunk_start}')
-    # Processed all lines, flush everything
-    with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_result.txt'), 'a') as f:
-        f.write(''.join(results))
-    with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_log.txt'), 'a') as f:
-        f.write(''.join(log))
-    if config.get('verbose'):
-        print(f'Clean_up ({pid}): done {filename}, {chunk_start}')
+    return ({'results': results, 'log': log})
 
 
-def chunkify(fname, config, size=1024 * 1024):
-    # based on: https://www.blopig.com/blog/2016/08/processing-large-files-using-python/
-    for filename in tqdm(glob(fname, recursive=True), desc='Chunkify', mininterval=0.1, unit='files',
-                         disable=not config.get('progress')):
-        if not path.isfile(filename):
-            continue
-        fileend = path.getsize(filename)
-        with open(filename, 'br') as f:
-            for x in range(0, config.get('skip')):
-                f.readline()
-            chunkend = f.tell()
-            while True:
-                chunkstart = chunkend
-                f.seek(size, 1)
-                f.readline()
-                chunkend = f.tell()
-                yield chunkstart, chunkend - chunkstart, filename
-                if chunkend > fileend:
-                    break
+def chunkify(filename, config, size=1024 * 1024):
+    with open(filename, 'rb') as fh:
+        for x in range(0, config.get('skip')):
+            fh.readline()
+
+        while True:
+            lines = [line.rstrip(b'\n') for line in fh.readlines(size)]
+            yield lines
+            if len(lines) == 0:
+                break
 
 
 def main():
+    #
+    # Config parser
     arguments = docopt(cleandoc('\n'.join(__doc__.split('\n')[2:])))
 
     if arguments.get('--version'):
@@ -1460,67 +1416,75 @@ def main():
         config['check-replacement-character'] = True
         config['check-empty-line'] = True
 
+
+    #
+    #  Main worker
     print(f'Main: running demeuk - {version}')
-    if path.isdir('demeuk_tmp'):
-        rmtree('demeuk_tmp')
-    mkdir('demeuk_tmp')
 
-    pool = Pool(a_threads)
-    jobs = []
+    print(f'Main: start chunking file {input_file}')
+    print(f'Main: output found in {output_file}')
+    print(f'Main: logs found in {log_file}')
 
-    if input_file:
-        print(f'Main: start chunking file {input_file}')
-        for chunk_start, chunk_size, filename in chunkify(input_file, config):
-            jobs.append(pool.apply_async(clean_up, (chunk_start, chunk_size, config), {'filename': filename}))
-        print('Main: done chunking file.')
-        print('Main: processing started.')
+    print('Main: done chunking file.')
+    print('Main: processing started.')
 
-    # Ready for stdin and collect 50000 lines, then append that line to the pool
-    elif not input_file:
-        print('Main: reading stdin.')
-        chunk = []
+    p_output_file = open(output_file, 'a')
+    p_log_file = open(log_file, 'a')
+
+    def write_results(results):
+        p_output_file.writelines(results)
+        p_output_file.flush()
+
+    def write_log(log):
+        p_log_file.writelines(log)
+        p_log_file.flush()
+
+
+    def write_results_and_log(async_result):
+        write_results(async_result['results'])
+        write_log(async_result['log'])
+
+    write_log(f'Running demeuk - {version}{linesep}')
+    with Pool(a_threads) as pool:
+        jobs = []
+        # chunk_start will be the started value of the combined output lines
         chunk_start = 0
-        chunk_size = 50000
-        while True:
-            input_data = stdin.buffer.readline()
-            if input_data:
-                chunk.append(input_data.rstrip(b'\n'))
-                if len(chunk) >= chunk_size:
-                    jobs.append(pool.apply_async(clean_up, (chunk_start, chunk_size, config), {'lines': chunk}))
-                    chunk = []
-                    chunk_start += chunk_size
-            else:
-                break
-        if len(chunk) > 0:
-            jobs.append(pool.apply_async(clean_up, (chunk_start, chunk_size, config), {'lines': chunk}))
 
-    print('Main: done submitting jobs, waiting for threads to finish')
-    for job in tqdm(jobs, desc='Main', mininterval=1, unit='chunks', disable=not config.get('progress')):
-        job.get()
+        # Process files based on input glob
+        for filename in tqdm(glob(input_file, recursive=True), desc='Files processed', mininterval=0.1, unit=' files',
+                            disable=not config.get('progress')):
+            if not access(filename, R_OK):
+                continue
+            # Cut file in to chunks and process each trunk multi-threaded
+            for chunk in tqdm(chunkify(filename, config), desc='Chunks processed', mininterval=1, unit=' chunks', disable=not config.get('progress')):
+                while True:
+                    while True:
+                        # Process completed jobs in-order
+                        if jobs and jobs[0].ready():
+                            # Housekeeping cleanup jobs completed from the list
+                            job = jobs.pop(0)
+                            write_results_and_log(job.get())
+                        else:
+                            break
 
-    pool.close()
-    print('Main: done processing.')
+                    # Find out which jobs are running
+                    running_jobs = sum([not job.ready() for job in jobs])
+                    if running_jobs < a_threads:
+                        job = pool.apply_async(clean_up, (chunk, chunk_start, config))
+                        chunk_start += len(chunk)
+                        jobs.append(job)
+                        break
+                    else:
+                        # Wait a little while for available spacing within Pool
+                        sleep(1)
 
-    print('Main: start combining results.')
-    p_output_file = open(output_file, 'w')
-    p_log_file = open(log_file, 'w')
-    p_log_file.write(f'Running demeuk - {version}{linesep}')
+        print('Main: done submitting all jobs, waiting for threads to finish')
+        while len(jobs) > 0:
+            job = jobs.pop(0)
+            job.wait()
+            write_results_and_log(job.get())
 
-    for root, directories, files in walk('demeuk_tmp'):
-        for file_name in files:
-            if '_log.txt' in file_name:
-                with open(path.join(root, file_name), 'r') as f:
-                    p_log_file.write(f.read())
-            if '_result.txt' in file_name:
-                with open(path.join(root, file_name), 'r') as f:
-                    p_output_file.write(f.read())
-
-    p_output_file.close()
-    p_log_file.close()
-    print(f'Main: done combining results. Output found in {output_file}, logs found in {log_file}')
-
-    rmtree('demeuk_tmp')
-
+    print(f'Main: all done')
 
 if __name__ == "__main__":
     main()
