@@ -333,3 +333,6 @@ with open('testdata/input47', 'w') as file:
     file.write(f'alpha{linesep}')
     file.write(f'alpha123{linesep}')
     file.write(f'alpha1234!{linesep}')
+
+with open('testdata/input48', 'w') as file:
+    file.write(f'3 Doors Down{linesep}')

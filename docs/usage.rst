@@ -338,10 +338,15 @@ https://pypi.org/project/Unidecode/
 
 For example a line like 'kožušček' is replaced to kozuscek.
 
+lowercase
+~~~~~~~~~~
+Replace lines like 'Test Test Test' to 'test test test'. Basically lowercasing all
+words in a line.
+
 title-case
 ~~~~~~~~~~
 Replace lines like 'test test test' to 'Test Test Test'. Basically uppercasing all
-words in a line. This uses 
+words in a line.
 
 mojibake
 ~~~~~~~~

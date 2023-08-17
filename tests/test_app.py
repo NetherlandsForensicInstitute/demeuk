@@ -807,3 +807,17 @@ def test_check_multiple_regexes():
     assert 'alpha\n' not in filecontent
     assert 'alpha123\n' in filecontent
     assert 'alpha1234!' in filecontent
+
+
+def test_check_lowercase():
+    testargs = [
+        'demeuk', '-i', 'testdata/input48', '-o', 'testdata/output48', '-l', 'testdata/log48',
+        '--verbose', '--lowercase',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output48') as f:
+        filecontent = f.read()
+
+    assert '3 doors down' in filecontent
