@@ -24,7 +24,9 @@ r"""
                                         Note: threading will cost some setup time. Only speeds up for larger files.
         --input-encoding <encoding>     Forces demeuk to decode the input using this encoding (default: en_US.UTF-8).
         --output-encoding <encoding>    Forces demeuk to encoding the output using this encoding (default: en_US.UTF-8).
-        -v --verbose                    When set, the logfile will not only contain lines which caused an error, but
+        -v --verbose                    When set, printing some extra information to stderr. And will print the
+                                        lines containing errors to logfile.
+        -d --debug                      When set, the logfile will not only contain lines which caused an error, but
                                         also line which were modified.
         --progress                      Prints out the progress of the demeuk process.
         -n --limit <int>                Limit the number of lines per thread.
@@ -860,7 +862,7 @@ def clean_encode(line, input_encoding):
     return True, line_decoded
 
 
-def clean_up(lines, config):
+def clean_up(lines):
     """Main clean loop, this calls all the other clean functions.
 
     Args:
@@ -884,12 +886,12 @@ def clean_up(lines, config):
 
         # When stop is set all demeuking module will be skipped for this line.
         stop = False
-        if config['verbose']:
+        if config['debug']:
             log.append(f'----BEGIN---- {hexlify(line)}{linesep}')
         # Replace tab chars as ':' greedy
         if config.get('tab') and not stop:
             status, line = clean_tab(line)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_tab; replaced tab characters; {line}{linesep}')
         # Converting enoding to UTF-8
         if config.get('encode') and not stop:
@@ -897,12 +899,12 @@ def clean_up(lines, config):
             if status is False:
                 log.append(f'Clean_encode; decoding error with {line_decoded}; {line}{linesep}')
                 stop = True
-            elif status is True and config['verbose']:
+            elif status is True and config['debug']:
                 log.append(f'Clean_encode; decoded line; {line_decoded}{linesep}')
         else:
             try:
                 line_decoded = line.decode(config.get('input_encoding')[0])
-                if config['verbose']:
+                if config['debug']:
                     log.append(f'Clean_up; decoded using input_encoding option; {line_decoded}{linesep}')
             except (UnicodeDecodeError) as e: # noqa F841
                 log.append(f'Clean_up; decoding error with unknown; {line}{linesep}')
@@ -915,7 +917,7 @@ def clean_up(lines, config):
                 # Lines contains hex, this function will return binary string, so add it back to
                 # our undecoded lines
                 lines.append(line_decoded)
-                if config['verbose']:
+                if config['debug']:
                     log.append(f'Clean_hex; replaced $HEX[], added to queue and quiting; {line}{linesep}')
                 # Aborting future processing of this line.
                 stop = True
@@ -927,7 +929,7 @@ def clean_up(lines, config):
                 # Line contains html string, because this can be binary data (linefeeds etc)
                 # convert back to binary string and add to queue again.
                 lines.append(line_decoded.encode())
-                if config['verbose']:
+                if config['debug']:
                     log.append(f'Clean_html; replaced html, added to queue and quiting; {line_decoded}{linesep}')
                 stop = True
 
@@ -936,13 +938,13 @@ def clean_up(lines, config):
         # are part of a valid mojibake.
         if config.get('mojibake') and not stop:
             status, line_decoded = clean_mojibake(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_mojibake; found a mojibake; {line}{linesep}')
 
         # Delete leading and trailing newline characters
         if config.get('newline') and not stop:
             status, line_decoded = clean_newline(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_newline; deleted newline characters; {line_decoded!r}{linesep}')
 
         # Checks if there are any control chars inside line
@@ -956,48 +958,48 @@ def clean_up(lines, config):
         # Check if there are named html chars in the line
         if config.get('html-named') and not stop:
             status, line_decoded = clean_html_named(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_html_named; found named html character; {line_decoded}{linesep}')
 
         # Delete leading and trailing character sequences representing a newline
         if config.get('trim') and not stop:
             status, line_decoded = clean_trim(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_trim; found trim sequence; {line_decoded!r}{linesep}')
 
         # Should we do the cut?
         if config.get('cut') and not stop:
             status, line_decoded = clean_cut(line_decoded, config['delimiter'], config['cut-fields'])
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_cut; field cutted; {line_decoded}{linesep}')
 
         # Replace umlauts
         if config.get('umlaut') and not stop:
             status, line_decoded = clean_add_umlaut(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_umlaut; umlaut replaced; {line_decoded}{linesep}')
 
         # Replace non-ascii
         if config.get('non-ascii') and not stop:
             status, line_decoded = clean_non_ascii(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_non_ascii; non-ascii replaced; {line_decoded}{linesep}')
 
         # Replace first letter of a word to a uppercase letter
         if config.get('title-case') and not stop:
             status, line_decoded = clean_title_case(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_title_case; non-ascii replaced; {line_decoded}{linesep}')
 
         # Should we remove emails?
         if config.get('remove-email') and not stop:
             status, line_decoded = remove_email(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Remove_email; email found; {line_decoded}{linesep}')
 
         if config.get('googlengram') and not stop:
             status, line_decoded = clean_googlengram(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_googlengram; tos found and removed; {line_decoded}{linesep}')
 
         if config.get('check-case') and not stop:
@@ -1066,12 +1068,12 @@ def clean_up(lines, config):
 
         if config.get('remove-punctuation') and not stop:
             status, line_decoded = remove_punctuation(line_decoded, config.get('punctuation'))
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Remove_punctuation; stripped punctuation; {line_decoded}{linesep}')
 
         if config.get('remove-strip-punctuation') and not stop:
             status, line_decoded = remove_strip_punctuation(line_decoded, config.get('punctuation'))
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Remove_strip_punctuation; stripped punctuation; {line_decoded}{linesep}')
 
         # We ran all modules
@@ -1083,46 +1085,46 @@ def clean_up(lines, config):
                 modified_lines = add_split(line_decoded)
                 if modified_lines:
                     for modified_line in modified_lines:
-                        if config['verbose']:
+                        if config['debug']:
                             log.append(f'Add_split; new line because of split; {modified_line}{linesep}')
                         lines.append(modified_line.encode())
 
             if config.get('add-lower'):
                 modified_line = add_lower(line_decoded)
                 if modified_line:
-                    if config['verbose']:
+                    if config['debug']:
                         log.append(f'Add_lower; new line; {modified_line}{linesep}')
                     lines.append(modified_line.encode())
 
             if config.get('add-latin-ligatures'):
                 modified_line = add_latin_ligatures(line_decoded)
                 if modified_line:
-                    if config['verbose']:
+                    if config['debug']:
                         log.append(f'Add_latin_ligatures; new line; {modified_line}{linesep}')
                     lines.append(modified_line.encode())
 
             if config.get('add-umlaut'):
                 status, modified_line = clean_add_umlaut(line_decoded)
                 if status:
-                    if config['verbose']:
+                    if config['debug']:
                         log.append(f'Add_umlaut; new line; {modified_line}{linesep}')
                     lines.append(modified_line.encode())
 
             if config.get('add-without-punctuation'):
                 modified_line = add_without_punctuation(line_decoded, config.get('punctuation'))
                 if modified_line:
-                    if config['verbose']:
+                    if config['debug']:
                         log.append(f'Add_without_punctuation; new line; {modified_line}{linesep}')
                     lines.append(modified_line.encode())
 
-            if config['verbose']:
+            if config['debug']:
                 log.append(f'----End---- {line_decoded}{linesep}{linesep}')
             results.append(f'{line_decoded}{linesep}')
 
     return ({'results': results, 'log': log})
 
 
-def chunkify(filename, config, size=1024 * 1024):
+def chunkify(filename, size=1024 * 1024):
     with open(filename, 'rb') as fh:
         for x in range(0, config.get('skip')):
             fh.readline()
@@ -1134,9 +1136,10 @@ def chunkify(filename, config, size=1024 * 1024):
                 break
 
 # Quick to default logging to stderr instead
-def stderr_print(*args, **kwargs):
-    kwargs.setdefault('file', stderr)
-    print(*args, **kwargs)
+def stderr_print(*args, **kwargs):  
+    if config['verbose'] is True:
+        kwargs.setdefault('file', stderr)
+        print(*args, **kwargs)
 
 
 def main():
@@ -1145,7 +1148,7 @@ def main():
     arguments = docopt(cleandoc('\n'.join(__doc__.split('\n')[2:])))
 
     if arguments.get('--version'):
-        stderr_print(f'demeuk - {version}')
+        print(f'demeuk - {version}')
         exit()
 
     input_file = arguments.get('--input') or '/dev/stdin'
@@ -1162,12 +1165,14 @@ def main():
             a_threads = int(a_threads)
 
     # Lets create the default config
+    global config
     config = {
         'input_encoding': ['UTF-8'],
         'cut': False,
         'delimiter': ':',
         'cut-fields': '2-',
         'verbose': False,
+        'debug': False,
         'progress': False,
         'limit': False,
         'skip': False,
@@ -1218,6 +1223,9 @@ def main():
     # Default modules
     if arguments.get('--verbose'):
         config['verbose'] = True
+
+    if arguments.get('--debug'):
+        config['debug'] = True
 
     if arguments.get('--progress'):
         config['progress'] = True
@@ -1447,8 +1455,9 @@ def main():
         p_output_file.flush()
 
     def write_log(log):
-        p_log_file.writelines(log)
-        p_log_file.flush()
+        if config['debug'] or config['verbose']:
+            p_log_file.writelines(log)
+            p_log_file.flush()
 
 
     def write_results_and_log(async_result):
@@ -1470,7 +1479,7 @@ def main():
             if not access(filename, R_OK):
                 continue
             # Cut file in to chunks and process each trunk multi-threaded
-            for chunk in tqdm(chunkify(filename, config), desc='Chunks processed', mininterval=1, unit=' chunks', disable=not config.get('progress')):
+            for chunk in tqdm(chunkify(filename), desc='Chunks processed', mininterval=1, unit=' chunks', disable=not config.get('progress')):
                 while True:
                     while True:
                         # Process completed jobs in-order
@@ -1484,7 +1493,7 @@ def main():
                     # Find out which jobs are running
                     running_jobs = sum([not job.ready() for job in jobs])
                     if running_jobs < a_threads:
-                        job = pool.apply_async(clean_up, (chunk, config))
+                        job = pool.apply_async(clean_up, (chunk,))
                         chunk_start += len(chunk)
                         jobs.append(job)
                         break
