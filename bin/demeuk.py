@@ -116,10 +116,10 @@ from glob import glob
 from html import unescape
 from inspect import cleandoc
 from locale import LC_ALL, setlocale
-from math import floor
+from math import floor, ceil
 from multiprocessing import cpu_count, current_process, Pool
 from os import linesep, access, stat as os_stat, R_OK, W_OK, X_OK
-from os.path import exists as os_path_exists, dirname
+from os.path import exists as os_path_exists, dirname, getsize
 from re import compile as re_compile
 from re import search
 from re import split as re_split
@@ -1228,6 +1228,10 @@ def main():
         config['debug'] = True
 
     if arguments.get('--progress'):
+        if config['verbose'] or config['debug']:
+            if log_file == '/dev/stderr':
+                stderr_print('Progress can not be used with verbose or debug')
+                exit(2)
         config['progress'] = True
 
     if arguments.get('--force'):
@@ -1475,11 +1479,13 @@ def main():
 
         # Process files based on input glob
         for filename in tqdm(glob(input_file, recursive=True), desc='Files processed', mininterval=0.1, unit=' files',
-                            disable=not config.get('progress')):
+                            disable=not config.get('progress'), position=0):
             if not access(filename, R_OK):
                 continue
             # Cut file in to chunks and process each trunk multi-threaded
-            for chunk in tqdm(chunkify(filename), desc='Chunks processed', mininterval=1, unit=' chunks', disable=not config.get('progress')):
+            chunk_size = 1024 * 1024
+            chunks_estimate = int(ceil(getsize(filename) / chunk_size))
+            for chunk in tqdm(chunkify(filename, chunk_size), desc='Chunks processed', mininterval=1, unit=' chunks', disable=not config.get('progress'), total=chunks_estimate, position=1):
                 while True:
                     while True:
                         # Process completed jobs in-order
