@@ -1514,6 +1514,8 @@ def main():
             write_results_and_log(job.get())
 
     stderr_print(f'Main: all done')
+    p_output_file.close()
+    p_log_file.close()
 
 if __name__ == "__main__":
     try:
