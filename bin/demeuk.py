@@ -16,17 +16,17 @@ r"""
         demeuk -i inputfile -o outputfile --threads all
 
     Standard Options:
-        -i --input <path to file>       Specify the input file to be cleaned, or provide a glob pattern
-        --stdin                         Read from stdin and not from an input file
-        -o --output <path to file>      Specify the output file name.
-        -l --log <path to file>         Optional, specify where the log file needs to be writen to
-        -j --threads <threads>          Optional, demeuk doesn't use threads by default. Specify amount of threads to
-                                        spawn. Specify the string 'all' to make demeuk auto detect the amount of threads
-                                        to start based on the CPU's.
+        -i --input <path to file>       Specify the input file to be cleaned, or provide a glob pattern. (default: /dev/stdin)
+        -o --output <path to file>      Specify the output file name. (default: /dev/stdout)
+        -l --log <path to file>         Optional, specify where the log file needs to be writen to (default: /dev/stderr)
+        -j --threads <threads>          Optional, specify amount of threads to spawn. Specify the string 'all' to make
+                                        demeuk auto detect the amount of threads to start based on the CPU's. [default: 50%].
                                         Note: threading will cost some setup time. Only speeds up for larger files.
         --input-encoding <encoding>     Forces demeuk to decode the input using this encoding (default: en_US.UTF-8).
         --output-encoding <encoding>    Forces demeuk to encoding the output using this encoding (default: en_US.UTF-8).
-        -v --verbose                    When set, the logfile will not only contain lines which caused an error, but
+        -v --verbose                    When set, printing some extra information to stderr. And will print the
+                                        lines containing errors to logfile.
+        -d --debug                      When set, the logfile will not only contain lines which caused an error, but
                                         also line which were modified.
         --progress                      Prints out the progress of the demeuk process.
         -n --limit <int>                Limit the number of lines per thread.
@@ -113,19 +113,22 @@ r"""
 
 from binascii import hexlify, unhexlify
 from glob import glob
-from hashlib import md5
 from html import unescape
 from inspect import cleandoc
 from locale import LC_ALL, setlocale
+from math import floor, ceil
 from multiprocessing import cpu_count, current_process, Pool
-from os import linesep, mkdir, path, walk
+from os import linesep, access, stat as os_stat, R_OK, W_OK, X_OK
+from os.path import exists as os_path_exists, dirname, getsize
 from re import compile as re_compile
 from re import search
 from re import split as re_split
 from re import sub
-from shutil import rmtree
+from signal import signal, SIGINT, SIG_IGN
+from stat import S_ISFIFO, S_ISCHR
 from string import punctuation as string_punctuation
-from sys import stdin
+from time import sleep
+from sys import stderr
 from unicodedata import category
 
 
@@ -859,7 +862,7 @@ def clean_encode(line, input_encoding):
     return True, line_decoded
 
 
-def clean_up(chunk_start, chunk_size, config, filename='', lines=[]):
+def clean_up(lines):
     """Main clean loop, this calls all the other clean functions.
 
     Args:
@@ -871,26 +874,7 @@ def clean_up(chunk_start, chunk_size, config, filename='', lines=[]):
     results = []
     log = []
 
-    temp_folder = 'demeuk_tmp'
-    if filename:
-        temp_file = md5(filename.encode()).hexdigest()
-    else:
-        temp_file = md5('stdin'.encode()).hexdigest()
-
     pid = current_process().pid
-
-    if filename:
-        with open(filename, 'rb') as f:
-            if config.get('verbose'):
-                print(f'Clean_up ({pid}): seeking {filename}, {chunk_start}, {chunk_size}')
-            f.seek(chunk_start)
-            if config.get('verbose'):
-                print(f'Clean_up ({pid}): splitting {filename}, {chunk_start}, {chunk_size}')
-            lines = f.read(chunk_size).splitlines()
-        if config.get('verbose'):
-            print(f'Clean_up ({pid}): processing {filename}, {chunk_start}, {chunk_size}')
-    elif config.get('verbose'):
-        print(f'Clean_up ({pid}): processing stdin, {chunk_start}, {chunk_size}')
 
     for line in lines:
         # Check if the limit is set, if so minus 1 and if 0 is reached lets quit.
@@ -902,12 +886,12 @@ def clean_up(chunk_start, chunk_size, config, filename='', lines=[]):
 
         # When stop is set all demeuking module will be skipped for this line.
         stop = False
-        if config['verbose']:
+        if config['debug']:
             log.append(f'----BEGIN---- {hexlify(line)}{linesep}')
         # Replace tab chars as ':' greedy
         if config.get('tab') and not stop:
             status, line = clean_tab(line)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_tab; replaced tab characters; {line}{linesep}')
         # Converting enoding to UTF-8
         if config.get('encode') and not stop:
@@ -915,12 +899,12 @@ def clean_up(chunk_start, chunk_size, config, filename='', lines=[]):
             if status is False:
                 log.append(f'Clean_encode; decoding error with {line_decoded}; {line}{linesep}')
                 stop = True
-            elif status is True and config['verbose']:
+            elif status is True and config['debug']:
                 log.append(f'Clean_encode; decoded line; {line_decoded}{linesep}')
         else:
             try:
                 line_decoded = line.decode(config.get('input_encoding')[0])
-                if config['verbose']:
+                if config['debug']:
                     log.append(f'Clean_up; decoded using input_encoding option; {line_decoded}{linesep}')
             except (UnicodeDecodeError) as e: # noqa F841
                 log.append(f'Clean_up; decoding error with unknown; {line}{linesep}')
@@ -933,7 +917,7 @@ def clean_up(chunk_start, chunk_size, config, filename='', lines=[]):
                 # Lines contains hex, this function will return binary string, so add it back to
                 # our undecoded lines
                 lines.append(line_decoded)
-                if config['verbose']:
+                if config['debug']:
                     log.append(f'Clean_hex; replaced $HEX[], added to queue and quiting; {line}{linesep}')
                 # Aborting future processing of this line.
                 stop = True
@@ -945,7 +929,7 @@ def clean_up(chunk_start, chunk_size, config, filename='', lines=[]):
                 # Line contains html string, because this can be binary data (linefeeds etc)
                 # convert back to binary string and add to queue again.
                 lines.append(line_decoded.encode())
-                if config['verbose']:
+                if config['debug']:
                     log.append(f'Clean_html; replaced html, added to queue and quiting; {line_decoded}{linesep}')
                 stop = True
 
@@ -954,13 +938,13 @@ def clean_up(chunk_start, chunk_size, config, filename='', lines=[]):
         # are part of a valid mojibake.
         if config.get('mojibake') and not stop:
             status, line_decoded = clean_mojibake(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_mojibake; found a mojibake; {line}{linesep}')
 
         # Delete leading and trailing newline characters
         if config.get('newline') and not stop:
             status, line_decoded = clean_newline(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_newline; deleted newline characters; {line_decoded!r}{linesep}')
 
         # Checks if there are any control chars inside line
@@ -974,48 +958,48 @@ def clean_up(chunk_start, chunk_size, config, filename='', lines=[]):
         # Check if there are named html chars in the line
         if config.get('html-named') and not stop:
             status, line_decoded = clean_html_named(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_html_named; found named html character; {line_decoded}{linesep}')
 
         # Delete leading and trailing character sequences representing a newline
         if config.get('trim') and not stop:
             status, line_decoded = clean_trim(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_trim; found trim sequence; {line_decoded!r}{linesep}')
 
         # Should we do the cut?
         if config.get('cut') and not stop:
             status, line_decoded = clean_cut(line_decoded, config['delimiter'], config['cut-fields'])
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_cut; field cutted; {line_decoded}{linesep}')
 
         # Replace umlauts
         if config.get('umlaut') and not stop:
             status, line_decoded = clean_add_umlaut(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_umlaut; umlaut replaced; {line_decoded}{linesep}')
 
         # Replace non-ascii
         if config.get('non-ascii') and not stop:
             status, line_decoded = clean_non_ascii(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_non_ascii; non-ascii replaced; {line_decoded}{linesep}')
 
         # Replace first letter of a word to a uppercase letter
         if config.get('title-case') and not stop:
             status, line_decoded = clean_title_case(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_title_case; non-ascii replaced; {line_decoded}{linesep}')
 
         # Should we remove emails?
         if config.get('remove-email') and not stop:
             status, line_decoded = remove_email(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Remove_email; email found; {line_decoded}{linesep}')
 
         if config.get('googlengram') and not stop:
             status, line_decoded = clean_googlengram(line_decoded)
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Clean_googlengram; tos found and removed; {line_decoded}{linesep}')
 
         if config.get('check-case') and not stop:
@@ -1084,12 +1068,12 @@ def clean_up(chunk_start, chunk_size, config, filename='', lines=[]):
 
         if config.get('remove-punctuation') and not stop:
             status, line_decoded = remove_punctuation(line_decoded, config.get('punctuation'))
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Remove_punctuation; stripped punctuation; {line_decoded}{linesep}')
 
         if config.get('remove-strip-punctuation') and not stop:
             status, line_decoded = remove_strip_punctuation(line_decoded, config.get('punctuation'))
-            if status and config['verbose']:
+            if status and config['debug']:
                 log.append(f'Remove_strip_punctuation; stripped punctuation; {line_decoded}{linesep}')
 
         # We ran all modules
@@ -1101,127 +1085,94 @@ def clean_up(chunk_start, chunk_size, config, filename='', lines=[]):
                 modified_lines = add_split(line_decoded)
                 if modified_lines:
                     for modified_line in modified_lines:
-                        if config['verbose']:
+                        if config['debug']:
                             log.append(f'Add_split; new line because of split; {modified_line}{linesep}')
                         lines.append(modified_line.encode())
 
             if config.get('add-lower'):
                 modified_line = add_lower(line_decoded)
                 if modified_line:
-                    if config['verbose']:
+                    if config['debug']:
                         log.append(f'Add_lower; new line; {modified_line}{linesep}')
                     lines.append(modified_line.encode())
 
             if config.get('add-latin-ligatures'):
                 modified_line = add_latin_ligatures(line_decoded)
                 if modified_line:
-                    if config['verbose']:
+                    if config['debug']:
                         log.append(f'Add_latin_ligatures; new line; {modified_line}{linesep}')
                     lines.append(modified_line.encode())
 
             if config.get('add-umlaut'):
                 status, modified_line = clean_add_umlaut(line_decoded)
                 if status:
-                    if config['verbose']:
+                    if config['debug']:
                         log.append(f'Add_umlaut; new line; {modified_line}{linesep}')
                     lines.append(modified_line.encode())
 
             if config.get('add-without-punctuation'):
                 modified_line = add_without_punctuation(line_decoded, config.get('punctuation'))
                 if modified_line:
-                    if config['verbose']:
+                    if config['debug']:
                         log.append(f'Add_without_punctuation; new line; {modified_line}{linesep}')
                     lines.append(modified_line.encode())
 
-            if config['verbose']:
+            if config['debug']:
                 log.append(f'----End---- {line_decoded}{linesep}{linesep}')
             results.append(f'{line_decoded}{linesep}')
 
-        # We made it all the way here, check if we need to flush lines to disk
-        if len(log) > 10000 or len(results) > 10000:
-            with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_result.txt'), 'a') as f:
-                f.write(''.join(results))
-            # Make sure list is deleted from memory
-            del results[:]
-            with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_log.txt'), 'a') as f:
-                f.write(''.join(log))
-            # Make sure list is deleted from memory
-            del log[:]
-
-    if config.get('verbose'):
-        print(f'Clean_up ({pid}): stopping {filename}, {chunk_start}')
-    # Processed all lines, flush everything
-    with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_result.txt'), 'a') as f:
-        f.write(''.join(results))
-    with open(path.join(temp_folder, f'{temp_file}_{chunk_start}_log.txt'), 'a') as f:
-        f.write(''.join(log))
-    if config.get('verbose'):
-        print(f'Clean_up ({pid}): done {filename}, {chunk_start}')
+    return ({'results': results, 'log': log})
 
 
-def chunkify(fname, config, size=1024 * 1024):
-    # based on: https://www.blopig.com/blog/2016/08/processing-large-files-using-python/
-    for filename in tqdm(glob(fname, recursive=True), desc='Chunkify', mininterval=0.1, unit='files',
-                         disable=not config.get('progress')):
-        if not path.isfile(filename):
-            continue
-        fileend = path.getsize(filename)
-        with open(filename, 'br') as f:
-            for x in range(0, config.get('skip')):
-                f.readline()
-            chunkend = f.tell()
-            while True:
-                chunkstart = chunkend
-                f.seek(size, 1)
-                f.readline()
-                chunkend = f.tell()
-                yield chunkstart, chunkend - chunkstart, filename
-                if chunkend > fileend:
-                    break
+def chunkify(filename, size=1024 * 1024):
+    with open(filename, 'rb') as fh:
+        for x in range(0, config.get('skip')):
+            fh.readline()
+
+        while True:
+            lines = [line.rstrip(b'\n') for line in fh.readlines(size)]
+            yield lines
+            if len(lines) == 0:
+                break
+
+# Quick to default logging to stderr instead
+def stderr_print(*args, **kwargs):  
+    if config['verbose'] is True:
+        kwargs.setdefault('file', stderr)
+        print(*args, **kwargs)
 
 
 def main():
+    #
+    # Config parser
     arguments = docopt(cleandoc('\n'.join(__doc__.split('\n')[2:])))
 
     if arguments.get('--version'):
         print(f'demeuk - {version}')
         exit()
 
-    if arguments.get('--input'):
-        input_file = arguments.get('--input')
-    elif arguments.get('--stdin'):
-        input_file = False
-    else:
-        print('No input file given or not reading from stdin. Use --input or --stdin')
-        exit(1)
-
-    if arguments.get('--output'):
-        output_file = arguments.get('--output')
-    else:
-        print('No output file given, use --output')
-        exit(1)
-
-    if arguments.get('--log'):
-        log_file = arguments.get('--log')
-    else:
-        log_file = '/dev/null'
+    input_file = arguments.get('--input') or '/dev/stdin'
+    output_file = arguments.get('--output') or '/dev/stdout'
+    log_file = arguments.get('--log') or '/dev/stderr'
 
     if arguments.get('--threads'):
         a_threads = arguments.get('--threads')
         if a_threads == 'all':
             a_threads = cpu_count()
+        elif '%' in a_threads:
+            a_threads = max(floor(cpu_count() * (float(a_threads.rstrip(' %')) / 100)), 1)
         else:
             a_threads = int(a_threads)
-    else:
-        a_threads = 1
 
     # Lets create the default config
+    global config
     config = {
         'input_encoding': ['UTF-8'],
         'cut': False,
         'delimiter': ':',
         'cut-fields': '2-',
         'verbose': False,
+        'debug': False,
         'progress': False,
         'limit': False,
         'skip': False,
@@ -1273,8 +1224,18 @@ def main():
     if arguments.get('--verbose'):
         config['verbose'] = True
 
+    if arguments.get('--debug'):
+        config['debug'] = True
+
     if arguments.get('--progress'):
+        if config['verbose'] or config['debug']:
+            if log_file == '/dev/stderr':
+                stderr_print('Progress can not be used with verbose or debug')
+                exit(2)
         config['progress'] = True
+
+    if arguments.get('--force'):
+        config['force'] = True
 
     if arguments.get('--limit'):
         config['limit'] = int(arguments.get('--limit'))
@@ -1460,67 +1421,105 @@ def main():
         config['check-replacement-character'] = True
         config['check-empty-line'] = True
 
-    print(f'Main: running demeuk - {version}')
-    if path.isdir('demeuk_tmp'):
-        rmtree('demeuk_tmp')
-    mkdir('demeuk_tmp')
 
-    pool = Pool(a_threads)
-    jobs = []
+    #
+    # Check file permissions and existence
+    def file_writable_check(filepath, name):
+        file_errno = 0
+        if os_path_exists(filepath):
+            # Check if file is write-able
+            try:
+                open(filepath, 'a')
+            except Exception as e:
+                stderr_print(f"ERROR: {name} file '{filepath}' not write-able ({e})!")
+                file_errno += 1
+                exit(2)
 
-    if input_file:
-        print(f'Main: start chunking file {input_file}')
-        for chunk_start, chunk_size, filename in chunkify(input_file, config):
-            jobs.append(pool.apply_async(clean_up, (chunk_start, chunk_size, config), {'filename': filename}))
-        print('Main: done chunking file.')
-        print('Main: processing started.')
+    file_writable_check(output_file, "Output")
+    file_writable_check(log_file, "Log")
 
-    # Ready for stdin and collect 50000 lines, then append that line to the pool
-    elif not input_file:
-        print('Main: reading stdin.')
-        chunk = []
-        chunk_start = 0
-        chunk_size = 50000
-        while True:
-            input_data = stdin.buffer.readline()
-            if input_data:
-                chunk.append(input_data.rstrip(b'\n'))
-                if len(chunk) >= chunk_size:
-                    jobs.append(pool.apply_async(clean_up, (chunk_start, chunk_size, config), {'lines': chunk}))
-                    chunk = []
-                    chunk_start += chunk_size
-            else:
-                break
-        if len(chunk) > 0:
-            jobs.append(pool.apply_async(clean_up, (chunk_start, chunk_size, config), {'lines': chunk}))
+    #
+    #  Main worker
+    stderr_print(f'Main: running demeuk - {version}')
 
-    print('Main: done submitting jobs, waiting for threads to finish')
-    for job in tqdm(jobs, desc='Main', mininterval=1, unit='chunks', disable=not config.get('progress')):
-        job.get()
+    stderr_print(f'Main: Using {a_threads} core(s) of total available cores: {cpu_count()}')
 
-    pool.close()
-    print('Main: done processing.')
+    stderr_print(f'Main: start chunking file {input_file}')
+    stderr_print(f'Main: output found in {output_file}')
+    stderr_print(f'Main: logs found in {log_file}')
 
-    print('Main: start combining results.')
+    stderr_print('Main: done chunking file.')
+    stderr_print('Main: processing started.')
+
     p_output_file = open(output_file, 'w')
     p_log_file = open(log_file, 'w')
-    p_log_file.write(f'Running demeuk - {version}{linesep}')
 
-    for root, directories, files in walk('demeuk_tmp'):
-        for file_name in files:
-            if '_log.txt' in file_name:
-                with open(path.join(root, file_name), 'r') as f:
-                    p_log_file.write(f.read())
-            if '_result.txt' in file_name:
-                with open(path.join(root, file_name), 'r') as f:
-                    p_output_file.write(f.read())
+    def write_results(results):
+        p_output_file.writelines(results)
+        p_output_file.flush()
 
+    def write_log(log):
+        if config['debug'] or config['verbose']:
+            p_log_file.writelines(log)
+            p_log_file.flush()
+
+
+    def write_results_and_log(async_result):
+        write_results(async_result['results'])
+        write_log(async_result['log'])
+
+    def init_worker():
+        signal(SIGINT, SIG_IGN)
+
+    write_log(f'Running demeuk - {version}{linesep}')
+    with Pool(a_threads, init_worker) as pool:
+        jobs = []
+        # chunk_start will be the started value of the combined output lines
+        chunk_start = 0
+
+        # Process files based on input glob
+        for filename in tqdm(glob(input_file, recursive=True), desc='Files processed', mininterval=0.1, unit=' files',
+                            disable=not config.get('progress'), position=0):
+            if not access(filename, R_OK):
+                continue
+            # Cut file in to chunks and process each trunk multi-threaded
+            chunk_size = 1024 * 1024
+            chunks_estimate = int(ceil(getsize(filename) / chunk_size))
+            for chunk in tqdm(chunkify(filename, chunk_size), desc='Chunks processed', mininterval=1, unit=' chunks', disable=not config.get('progress'), total=chunks_estimate, position=1):
+                while True:
+                    while True:
+                        # Process completed jobs in-order
+                        if jobs and jobs[0].ready():
+                            # Housekeeping cleanup jobs completed from the list
+                            job = jobs.pop(0)
+                            write_results_and_log(job.get())
+                        else:
+                            break
+
+                    # Find out which jobs are running
+                    running_jobs = sum([not job.ready() for job in jobs])
+                    if running_jobs < a_threads:
+                        job = pool.apply_async(clean_up, (chunk,))
+                        chunk_start += len(chunk)
+                        jobs.append(job)
+                        break
+                    else:
+                        # Wait a little while for available spacing within Pool
+                        sleep(1)
+
+        stderr_print('Main: done submitting all jobs, waiting for threads to finish')
+        while len(jobs) > 0:
+            job = jobs.pop(0)
+            job.wait()
+            write_results_and_log(job.get())
+
+    stderr_print(f'Main: all done')
     p_output_file.close()
     p_log_file.close()
-    print(f'Main: done combining results. Output found in {output_file}, logs found in {log_file}')
-
-    rmtree('demeuk_tmp')
-
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt as e:
+        stderr_print("ERROR: Process terminated by user! (CTRL+C)")
+        exit(3)
