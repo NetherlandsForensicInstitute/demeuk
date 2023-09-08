@@ -19,8 +19,6 @@ r"""
         -i --input <path to file>       Specify the input file to be cleaned, or provide a glob pattern. (default: /dev/stdin)
         -o --output <path to file>      Specify the output file name. (default: /dev/stdout)
         -l --log <path to file>         Optional, specify where the log file needs to be writen to (default: /dev/stderr)
-        --force                         Overwrite existing log or output files (default: False)
-
         -j --threads <threads>          Optional, specify amount of threads to spawn. Specify the string 'all' to make
                                         demeuk auto detect the amount of threads to start based on the CPU's. [default: 50%].
                                         Note: threading will cost some setup time. Only speeds up for larger files.
@@ -1414,7 +1412,7 @@ def main():
 
     #
     # Check file permissions and existence
-    def file_safety_check(filepath, name):
+    def file_writable_check(filepath, name):
         file_errno = 0
         if os_path_exists(filepath):
             # Check if file is write-able
@@ -1423,26 +1421,10 @@ def main():
             except Exception as e:
                 stderr_print(f"ERROR: {name} file '{filepath}' not write-able ({e})!")
                 file_errno += 1
+                exit(2)
 
-            # Safeguard against overwriting regular files
-            is_fifo = lambda path: S_ISFIFO(os_stat(path).st_mode)
-            is_chr = lambda path: S_ISCHR(os_stat(path).st_mode)
-            if not is_fifo(filepath) and not is_chr(filepath):
-                if arguments.get('--force'):
-                    stderr_print(f"WARNING: {name} file '{filepath}' already exists, "
-                                 "overwriting due to --force argument")
-                else:
-                    stderr_print(f"ERROR: {name} file '{filepath}' already exists!")
-                    file_errno += 1
-        # Return final results
-        return file_errno
-
-
-    retval_errno = file_safety_check(output_file, "Output")
-    retval_errno += file_safety_check(log_file, "Log")
-    if retval_errno > 0:
-        exit(2)
-
+    file_writable_check(output_file, "Output")
+    file_writable_check(log_file, "Log")
 
     #
     #  Main worker
