@@ -1159,7 +1159,7 @@ def main():
         a_threads = arguments.get('--threads')
         if a_threads == 'all':
             a_threads = cpu_count()
-        if '%' in a_threads:
+        elif '%' in a_threads:
             a_threads = max(floor(cpu_count() * (float(a_threads.rstrip(' %')) / 100)), 1)
         else:
             a_threads = int(a_threads)
