@@ -128,7 +128,7 @@ from signal import signal, SIGINT, SIG_IGN
 from stat import S_ISFIFO, S_ISCHR
 from string import punctuation as string_punctuation
 from time import sleep
-from sys import stderr
+from sys import stderr, stdin, stdout
 from unicodedata import category
 
 
@@ -1151,9 +1151,9 @@ def main():
         print(f'demeuk - {version}')
         exit()
 
-    input_file = arguments.get('--input') or '/dev/stdin'
-    output_file = arguments.get('--output') or '/dev/stdout'
-    log_file = arguments.get('--log') or '/dev/stderr'
+    input_file = arguments.get('--input')
+    output_file = arguments.get('--output')
+    log_file = arguments.get('--log')
 
     if arguments.get('--threads'):
         a_threads = arguments.get('--threads')
@@ -1229,9 +1229,14 @@ def main():
 
     if arguments.get('--progress'):
         if config['verbose'] or config['debug']:
-            if log_file == '/dev/stderr':
+            if not log_file:
                 stderr_print('Progress can not be used with verbose or debug')
                 exit(2)
+        if not input_file:
+            # Forcing printing error message
+            config['verbose'] = True
+            stderr_print('Progress can not be used when using stdin.')
+            exit(2)
         config['progress'] = True
 
     if arguments.get('--force'):
@@ -1434,9 +1439,10 @@ def main():
                 stderr_print(f"ERROR: {name} file '{filepath}' not write-able ({e})!")
                 file_errno += 1
                 exit(2)
-
-    file_writable_check(output_file, "Output")
-    file_writable_check(log_file, "Log")
+    if output_file:
+        file_writable_check(output_file, "Output")
+    if log_file:
+        file_writable_check(log_file, "Log")
 
     #
     #  Main worker
@@ -1445,14 +1451,23 @@ def main():
     stderr_print(f'Main: Using {a_threads} core(s) of total available cores: {cpu_count()}')
 
     stderr_print(f'Main: start chunking file {input_file}')
-    stderr_print(f'Main: output found in {output_file}')
-    stderr_print(f'Main: logs found in {log_file}')
+    if output_file:
+        stderr_print(f'Main: output found in {output_file}')
+    if log_file:
+        stderr_print(f'Main: logs found in {log_file}')
 
     stderr_print('Main: done chunking file.')
     stderr_print('Main: processing started.')
 
-    p_output_file = open(output_file, 'w')
-    p_log_file = open(log_file, 'w')
+    if output_file:
+        p_output_file = open(output_file, 'w')
+    else:
+        p_output_file = stdout
+    
+    if log_file:
+        p_log_file = open(log_file, 'w')
+    else:
+        p_log_file = stderr
 
     def write_results(results):
         p_output_file.writelines(results)
@@ -1472,50 +1487,54 @@ def main():
         signal(SIGINT, SIG_IGN)
 
     write_log(f'Running demeuk - {version}{linesep}')
-    with Pool(a_threads, init_worker) as pool:
-        jobs = []
-        # chunk_start will be the started value of the combined output lines
-        chunk_start = 0
+    if input_file:
+        with Pool(a_threads, init_worker) as pool:
+            jobs = []
+            # chunk_start will be the started value of the combined output lines
+            chunk_start = 0
 
-        # Process files based on input glob
-        for filename in tqdm(glob(input_file, recursive=True), desc='Files processed', mininterval=0.1, unit=' files',
-                            disable=not config.get('progress'), position=0):
-            if not access(filename, R_OK):
-                continue
-            # Cut file in to chunks and process each trunk multi-threaded
-            chunk_size = 1024 * 1024
-            chunks_estimate = int(ceil(getsize(filename) / chunk_size))
-            for chunk in tqdm(chunkify(filename, chunk_size), desc='Chunks processed', mininterval=1, unit=' chunks', disable=not config.get('progress'), total=chunks_estimate, position=1):
-                while True:
+            # Process files based on input glob
+            for filename in tqdm(glob(input_file, recursive=True), desc='Files processed', mininterval=0.1, unit=' files',
+                                disable=not config.get('progress'), position=0):
+                if not access(filename, R_OK):
+                    continue
+                # Cut file in to chunks and process each trunk multi-threaded
+                chunk_size = 1024 * 1024
+                chunks_estimate = int(ceil(getsize(filename) / chunk_size))
+                for chunk in tqdm(chunkify(filename, chunk_size), desc='Chunks processed', mininterval=1, unit=' chunks', disable=not config.get('progress'), total=chunks_estimate, position=1):
                     while True:
-                        # Process completed jobs in-order
-                        if jobs and jobs[0].ready():
-                            # Housekeeping cleanup jobs completed from the list
-                            job = jobs.pop(0)
-                            write_results_and_log(job.get())
-                        else:
+                        while True:
+                            # Process completed jobs in-order
+                            if jobs and jobs[0].ready():
+                                # Housekeeping cleanup jobs completed from the list
+                                job = jobs.pop(0)
+                                write_results_and_log(job.get())
+                            else:
+                                break
+
+                        # Find out which jobs are running
+                        running_jobs = sum([not job.ready() for job in jobs])
+                        if running_jobs < a_threads:
+                            job = pool.apply_async(clean_up, (chunk,))
+                            chunk_start += len(chunk)
+                            jobs.append(job)
                             break
-
-                    # Find out which jobs are running
-                    running_jobs = sum([not job.ready() for job in jobs])
-                    if running_jobs < a_threads:
-                        job = pool.apply_async(clean_up, (chunk,))
-                        chunk_start += len(chunk)
-                        jobs.append(job)
-                        break
-                    else:
-                        # Wait a little while for available spacing within Pool
-                        sleep(1)
-
+                        else:
+                            # Wait a little while for available spacing within Pool
+                            sleep(1)
         stderr_print('Main: done submitting all jobs, waiting for threads to finish')
         while len(jobs) > 0:
             job = jobs.pop(0)
             job.wait()
             write_results_and_log(job.get())
+    else:
+        write_results_and_log(clean_up([line.rstrip('\n').encode(config['input_encoding'][0]) for line in stdin.readlines()]))
 
     stderr_print(f'Main: all done')
-    p_output_file.close()
-    p_log_file.close()
+    if output_file:
+        p_output_file.close()
+    if log_file:
+        p_log_file.close()
 
 if __name__ == "__main__":
     try:
