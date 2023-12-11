@@ -16,11 +16,13 @@ r"""
         demeuk -i inputfile -o outputfile --threads all
 
     Standard Options:
-        -i --input <path to file>       Specify the input file to be cleaned, or provide a glob pattern. (default: /dev/stdin)
-        -o --output <path to file>      Specify the output file name. (default: /dev/stdout)
-        -l --log <path to file>         Optional, specify where the log file needs to be writen to (default: /dev/stderr)
+        -i --input <path to file>       Specify the input file to be cleaned, or provide a glob pattern.
+                                        (default: stdin)
+        -o --output <path to file>      Specify the output file name. (default: stdout)
+        -l --log <path to file>         Optional, specify where the log file needs to be writen to (default: stderr)
         -j --threads <threads>          Optional, specify amount of threads to spawn. Specify the string 'all' to make
-                                        demeuk auto detect the amount of threads to start based on the CPU's. [default: 50%].
+                                        demeuk auto detect the amount of threads to start based on the CPU's.
+                                        [default: 50%].
                                         Note: threading will cost some setup time. Only speeds up for larger files.
         --input-encoding <encoding>     Forces demeuk to decode the input using this encoding (default: en_US.UTF-8).
         --output-encoding <encoding>    Forces demeuk to encoding the output using this encoding (default: en_US.UTF-8).
@@ -117,15 +119,14 @@ from html import unescape
 from inspect import cleandoc
 from locale import LC_ALL, setlocale
 from math import floor, ceil
-from multiprocessing import cpu_count, current_process, Pool
-from os import linesep, access, stat as os_stat, R_OK, W_OK, X_OK
-from os.path import exists as os_path_exists, dirname, getsize
+from multiprocessing import cpu_count, Pool
+from os import linesep, access, R_OK
+from os.path import exists as os_path_exists, getsize
 from re import compile as re_compile
 from re import search
 from re import split as re_split
 from re import sub
 from signal import signal, SIGINT, SIG_IGN
-from stat import S_ISFIFO, S_ISCHR
 from string import punctuation as string_punctuation
 from time import sleep
 from sys import stderr, stdin, stdout
@@ -169,6 +170,7 @@ HASH_REGEX_LIST = [HASH_BCRYPT_REGEX, HASH_CRYPT_SALT_REGEX, HASH_CRYPT_REGEX, H
 TRIM_BLOCKS = ('\\\\n', '\\\\r', '\\n', '\\r', '<br>', '<br />')
 
 CHUNK_SIZE = 1024 * 1024
+
 
 def _unescape_fixup_named(match):
     """
@@ -875,8 +877,6 @@ def clean_up(lines):
     results = []
     log = []
 
-    pid = current_process().pid
-
     for line in lines:
         # Check if the limit is set, if so minus 1 and if 0 is reached lets quit.
         if type(config['limit']) is int:
@@ -1136,8 +1136,9 @@ def chunkify(filename, size=1024 * 1024):
             if len(lines) == 0:
                 break
 
+
 # Quick to default logging to stderr instead
-def stderr_print(*args, **kwargs):  
+def stderr_print(*args, **kwargs):
     if config['verbose'] is True:
         kwargs.setdefault('file', stderr)
         print(*args, **kwargs)
@@ -1427,8 +1428,6 @@ def main():
         config['check-replacement-character'] = True
         config['check-empty-line'] = True
 
-
-    #
     # Check file permissions and existence
     def file_writable_check(filepath, name):
         file_errno = 0
@@ -1464,7 +1463,7 @@ def main():
         p_output_file = open(output_file, 'w')
     else:
         p_output_file = stdout
-    
+
     if log_file:
         p_log_file = open(log_file, 'w')
     else:
@@ -1478,7 +1477,6 @@ def main():
         if config['debug'] or config['verbose'] or log_file:
             p_log_file.writelines(log)
             p_log_file.flush()
-
 
     def write_results_and_log(async_result):
         write_results(async_result['results'])
@@ -1495,14 +1493,16 @@ def main():
             chunk_start = 0
 
             # Process files based on input glob
-            for filename in tqdm(glob(input_file, recursive=True), desc='Files processed', mininterval=0.1, unit=' files',
-                                disable=not config.get('progress'), position=0):
+            for filename in tqdm(glob(input_file, recursive=True), desc='Files processed', mininterval=0.1,
+                                 unit=' files', disable=not config.get('progress'), position=0):
                 if not access(filename, R_OK):
                     continue
                 # Cut file in to chunks and process each trunk multi-threaded
-                
+
                 chunks_estimate = int(ceil(getsize(filename) / CHUNK_SIZE))
-                for chunk in tqdm(chunkify(filename, CHUNK_SIZE), desc='Chunks processed', mininterval=1, unit=' chunks', disable=not config.get('progress'), total=chunks_estimate, position=1):
+                for chunk in tqdm(chunkify(filename, CHUNK_SIZE), desc='Chunks processed', mininterval=1,
+                                  unit=' chunks', disable=not config.get('progress'), total=chunks_estimate,
+                                  position=1):
                     while True:
                         while True:
                             # Process completed jobs in-order
@@ -1565,16 +1565,16 @@ def main():
                 job.wait()
                 write_results_and_log(job.get())
 
-
-    stderr_print(f'Main: all done')
+    stderr_print('Main: all done')
     if output_file:
         p_output_file.close()
     if log_file:
         p_log_file.close()
 
+
 if __name__ == "__main__":
     try:
         main()
-    except KeyboardInterrupt as e:
+    except KeyboardInterrupt:
         stderr_print("ERROR: Process terminated by user! (CTRL+C)")
         exit(3)
