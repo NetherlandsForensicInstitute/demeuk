@@ -26,7 +26,7 @@ r"""
         --output-encoding <encoding>    Forces demeuk to encoding the output using this encoding (default: en_US.UTF-8).
         -v --verbose                    When set, printing some extra information to stderr. And will print the
                                         lines containing errors to logfile.
-        -d --debug                      When set, the logfile will not only contain lines which caused an error, but
+        --debug                         When set, the logfile will not only contain lines which caused an error, but
                                         also line which were modified.
         --progress                      Prints out the progress of the demeuk process.
         -n --limit <int>                Limit the number of lines per thread.
@@ -1475,7 +1475,7 @@ def main():
         p_output_file.flush()
 
     def write_log(log):
-        if config['debug'] or config['verbose']:
+        if config['debug'] or config['verbose'] or log_file:
             p_log_file.writelines(log)
             p_log_file.flush()
 

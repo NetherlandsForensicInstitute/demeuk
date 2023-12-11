@@ -296,7 +296,7 @@ def test_unhtml_named():
 def test_verbose():
     testargs = [
         'demeuk', '-i', 'testdata/input18', '-o', 'testdata/output18', '-l', 'testdata/log18',
-        '-f', '5-', '-c', '--verbose',
+        '-f', '5-', '-c', '--verbose', '--debug'
     ]
     with patch.object(sys, 'argv', testargs):
         main()
