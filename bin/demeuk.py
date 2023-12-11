@@ -74,6 +74,7 @@ r"""
         --html                          Replace lines like: &#351;ifreyok with şifreyok.
         --html-named                    Replace lines like: &#alpha; Those structures are more like passwords, so
                                         be careful to enable this option.
+        --lowercase                     Replace line like 'This Test String' to 'this test string'
         --title-case                    Replace line like 'this test string' to 'This Test String'
         --umlaut                        Replace lines like ko"ffie with an o with an umlaut.
         --mojibake                      Fixes mojibakes, which means lines like SmˆrgÂs will be fixed to Smörgås.
@@ -617,6 +618,23 @@ def clean_non_ascii(line):
         return False, line
 
 
+def clean_lowercase(line):
+    """Replace all capitals to lowercase
+
+        Params:
+            line (Unicode)
+
+        Returns:
+            line (Unicode)
+
+        """
+    cleaned_line = line.lower()
+    if line != cleaned_line:
+        return True, cleaned_line
+    else:
+        return False, line
+
+
 def clean_title_case(line):
     """Replace words to title word (uppercasing first letter)
 
@@ -986,6 +1004,12 @@ def clean_up(lines):
             if status and config['debug']:
                 log.append(f'Clean_non_ascii; non-ascii replaced; {line_decoded}{linesep}')
 
+        # Replace all letters with lowercase
+        if config.get('lowercase') and not stop:
+            status, line_decoded = clean_lowercase(line_decoded)
+            if status and config['verbose']:
+                log.append(f'Clean_lowercase; all capitals replaced; {line_decoded}{linesep}')
+
         # Replace first letter of a word to a uppercase letter
         if config.get('title-case') and not stop:
             status, line_decoded = clean_title_case(line_decoded)
@@ -1294,6 +1318,9 @@ def main():
 
     if arguments.get('--non-ascii'):
         config['non-ascii'] = True
+
+    if arguments.get('--lowercase'):
+        config['lowercase'] = True
 
     if arguments.get('--title-case'):
         config['title-case'] = True

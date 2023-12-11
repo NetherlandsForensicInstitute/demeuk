@@ -819,3 +819,17 @@ def test_stdin_stdout():
     assert res.returncode == 0
     assert res.stdout == b'input\nlines\n'
     assert res.stderr == b''
+
+
+def test_check_lowercase():
+    testargs = [
+        'demeuk', '-i', 'testdata/input48', '-o', 'testdata/output48', '-l', 'testdata/log48',
+        '--verbose', '--lowercase',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output48') as f:
+        filecontent = f.read()
+
+    assert '3 doors down' in filecontent
