@@ -168,6 +168,7 @@ HASH_REGEX_LIST = [HASH_BCRYPT_REGEX, HASH_CRYPT_SALT_REGEX, HASH_CRYPT_REGEX, H
 
 TRIM_BLOCKS = ('\\\\n', '\\\\r', '\\n', '\\r', '<br>', '<br />')
 
+CHUNK_SIZE = 1024 * 1024
 
 def _unescape_fixup_named(match):
     """
@@ -1499,9 +1500,9 @@ def main():
                 if not access(filename, R_OK):
                     continue
                 # Cut file in to chunks and process each trunk multi-threaded
-                chunk_size = 1024 * 1024
-                chunks_estimate = int(ceil(getsize(filename) / chunk_size))
-                for chunk in tqdm(chunkify(filename, chunk_size), desc='Chunks processed', mininterval=1, unit=' chunks', disable=not config.get('progress'), total=chunks_estimate, position=1):
+                
+                chunks_estimate = int(ceil(getsize(filename) / CHUNK_SIZE))
+                for chunk in tqdm(chunkify(filename, CHUNK_SIZE), desc='Chunks processed', mininterval=1, unit=' chunks', disable=not config.get('progress'), total=chunks_estimate, position=1):
                     while True:
                         while True:
                             # Process completed jobs in-order
@@ -1522,13 +1523,48 @@ def main():
                         else:
                             # Wait a little while for available spacing within Pool
                             sleep(1)
-        stderr_print('Main: done submitting all jobs, waiting for threads to finish')
-        while len(jobs) > 0:
-            job = jobs.pop(0)
-            job.wait()
-            write_results_and_log(job.get())
+            stderr_print('Main: done submitting all jobs, waiting for threads to finish')
+            while len(jobs) > 0:
+                job = jobs.pop(0)
+                job.wait()
+                write_results_and_log(job.get())
     else:
-        write_results_and_log(clean_up([line.rstrip('\n').encode(config['input_encoding'][0]) for line in stdin.readlines()]))
+        # Chunking for stdin
+        with Pool(a_threads, init_worker) as pool:
+            jobs = []
+            # chunk_start will be the started value of the combined output lines
+            chunk_start = 0
+
+            # Read chunk amount from stdin
+            chunks = stdin.readlines(CHUNK_SIZE)
+            while chunks:
+                chunk = [line.rstrip('\n').encode(config['input_encoding'][0]) for line in chunks]
+                while True:
+                    while True:
+                        # Process completed jobs in-order
+                        if jobs and jobs[0].ready():
+                            # Housekeeping cleanup jobs completed from the list
+                            job = jobs.pop(0)
+                            write_results_and_log(job.get())
+                        else:
+                            break
+
+                    # Find out which jobs are running
+                    running_jobs = sum([not job.ready() for job in jobs])
+                    if running_jobs < a_threads:
+                        job = pool.apply_async(clean_up, (chunk,))
+                        chunk_start += len(chunk)
+                        jobs.append(job)
+                        break
+
+                chunks = stdin.readlines(CHUNK_SIZE)
+
+            stderr_print('Main: done submitting all jobs, waiting for threads to finish')
+            while len(jobs) > 0:
+                job = jobs.pop(0)
+                job.wait()
+                write_results_and_log(job.get())
+
 
     stderr_print(f'Main: all done')
     if output_file:
