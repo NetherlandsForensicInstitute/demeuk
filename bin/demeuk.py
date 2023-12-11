@@ -145,7 +145,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '4.1.0'
+version = '4.2.0'
 
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.
