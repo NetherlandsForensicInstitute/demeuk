@@ -23,7 +23,6 @@ r"""
         -l --log <path to file>         Optional, specify where the log file needs to be writen to (default: stderr)
         -j --threads <threads>          Optional, specify amount of threads to spawn. Specify the string 'all' to make
                                         demeuk auto detect the amount of threads to start based on the CPU's.
-                                        [default: 50%].
                                         Note: threading will cost some setup time. Only speeds up for larger files.
         --input-encoding <encoding>     Forces demeuk to decode the input using this encoding (default: en_US.UTF-8).
         --output-encoding <encoding>    Forces demeuk to encoding the output using this encoding (default: en_US.UTF-8).
@@ -1186,10 +1185,10 @@ def main():
         a_threads = arguments.get('--threads')
         if a_threads == 'all':
             a_threads = cpu_count()
-        elif '%' in a_threads:
-            a_threads = max(floor(cpu_count() * (float(a_threads.rstrip(' %')) / 100)), 1)
         else:
             a_threads = int(a_threads)
+    else:
+        a_threads = 1
 
     # Lets create the default config
     global config
