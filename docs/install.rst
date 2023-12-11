@@ -15,7 +15,7 @@ Requirements
 ------------
 
 - Python 3.6 is required
-- Ubuntu 18.04 is the only OS on which demeuk has been tested.
+- Ubuntu is the only OS on which demeuk has been tested.
 
 Installing
 ----------

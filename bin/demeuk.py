@@ -14,6 +14,7 @@ r"""
         demeuk -i inputfile -o outputfile -j 24
         demeuk -i inputfile -o outputfile -c -e
         demeuk -i inputfile -o outputfile --threads all
+        cat inputfile | demeuk --leak -j all | sort -u > outputfile
 
     Standard Options:
         -i --input <path to file>       Specify the input file to be cleaned, or provide a glob pattern.

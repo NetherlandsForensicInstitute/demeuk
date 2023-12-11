@@ -8,15 +8,17 @@ is a must read for anyone adding features to demeuk.
 
 Threading
 ---------
-To start of, the input file is counted by the main processes. It will split
+In cause of an input file, the file is 'chunked' by the main processes. It will split
 the input files in chunks. It does so by reading the file per 1 KB. After reading 1 KB
-it will search for the next newline after the 1 KB. It will check the file pointer
-byte offset. It will then read again 1 KB and search for the first new line after that.
-This starting and ending offsets are stored in a list and threads will read useful
-the list to determine what to work on.
+it will search for the next newline after the 1 KB. It will then read again 1 KB and 
+search for the first new line after that. This will continue until the end of the file.
 
 The size of 1 KB is used to reduce memory load and was found to be a solid number for
 good performance.
+
+When using stdin, the input is not chunked. This is because stdin is a stream and
+thus we can not seek to a specific offset. So the main thread will read the input
+per 1 KB and search for the first newline after that.
 
 Next a thread will open the input file and seek to the start offset. It will read
 the remaining byte to the end offset and starts processing the lines.
