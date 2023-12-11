@@ -119,7 +119,7 @@ from glob import glob
 from html import unescape
 from inspect import cleandoc
 from locale import LC_ALL, setlocale
-from math import floor, ceil
+from math import ceil
 from multiprocessing import cpu_count, Pool
 from os import linesep, access, R_OK
 from os.path import exists as os_path_exists, getsize
