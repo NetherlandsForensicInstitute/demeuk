@@ -1150,7 +1150,7 @@ def clean_up(lines):
     return ({'results': results, 'log': log})
 
 
-def chunkify(filename, size=1024 * 1024):
+def chunkify(filename, size=CHUNK_SIZE):
     with open(filename, 'rb') as fh:
         for x in range(0, config.get('skip')):
             fh.readline()
