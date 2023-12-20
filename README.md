@@ -3,7 +3,7 @@
 
 Demeuk is a simple tool to clean up corpora (like dictionaries) or any dataset
 containing plain text strings. Example use cases are: cleaning up language dictionaries,
-password sets (like for example RockYou) or any file containing plain text strings.
+password sets (like for example RockYou) or any file / stdin containing plain text strings.
 
 In those corpora you'll find encoding mistakes that have been made, or you want to remove some parts
 of a line. Instead of creating a huge bash oneliner you can use demeuk to do all your cleaning.
@@ -44,6 +44,7 @@ Examples:
     demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt --leak
     demeuk -i inputfile -o outputfile -j 24 -l logfile.log --leak-full
     demeuk -i inputdir/*.txt -o outputfile.dict -l logfile.log
+    demeuk -o outputfile.dict -l logfile.log
 ```
 
 ## Docs
