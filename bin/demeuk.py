@@ -114,7 +114,6 @@ r"""
                                             check-hash, check-mac-address, check-uuid, check-email,
                                             check-replacement-character, check-empty-line
 """
-
 from binascii import hexlify, unhexlify
 from glob import glob
 from html import unescape
@@ -122,8 +121,7 @@ from inspect import cleandoc
 from locale import LC_ALL, setlocale
 from math import ceil
 from multiprocessing import cpu_count, Pool
-from os import linesep, access, R_OK
-from os.path import exists as os_path_exists, getsize
+from os import linesep, access,path, R_OK, F_OK, W_OK
 from re import compile as re_compile
 from re import search
 from re import split as re_split
@@ -1456,21 +1454,13 @@ def main():
         config['check-replacement-character'] = True
         config['check-empty-line'] = True
 
-    # Check file permissions and existence
-    def file_writable_check(filepath, name):
-        file_errno = 0
-        if os_path_exists(filepath):
-            # Check if file is write-able
-            try:
-                open(filepath, 'a')
-            except Exception as e:
-                stderr_print(f"ERROR: {name} file '{filepath}' not write-able ({e})!")
-                file_errno += 1
-                exit(2)
-    if output_file:
-        file_writable_check(output_file, "Output")
-    if log_file:
-        file_writable_check(log_file, "Log")
+    if output_file and not access(path.dirname(output_file), W_OK):
+        stderr_print(f"Cannot write output file to {path(output_file)}")
+    # check if logfile exists, or that the directory of the log file is at least writable.
+    if log_file and not (access(log_file, F_OK) or access(path.dirname(log_file), W_OK)):
+        stderr_print(f"Cannot write log file to {log_file}")
+    if input_file and not access(input_file, R_OK):
+        stderr_print(f"Cannot read input file to {input_file}")
 
     #
     #  Main worker
@@ -1527,7 +1517,7 @@ def main():
                     continue
                 # Cut file in to chunks and process each trunk multi-threaded
 
-                chunks_estimate = int(ceil(getsize(filename) / CHUNK_SIZE))
+                chunks_estimate = int(ceil(path.getsize(filename) / CHUNK_SIZE))
                 for chunk in tqdm(chunkify(filename, CHUNK_SIZE), desc='Chunks processed', mininterval=1,
                                   unit=' chunks', disable=not config.get('progress'), total=chunks_estimate,
                                   position=1):
