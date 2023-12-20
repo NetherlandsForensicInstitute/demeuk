@@ -121,7 +121,7 @@ from inspect import cleandoc
 from locale import LC_ALL, setlocale
 from math import ceil
 from multiprocessing import cpu_count, Pool
-from os import linesep, access,path, R_OK, F_OK, W_OK
+from os import linesep, access, path, R_OK, F_OK, W_OK
 from re import compile as re_compile
 from re import search
 from re import split as re_split
@@ -1462,7 +1462,6 @@ def main():
     if input_file and not access(input_file, R_OK):
         stderr_print(f"Cannot read input file to {input_file}")
 
-    #
     #  Main worker
     stderr_print(f'Main: running demeuk - {version}')
 
@@ -1504,6 +1503,7 @@ def main():
         signal(SIGINT, SIG_IGN)
 
     def process_jobs(chunk_start):
+        # Cut file in to chunks and process each trunk multi-threaded
         while True:
             while True:
                 # Process completed jobs in-order
@@ -1531,37 +1531,35 @@ def main():
         # chunk_start will be the started value of the combined output lines
         chunk_start = 0
         if input_file:
-                # Process files based on input glob
-                for filename in tqdm(glob(input_file, recursive=True), desc='Files processed', mininterval=0.1,
-                                     unit=' files', disable=not config.get('progress'), position=0):
-                    if not access(filename, R_OK):
-                        continue
-                    # Cut file in to chunks and process each trunk multi-threaded
-
-                    chunks_estimate = int(ceil(path.getsize(filename) / CHUNK_SIZE))
-                    for chunk in tqdm(chunkify(filename, CHUNK_SIZE), desc='Chunks processed', mininterval=1,
-                                      unit=' chunks', disable=not config.get('progress'), total=chunks_estimate,
-                                      position=1):
-                        process_jobs(chunk_start)
-                stderr_print('Main: done submitting all jobs, waiting for threads to finish')
-                while len(jobs) > 0:
-                    job = jobs.pop(0)
-                    job.wait()
-                    write_results_and_log(job.get())
-        else:
-                # Read chunk amount from stdin
-                chunks = stdin.readlines(CHUNK_SIZE)
-                while chunks:
-                    chunk = [line.rstrip('\n').encode(config['input_encoding'][0]) for line in chunks]
+            # Process files based on input glob
+            for filename in tqdm(glob(input_file, recursive=True), desc='Files processed', mininterval=0.1,
+                                 unit=' files', disable=not config.get('progress'), position=0):
+                if not access(filename, R_OK):
+                    continue
+                chunks_estimate = int(ceil(path.getsize(filename) / CHUNK_SIZE))
+                for chunk in tqdm(chunkify(filename, CHUNK_SIZE), desc='Chunks processed', mininterval=1,
+                                  unit=' chunks', disable=not config.get('progress'), total=chunks_estimate,
+                                  position=1):
                     process_jobs(chunk_start)
+            stderr_print('Main: done submitting all jobs, waiting for threads to finish')
+            while len(jobs) > 0:
+                job = jobs.pop(0)
+                job.wait()
+                write_results_and_log(job.get())
+        else:
+            # Read chunk amount from stdin
+            chunks = stdin.readlines(CHUNK_SIZE)
+            while chunks:
+                chunk = [line.rstrip('\n').encode(config['input_encoding'][0]) for line in chunks]
+                process_jobs(chunk_start)
 
-                    chunks = stdin.readlines(CHUNK_SIZE)
+                chunks = stdin.readlines(CHUNK_SIZE)
 
-                stderr_print('Main: done submitting all jobs, waiting for threads to finish')
-                while len(jobs) > 0:
-                    job = jobs.pop(0)
-                    job.wait()
-                    write_results_and_log(job.get())
+            stderr_print('Main: done submitting all jobs, waiting for threads to finish')
+            while len(jobs) > 0:
+                job = jobs.pop(0)
+                job.wait()
+                write_results_and_log(job.get())
 
     stderr_print('Main: all done')
     if output_file:
