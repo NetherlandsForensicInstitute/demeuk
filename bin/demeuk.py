@@ -1483,7 +1483,7 @@ def main():
         p_output_file = stdout
 
     if log_file:
-        p_log_file = open(log_file, 'w')
+        p_log_file = open(log_file, 'a')
     else:
         p_log_file = stderr
 
