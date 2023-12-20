@@ -1503,6 +1503,28 @@ def main():
     def init_worker():
         signal(SIGINT, SIG_IGN)
 
+    def process_jobs(chunk_start):
+        while True:
+            while True:
+                # Process completed jobs in-order
+                if jobs and jobs[0].ready():
+                    # Housekeeping cleanup jobs completed from the list
+                    job = jobs.pop(0)
+                    write_results_and_log(job.get())
+                else:
+                    break
+
+            # Find out which jobs are running
+            running_jobs = sum([not job.ready() for job in jobs])
+            if running_jobs < a_threads:
+                job = pool.apply_async(clean_up, (chunk,))
+                chunk_start += len(chunk)
+                jobs.append(job)
+                break
+            else:
+                # Wait a little while for available spacing within Pool
+                sleep(1)
+
     write_log(f'Running demeuk - {version}{linesep}')
     with Pool(a_threads, init_worker) as pool:
         jobs = []
@@ -1520,26 +1542,7 @@ def main():
                     for chunk in tqdm(chunkify(filename, CHUNK_SIZE), desc='Chunks processed', mininterval=1,
                                       unit=' chunks', disable=not config.get('progress'), total=chunks_estimate,
                                       position=1):
-                        while True:
-                            while True:
-                                # Process completed jobs in-order
-                                if jobs and jobs[0].ready():
-                                    # Housekeeping cleanup jobs completed from the list
-                                    job = jobs.pop(0)
-                                    write_results_and_log(job.get())
-                                else:
-                                    break
-
-                            # Find out which jobs are running
-                            running_jobs = sum([not job.ready() for job in jobs])
-                            if running_jobs < a_threads:
-                                job = pool.apply_async(clean_up, (chunk,))
-                                chunk_start += len(chunk)
-                                jobs.append(job)
-                                break
-                            else:
-                                # Wait a little while for available spacing within Pool
-                                sleep(1)
+                        process_jobs(chunk_start)
                 stderr_print('Main: done submitting all jobs, waiting for threads to finish')
                 while len(jobs) > 0:
                     job = jobs.pop(0)
@@ -1550,23 +1553,7 @@ def main():
                 chunks = stdin.readlines(CHUNK_SIZE)
                 while chunks:
                     chunk = [line.rstrip('\n').encode(config['input_encoding'][0]) for line in chunks]
-                    while True:
-                        while True:
-                            # Process completed jobs in-order
-                            if jobs and jobs[0].ready():
-                                # Housekeeping cleanup jobs completed from the list
-                                job = jobs.pop(0)
-                                write_results_and_log(job.get())
-                            else:
-                                break
-
-                        # Find out which jobs are running
-                        running_jobs = sum([not job.ready() for job in jobs])
-                        if running_jobs < a_threads:
-                            job = pool.apply_async(clean_up, (chunk,))
-                            chunk_start += len(chunk)
-                            jobs.append(job)
-                            break
+                    process_jobs(chunk_start)
 
                     chunks = stdin.readlines(CHUNK_SIZE)
 
