@@ -1504,23 +1504,52 @@ def main():
         signal(SIGINT, SIG_IGN)
 
     write_log(f'Running demeuk - {version}{linesep}')
-    if input_file:
-        with Pool(a_threads, init_worker) as pool:
-            jobs = []
-            # chunk_start will be the started value of the combined output lines
-            chunk_start = 0
+    with Pool(a_threads, init_worker) as pool:
+        jobs = []
+        # chunk_start will be the started value of the combined output lines
+        chunk_start = 0
+        if input_file:
+                # Process files based on input glob
+                for filename in tqdm(glob(input_file, recursive=True), desc='Files processed', mininterval=0.1,
+                                     unit=' files', disable=not config.get('progress'), position=0):
+                    if not access(filename, R_OK):
+                        continue
+                    # Cut file in to chunks and process each trunk multi-threaded
 
-            # Process files based on input glob
-            for filename in tqdm(glob(input_file, recursive=True), desc='Files processed', mininterval=0.1,
-                                 unit=' files', disable=not config.get('progress'), position=0):
-                if not access(filename, R_OK):
-                    continue
-                # Cut file in to chunks and process each trunk multi-threaded
+                    chunks_estimate = int(ceil(path.getsize(filename) / CHUNK_SIZE))
+                    for chunk in tqdm(chunkify(filename, CHUNK_SIZE), desc='Chunks processed', mininterval=1,
+                                      unit=' chunks', disable=not config.get('progress'), total=chunks_estimate,
+                                      position=1):
+                        while True:
+                            while True:
+                                # Process completed jobs in-order
+                                if jobs and jobs[0].ready():
+                                    # Housekeeping cleanup jobs completed from the list
+                                    job = jobs.pop(0)
+                                    write_results_and_log(job.get())
+                                else:
+                                    break
 
-                chunks_estimate = int(ceil(path.getsize(filename) / CHUNK_SIZE))
-                for chunk in tqdm(chunkify(filename, CHUNK_SIZE), desc='Chunks processed', mininterval=1,
-                                  unit=' chunks', disable=not config.get('progress'), total=chunks_estimate,
-                                  position=1):
+                            # Find out which jobs are running
+                            running_jobs = sum([not job.ready() for job in jobs])
+                            if running_jobs < a_threads:
+                                job = pool.apply_async(clean_up, (chunk,))
+                                chunk_start += len(chunk)
+                                jobs.append(job)
+                                break
+                            else:
+                                # Wait a little while for available spacing within Pool
+                                sleep(1)
+                stderr_print('Main: done submitting all jobs, waiting for threads to finish')
+                while len(jobs) > 0:
+                    job = jobs.pop(0)
+                    job.wait()
+                    write_results_and_log(job.get())
+        else:
+                # Read chunk amount from stdin
+                chunks = stdin.readlines(CHUNK_SIZE)
+                while chunks:
+                    chunk = [line.rstrip('\n').encode(config['input_encoding'][0]) for line in chunks]
                     while True:
                         while True:
                             # Process completed jobs in-order
@@ -1538,50 +1567,14 @@ def main():
                             chunk_start += len(chunk)
                             jobs.append(job)
                             break
-                        else:
-                            # Wait a little while for available spacing within Pool
-                            sleep(1)
-            stderr_print('Main: done submitting all jobs, waiting for threads to finish')
-            while len(jobs) > 0:
-                job = jobs.pop(0)
-                job.wait()
-                write_results_and_log(job.get())
-    else:
-        # Chunking for stdin
-        with Pool(a_threads, init_worker) as pool:
-            jobs = []
-            # chunk_start will be the started value of the combined output lines
-            chunk_start = 0
 
-            # Read chunk amount from stdin
-            chunks = stdin.readlines(CHUNK_SIZE)
-            while chunks:
-                chunk = [line.rstrip('\n').encode(config['input_encoding'][0]) for line in chunks]
-                while True:
-                    while True:
-                        # Process completed jobs in-order
-                        if jobs and jobs[0].ready():
-                            # Housekeeping cleanup jobs completed from the list
-                            job = jobs.pop(0)
-                            write_results_and_log(job.get())
-                        else:
-                            break
+                    chunks = stdin.readlines(CHUNK_SIZE)
 
-                    # Find out which jobs are running
-                    running_jobs = sum([not job.ready() for job in jobs])
-                    if running_jobs < a_threads:
-                        job = pool.apply_async(clean_up, (chunk,))
-                        chunk_start += len(chunk)
-                        jobs.append(job)
-                        break
-
-                chunks = stdin.readlines(CHUNK_SIZE)
-
-            stderr_print('Main: done submitting all jobs, waiting for threads to finish')
-            while len(jobs) > 0:
-                job = jobs.pop(0)
-                job.wait()
-                write_results_and_log(job.get())
+                stderr_print('Main: done submitting all jobs, waiting for threads to finish')
+                while len(jobs) > 0:
+                    job = jobs.pop(0)
+                    job.wait()
+                    write_results_and_log(job.get())
 
     stderr_print('Main: all done')
     if output_file:
