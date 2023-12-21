@@ -8,36 +8,31 @@ is a must read for anyone adding features to demeuk.
 
 Threading
 ---------
-To start of, the input file is counted by the main processes. It will split
+In cause of an input file, the file is 'chunked' by the main processes. It will split
 the input files in chunks. It does so by reading the file per 1 KB. After reading 1 KB
-it will search for the next newline after the 1 KB. It will check the file pointer
-byte offset. It will then read again 1 KB and search for the first new line after that.
-This starting and ending offsets are stored in a list and threads will read useful
-the list to determine what to work on.
+it will search for the next newline after the 1 KB. It will then read again 1 KB and 
+search for the first new line after that. This will continue until the end of the file.
 
 The size of 1 KB is used to reduce memory load and was found to be a solid number for
 good performance.
 
-Next a thread will open the input file and seek to the start offset. It will read
-the remaining byte to the end offset and starts processing the lines.
+When using stdin, the input is not chunked. This is because stdin is a stream and
+thus we can not seek to a specific offset. So the main thread will read the input
+per 1 KB and search for the first newline after that.
 
-Will processing the input file, the thread will create a temp file inside the folder
-'demeuk_tmp' inside the current working directory. Inside this temp file intermediate
-results will be written to reduce memory usages. Note: many thread will cause a significant
-IO storm. If you see a lot of IO wait, reduce the amount of threads or replace you disks
-with faster disks.
-
-Once all threads are done, the main thread will combine all of the results in the
-temp folder. You should note that the order inside the final output will be completely
-un ordered and thus if you want to have a sorted list you need to sort it yourself.
-
-Encoding detection
-------------------
-So, a thread has opened a file, it will start reading it using the splitlines() python
+Searching for the next newline is done using the python's splitlines() 
 function. This means the line will be splitted on: line feed, carriage return,
 LF + CR, formfeeds, file separator, etc. See https://docs.python.org/3/library/stdtypes.html
 for more information.
 
+Next a thread will process the list of lines.
+
+Once all threads are done, the main thread will combine all of the results. 
+You should note that the order inside the final output will be completely
+un ordered and thus if you want to have a sorted list you need to sort it yourself.
+
+Encoding detection
+------------------
 Next, when '--tab' is enabled all tabs will be converted to ':' greedy. This is to have
 a single cut/splitting char. This is done on binary level.
 
@@ -51,7 +46,7 @@ to do so. By default the application will try to decode the data using UTF-8.
 So we start by checking if we have a default encoding to try. This is either
 UTF-8 or supplied by the user. If the line decodes and there does not appear to be
 control character inside the line we can assume that the detection went correctly.
-Also, if you supply a list of input encodings. First put multibyte encodings first.
+Note: If you supply a list of input encodings. Put multibyte encodings first.
 Because single byte encodings will cause false positives.
 
 If that fails we run the detect function of the chardet library. Note: first the 

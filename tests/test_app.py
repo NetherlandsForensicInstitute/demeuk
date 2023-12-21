@@ -4,6 +4,8 @@ from unittest.mock import patch
 from bin.demeuk import main
 from pytest import raises
 
+from subprocess import PIPE, run
+
 
 def calculate_line_numbers(file_name):
     lines = 0
@@ -296,7 +298,7 @@ def test_unhtml_named():
 def test_verbose():
     testargs = [
         'demeuk', '-i', 'testdata/input18', '-o', 'testdata/output18', '-l', 'testdata/log18',
-        '-f', '5-', '-c', '--verbose',
+        '-f', '5-', '-c', '--verbose', '--debug'
     ]
     with patch.object(sys, 'argv', testargs):
         main()
@@ -807,6 +809,16 @@ def test_check_multiple_regexes():
     assert 'alpha\n' not in filecontent
     assert 'alpha123\n' in filecontent
     assert 'alpha1234!' in filecontent
+
+
+def test_stdin_stdout():
+    comlist = ['bin/demeuk.py']
+    script = b'input\nlines\n'
+    res = run(comlist, input=script,
+              stdout=PIPE, stderr=PIPE)
+    assert res.returncode == 0
+    assert res.stdout == b'input\nlines\n'
+    assert res.stderr == b''
 
 
 def test_check_lowercase():

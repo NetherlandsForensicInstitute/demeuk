@@ -8,9 +8,7 @@ Basic usage
 -----------
 An example usage for demeuk is to clean up a password list
 
-Download a list, like for example RockYou. The first step you have to document
-is combine the datafiles into one single file. Using default Linux tooling for this
-works very well. Next you'll run demeuk on the data to clean it up.
+Download a list, like for example RockYou. Then run the following command:
 
 .. code-block:: none
 
@@ -21,13 +19,13 @@ So what do all the parameters do? The -i selects the input file. The -o specifie
 the output file. The -l will specify the log file, by default the log file will only
 contain information on lines containing invalid characters. For example this
 can be lines where demeuk was not able to detect the encoding correctly. If you want
-detailed logging, also include the -v option (verbose logging). The -c
+detailed logging, also include the --verbose and --debug option. The -c
 specifies that there will be cut based on the first ':' found in a string. The -j
 indicates that we will be using multithreading and we'll be creating 8 threads.
 Demeuk has been tested with as many as 48 cores and all cores will be fully used,
 if IO is not a problem (for example on a fast SSD setup).
 
-The --leak option indicates the enabledment of the following modules: 
+The --leak option indicates the following modules: 
 --mojibake, --encode, --newline, --check-controlchar. 
 --mojibake will try to detect and fix encoding issues known as mojibakes. Example of a Mojibake is
 SmˆrgÂs (Smörgås). This is a very common encoding issue. --encode will enable the encoding detection of
@@ -40,6 +38,13 @@ contained line like  <something>:<email>:password.
 
 Some datasets contain encoded strings like hex strings (HEX[] format). Those can be 
 decoded using the following example:
+
+.. code-block:: none
+
+    $ cat inputfile | demeuk.py -j all --leak | sort -u
+
+When --input or --output is not specified, demeuk will use stdin and stdout.
+This allows for easy combining with other tools.
 
 .. code-block:: none
 
@@ -74,9 +79,13 @@ i input
 The input option can be used to select the input file. This can also be a glob
 pattern. For example: "testdir/\*.txt".
 
+When not specified it will use stdin as input.
+
 o output
 ~~~~~~~~
 The output option can be used to select the output file.
+
+When not specified it will use stdout as output.
 
 l log
 ~~~~~~
@@ -115,13 +124,21 @@ Defaults to all ascci punctuation:
 
 verbose
 ~~~~~~~
-Use the verbose option to log all the changes made to any line. Note that this will impact
+Use the verbose option to log lines which are causing some error. For example
+lines that are too long or lines that are not able to be decoded.
+
+debug
+~~~~~
+Use the debug option to log all the changes made to any line. Note that this will impact
 the performance of demeuk significantly. Also this will create a large log file.
 
 progress
 ~~~~~~~~
 Use the progress option to enable the progressbar. The progressbar will be displayed for
 both the chunkify process as well as the demeuking process.
+
+Progress can only be used when the input is a file. It can not be used when the input is
+stdin.
 
 n limit
 ~~~~~~~
