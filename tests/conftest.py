@@ -336,3 +336,6 @@ with open('testdata/input47', 'w') as file:
 
 with open('testdata/input48', 'w') as file:
     file.write(f'3 Doors Down{linesep}')
+
+with open('testdata/input49', 'w') as file:
+    file.write(f'Thirty Seconds To Mars{linesep}')
