@@ -441,8 +441,8 @@ add-umlaut
 In some spellings website the umlaut is not used correct. For example the characters a" are
 in those sites. This should of course be an a with an umlaut.
 
-add-split
-~~~~~~~~~
+add-split / split
+~~~~~~~~~~~~~~~~~
 In some language dictionaries some words are coupled that might be interesting to also
 add uncoupled.
 
@@ -450,6 +450,9 @@ Example: 3D-printer, add split will split the word and add: 3D, printer and 3D-p
 to the corpora. Note: Add-split will not perform a length check that was specified
 using the --min-length option. It only checks if the length of a split part is longer then
 1 unicode character.
+
+The add-split will keep the original in the file, the split command will only keep the
+splitted parts.
 
 add-without-punctuation
 ~~~~~~~~~~~~~~~~~~~~~~~

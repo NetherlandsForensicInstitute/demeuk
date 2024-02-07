@@ -86,6 +86,7 @@ r"""
                                         becomes u, ç becomes c.
         --trim                          Enables removing newlines representations from end and beginning. Newline
                                         representations detected are '\\n', '\\r', '\n', '\r', '<br>', and '<br />'.
+        --split                         Split lines like: 'This Test String' into 3 lines with: This, Test, String.
 
     Add modules (Modify a line, but keep the original as well):
         --add-lower                     If a line contains a capital letter this will add the lower case variant
@@ -144,7 +145,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '4.2.0'
+version = '4.2.1'
 
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.
@@ -1105,13 +1106,16 @@ def clean_up(lines):
             # Some clean modules will modify the end result, those modification will be added here.
             # They will be added to the running thread, this might cause one thread to have more work
             # then others.
-            if config.get('add-split'):
+            if config.get('add-split') or config.get('split'):
                 modified_lines = add_split(line_decoded)
                 if modified_lines:
                     for modified_line in modified_lines:
                         if config['debug']:
                             log.append(f'Add_split; new line because of split; {modified_line}{linesep}')
                         lines.append(modified_line.encode())
+                    if config.get('split'):
+                        # We skip the combined list and only work on the splitted parts.
+                        continue
 
             if config.get('add-lower'):
                 modified_line = add_lower(line_decoded)
@@ -1214,6 +1218,7 @@ def main():
         'umlaut': False,
         'non-ascii': False,
         'title_case': False,
+        'split': False,
 
         # Check
         'length': False,
@@ -1338,6 +1343,9 @@ def main():
 
     if arguments.get('--trim'):
         config['trim'] = True
+
+    if arguments.get('--split'):
+        config['split'] = True
 
     # Check modules
     if arguments.get('--check-min-length'):

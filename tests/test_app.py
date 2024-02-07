@@ -123,7 +123,7 @@ def test_coupe():
         assert 'LANCIA AURELIA B20 COUPÉ GT\n' in filecontent
 
 
-def test_split():
+def test_cut():
     testargs = ['demeuk', '-i', 'testdata/input8', '-o', 'testdata/output8', '-c']
     with patch.object(sys, 'argv', testargs):
         main()
@@ -833,3 +833,17 @@ def test_check_lowercase():
         filecontent = f.read()
 
     assert '3 doors down' in filecontent
+
+
+def test_split():
+    testargs = [
+        'demeuk', '-i', 'testdata/input49', '-o', 'testdata/output49', '-l', 'testdata/log49',
+        '--verbose', '--split',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output49') as f:
+        filecontent = f.read()
+
+    assert 'Thirty\nSeconds\n' in filecontent
