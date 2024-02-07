@@ -86,13 +86,13 @@ r"""
                                         becomes u, ç becomes c.
         --trim                          Enables removing newlines representations from end and beginning. Newline
                                         representations detected are '\\n', '\\r', '\n', '\r', '<br>', and '<br />'.
+        --split                         Split lines like: 'This Test String' into 3 lines with: This, Test, String.
 
     Add modules (Modify a line, but keep the original as well):
         --add-lower                     If a line contains a capital letter this will add the lower case variant
         --add-latin-ligatures           If a line contains a single ligatures of a latin letter (such as ij), the line
                                         is correct but the original line contain the ligatures is also added to output.
         --add-split                     split on known chars like - and . and add those to the final dictionary.
-        --split                         Split lines like: 'This Test String' into 3 lines with: This, Test, String.
         --add-umlaut                    In some spelling dicts, umlaut are sometimes written as: o" or i" and not as
                                         one char.
         --add-without-punctuation       If a line contains punctuations, a variant will be added without the
