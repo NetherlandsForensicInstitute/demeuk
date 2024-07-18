@@ -833,3 +833,16 @@ def test_check_lowercase():
         filecontent = f.read()
 
     assert '3 doors down' in filecontent
+
+
+def test_cut_comma_fields():
+    testargs = [
+        'demeuk', '-i', 'testdata/input13', '-o', 'testdata/output49', '-l', 'testdata/log49',
+        '-f', '2,4', '-c',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+    with open('testdata/output49') as f:
+        filecontent = f.read()
+        assert 'field2:field4\n' in filecontent
+        assert 'field3' not in filecontent
