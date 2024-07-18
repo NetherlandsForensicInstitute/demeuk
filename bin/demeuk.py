@@ -144,7 +144,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '4.2.0'
+version = '4.2.1'
 
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.
@@ -594,9 +594,20 @@ def clean_cut(line, delimiters, fields):
                 if stop == '':
                     stop = len(line)
                 fields = slice(int(start) - 1, int(stop))
+                return True, delimiter.join(line.split(delimiter)[fields])
+            # Small loop to add support for 1,3 for example to select the
+            # 1st and 3th element.
+            elif ',' in fields:
+                elements = [int(x) for x in fields.split(',')]
+                return_line = []
+                line = line.split(delimiter)
+                for element in elements:
+                    return_line.append(line[element - 1])
+
+                return True, delimiter.join(return_line)
             else:
                 fields = slice(int(fields) - 1, int(fields))
-            return True, delimiter.join(line.split(delimiter)[fields])
+                return True, delimiter.join(line.split(delimiter)[fields])
     else:
         return False, line
 
