@@ -74,7 +74,9 @@ r"""
         --check-min-uppercase <count>   Require that entries contain at least <count> uppercase letters
         --check-max-uppercase <count>   Require that entries contain at most <count> uppercase letters
         --check-min-specials <count>    Require that entries contain at least <count> specials
+                                        (a special is defined as a non whitespace character which is not alphanumeric)
         --check-max-specials <count>    Require that entries contain at most <count> specials
+                                        (a special is defined as a non whitespace character which is not alphanumeric)
 
     Modify modules (modify a line in place):
         --hex                           Replace lines like: $HEX[41424344] with ABCD.
