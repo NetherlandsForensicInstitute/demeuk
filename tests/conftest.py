@@ -336,3 +336,48 @@ with open('testdata/input47', 'w') as file:
 
 with open('testdata/input48', 'w') as file:
     file.write(f'3 Doors Down{linesep}')
+
+with open('testdata/input49', 'w') as file:
+    # no digits
+    file.write(f'nodigits{linesep}')
+    # digit at start
+    file.write(f'0digit{linesep}')
+    # nested digit
+    file.write(f'd1git{linesep}')
+    # digit at end
+    file.write(f'digit2{linesep}')
+    # non-ascii digit
+    file.write(f'६{linesep}')
+    # multiple digits
+    file.write(f'pw123!{linesep}')
+
+with open('testdata/input50', 'w') as file:
+    # no uppercase
+    file.write(f'noupper{linesep}')
+    # uppercase at start
+    file.write(f'Uppercase{linesep}')
+    # nested uppercase
+    file.write(f'upperCase{linesep}')
+    # uppercase at end
+    file.write(f'uppercasE{linesep}')
+    # non-ascii uppercase
+    file.write(f'greek:Ω{linesep}')
+    # multiple uppercase
+    file.write(f'ThisIsUpperCase!!!{linesep}')
+
+with open('testdata/input51', 'w') as file:
+    # no special
+    file.write(f'NoSpecialsHere{linesep}')
+    # special at start
+    file.write(f'!special{linesep}')
+    # nested special
+    file.write(f'No?Here{linesep}')
+    # special at end
+    file.write(f'evenSpecialer#{linesep}')
+    # non-ascii special
+    file.write(f'Richie£Rich{linesep}')
+    # multiple special
+    file.write(f'%✓⏻{linesep}')
+    # emoji encoded with 8 bytes in utf-8
+    # a combination of U+1F64C (raising hands) and U+1F3FD (skin tone)
+    file.write(f'8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽{linesep}')

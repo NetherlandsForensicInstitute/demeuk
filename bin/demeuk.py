@@ -825,6 +825,7 @@ def contains_at_least(line, bound, char_property):
         true if at least `bound` characters match
         false otherwise
     """
+    # TODO: would it improve performance if we loop ourselves and short-circuit?
     count = sum(1 for char in line if char_property(char))
     return count >= bound
 
@@ -841,6 +842,7 @@ def contains_at_most(line, bound, char_property):
         true if at most `bound` characters match
         false otherwise
     """
+    # TODO: would it improve performance if we loop ourselves and short-circuit?
     count = sum(1 for char in line if char_property(char))
     return count <= bound
 
@@ -1115,7 +1117,7 @@ def clean_up(lines):
                 stop = True
 
         max_digits = config.get('check-max-digits')
-        if max_digits and not stop:
+        if not stop:
             if not contains_at_most(line_decoded, max_digits, str.isdigit):
                 log.append(f'Check_max_digits; dropped line because it contains more than '
                            f'{max_digits} digits; {line_decoded}{linesep}')
@@ -1129,7 +1131,7 @@ def clean_up(lines):
                 stop = True
 
         max_uppercase = config.get('check-max-uppercase')
-        if max_uppercase and not stop:
+        if not stop:
             if not contains_at_most(line_decoded, max_uppercase, str.isupper):
                 log.append(f'Check_max_uppercase; dropped line because it contains more than '
                            f'{max_uppercase} uppercase characters; {line_decoded}{linesep}')
@@ -1143,7 +1145,7 @@ def clean_up(lines):
                 stop = True
 
         max_specials = config.get('check-max-specials')
-        if max_specials and not stop:
+        if not stop:
             if not contains_at_most(line_decoded, max_specials, lambda char: not char.isalnum() and not char.isspace()):
                 log.append(f'Check_max_specials; dropped line because it contains more than '
                            f'{max_specials} special characters; {line_decoded}{linesep}')
@@ -1313,6 +1315,12 @@ def main():
         'check-ending-with': False,
         'check-empty-line': False,
         'check-regex': False,
+        'check-min-digits': 0,
+        'check-max-digits': float('inf'),
+        'check-min-uppercase': 0,
+        'check-max-uppercase': float('inf'),
+        'check-min-specials': 0,
+        'check-max-specials': float('inf'),
 
         # Add
         'add-lower': False,
