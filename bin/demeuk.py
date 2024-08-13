@@ -1124,7 +1124,7 @@ def clean_up(lines):
                 stop = True
 
         max_digits = config.get('check-max-digits')
-        if not stop:
+        if max_digits != float('inf') and not stop:
             if not contains_at_most(line_decoded, max_digits, str.isdigit):
                 log.append(f'Check_max_digits; dropped line because it contains more than '
                            f'{max_digits} digits; {line_decoded}{linesep}')
@@ -1138,7 +1138,7 @@ def clean_up(lines):
                 stop = True
 
         max_uppercase = config.get('check-max-uppercase')
-        if not stop:
+        if max_uppercase != float('inf') and not stop:
             if not contains_at_most(line_decoded, max_uppercase, str.isupper):
                 log.append(f'Check_max_uppercase; dropped line because it contains more than '
                            f'{max_uppercase} uppercase characters; {line_decoded}{linesep}')
@@ -1152,7 +1152,7 @@ def clean_up(lines):
                 stop = True
 
         max_specials = config.get('check-max-specials')
-        if not stop:
+        if max_specials != float('inf') and not stop:
             if not contains_at_most(line_decoded, max_specials, lambda char: not char.isalnum() and not char.isspace()):
                 log.append(f'Check_max_specials; dropped line because it contains more than '
                            f'{max_specials} special characters; {line_decoded}{linesep}')
