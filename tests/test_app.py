@@ -907,6 +907,7 @@ def test_check_special():
     result = _run_demeuk('input51', '--check-min-special', '3', '--check-max-special', '3').splitlines()
     assert result == ['%✓⏻']
 
+    # 9 specials: 1 for * and each hand emoji is represented by 2 unicode codepoints
     result = _run_demeuk('input51', '--check-min-special', '9', '--check-max-special', '9').splitlines()
     assert result == ['8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽']
 
