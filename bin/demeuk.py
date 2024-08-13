@@ -70,13 +70,20 @@ r"""
         --check-regex <string>          Drop lines that do not match the regex. Regex is a comma seperated list of
                                         regexes. Example: [a-z]{1,8},[0-9]{1,8}
         --check-min-digits <count>      Require that entries contain at least <count> digits
+                                        (following the Python definition of a digit, see https://docs.python.org/3/library/stdtypes.html#str.isdigit)
         --check-max-digits <count>      Require that entries contain at most <count> digits
+                                        (following the Python definition of a digit, see https://docs.python.org/3/library/stdtypes.html#str.isdigit)
         --check-min-uppercase <count>   Require that entries contain at least <count> uppercase letters
+                                        (following the Python definition of uppercase, see https://docs.python.org/3/library/stdtypes.html#str.isupper)
         --check-max-uppercase <count>   Require that entries contain at most <count> uppercase letters
+                                        (following the Python definition of uppercase, see https://docs.python.org/3/library/stdtypes.html#str.isupper)
         --check-min-specials <count>    Require that entries contain at least <count> specials
-                                        (a special is defined as a non whitespace character which is not alphanumeric)
+                                        (a special is defined as a non whitespace character which is not alphanumeric,
+                                        following the Python definitions of both, see https://docs.python.org/3/library/stdtypes.html#str.isspace and https://docs.python.org/3/library/stdtypes.html#str.isalnum)
         --check-max-specials <count>    Require that entries contain at most <count> specials
-                                        (a special is defined as a non whitespace character which is not alphanumeric)
+                                        (a special is defined as a non whitespace character which is not alphanumeric,
+                                        following the Python definitions of both, see https://docs.python.org/3/library/stdtypes.html#str.isspace and https://docs.python.org/3/library/stdtypes.html#str.isalnum)
+
 
     Modify modules (modify a line in place):
         --hex                           Replace lines like: $HEX[41424344] with ABCD.
