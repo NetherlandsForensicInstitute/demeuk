@@ -832,9 +832,13 @@ def contains_at_least(line, bound, char_property):
         true if at least `bound` characters match
         false otherwise
     """
-    # TODO: would it improve performance if we loop ourselves and short-circuit?
-    count = sum(1 for char in line if char_property(char))
-    return count >= bound
+    count = 0
+    for char in line:
+        if char_property(char):
+            count += 1
+            if count >= bound:
+                return True
+    return False
 
 
 def contains_at_most(line, bound, char_property):
@@ -849,9 +853,13 @@ def contains_at_most(line, bound, char_property):
         true if at most `bound` characters match
         false otherwise
     """
-    # TODO: would it improve performance if we loop ourselves and short-circuit?
-    count = sum(1 for char in line if char_property(char))
-    return count <= bound
+    count = 0
+    for char in line:
+        if char_property(char):
+            count += 1
+            if count > bound:
+                return False
+    return True
 
 
 def try_encoding(line, encoding):
