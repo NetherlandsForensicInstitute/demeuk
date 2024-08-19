@@ -832,6 +832,9 @@ def contains_at_least(line, bound, char_property):
         true if at least `bound` characters match
         false otherwise
     """
+    if bound == 0:
+        return True
+
     count = 0
     for char in line:
         if char_property(char):

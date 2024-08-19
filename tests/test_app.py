@@ -858,6 +858,9 @@ def test_check_digits():
     result = _run_demeuk('input49', '--check-max-digits', '0').splitlines()
     assert result == ['nodigits']
 
+    result = _run_demeuk('input49', '--check-max-digits', '9999999').splitlines()
+    assert result == ['nodigits', '0digit', 'd1git', 'digit2', '६', 'pw123!']
+
     result = _run_demeuk('input49', '--check-min-digits', '1').splitlines()
     assert result == ['0digit', 'd1git', 'digit2', '६', 'pw123!']
 
@@ -878,6 +881,9 @@ def test_check_uppercase():
     result = _run_demeuk('input50', '--check-max-uppercase', '0').splitlines()
     assert result == ['noupper']
 
+    result = _run_demeuk('input50', '--check-max-digits', '9999999').splitlines()
+    assert result == ['noupper', 'Uppercase', 'upperCase', 'uppercasE', 'greek:Ω', 'ThisIsUpperCase!!!']
+
     result = _run_demeuk('input50', '--check-min-uppercase', '1').splitlines()
     assert result == ['Uppercase', 'upperCase', 'uppercasE', 'greek:Ω', 'ThisIsUpperCase!!!']
 
@@ -897,6 +903,9 @@ def test_check_special():
 
     result = _run_demeuk('input51', '--check-max-special', '0').splitlines()
     assert result == ['NoSpecialsHere']
+
+    result = _run_demeuk('input51', '--check-max-digits', '9999999').splitlines()
+    assert result == ['NoSpecialsHere', '!special', 'No?Here', 'evenSpecialer#', 'Richie£Rich', '%✓⏻', '8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽']
 
     result = _run_demeuk('input51', '--check-min-special', '1').splitlines()
     assert result == ['!special', 'No?Here', 'evenSpecialer#', 'Richie£Rich', '%✓⏻', '8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽']
