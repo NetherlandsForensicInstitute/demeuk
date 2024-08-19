@@ -1,10 +1,10 @@
 import sys
+from subprocess import PIPE, run
 from unittest.mock import patch
 
-from bin.demeuk import main
 from pytest import raises
 
-from subprocess import PIPE, run
+from bin.demeuk import main
 
 
 def calculate_line_numbers(file_name):
@@ -833,3 +833,93 @@ def test_check_lowercase():
         filecontent = f.read()
 
     assert '3 doors down' in filecontent
+
+
+def _run_demeuk(file_name, *extra_args):
+    testargs = [
+        'demeuk', '-i', f'testdata/{file_name}',
+        '-o', f'testdata/{file_name}.out',
+        '-l', f'testdata/{file_name}.log',
+        '--verbose',
+    ]
+    testargs.extend(extra_args)
+
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open(f'testdata/{file_name}.out') as f:
+        return f.read()
+
+
+def test_check_digits():
+    result = _run_demeuk('input49', '--check-min-digits', '0', '--check-max-digits', '0').splitlines()
+    assert result == ['nodigits']
+
+    result = _run_demeuk('input49', '--check-max-digits', '0').splitlines()
+    assert result == ['nodigits']
+
+    result = _run_demeuk('input49', '--check-max-digits', '9999999').splitlines()
+    assert result == ['nodigits', '0digit', 'd1git', 'digit2', '६', 'pw123!']
+
+    result = _run_demeuk('input49', '--check-min-digits', '1').splitlines()
+    assert result == ['0digit', 'd1git', 'digit2', '६', 'pw123!']
+
+    result = _run_demeuk('input49', '--check-min-digits', '2').splitlines()
+    assert result == ['pw123!']
+
+    result = _run_demeuk('input49', '--check-min-digits', '3', '--check-max-digits', '3').splitlines()
+    assert result == ['pw123!']
+
+    result = _run_demeuk('input49', '--check-min-digits', '4').splitlines()
+    assert result == []
+
+
+def test_check_uppercase():
+    result = _run_demeuk('input50', '--check-min-uppercase', '0', '--check-max-uppercase', '0').splitlines()
+    assert result == ['noupper']
+
+    result = _run_demeuk('input50', '--check-max-uppercase', '0').splitlines()
+    assert result == ['noupper']
+
+    result = _run_demeuk('input50', '--check-max-digits', '9999999').splitlines()
+    assert result == ['noupper', 'Uppercase', 'upperCase', 'uppercasE', 'greek:Ω', 'ThisIsUpperCase!!!']
+
+    result = _run_demeuk('input50', '--check-min-uppercase', '1').splitlines()
+    assert result == ['Uppercase', 'upperCase', 'uppercasE', 'greek:Ω', 'ThisIsUpperCase!!!']
+
+    result = _run_demeuk('input50', '--check-min-uppercase', '2').splitlines()
+    assert result == ['ThisIsUpperCase!!!']
+
+    result = _run_demeuk('input50', '--check-min-uppercase', '4', '--check-max-uppercase', '4').splitlines()
+    assert result == ['ThisIsUpperCase!!!']
+
+    result = _run_demeuk('input50', '--check-min-uppercase', '9999999').splitlines()
+    assert result == []
+
+
+def test_check_special():
+    result = _run_demeuk('input51', '--check-min-special', '0', '--check-max-special', '0').splitlines()
+    assert result == ['NoSpecialsHere']
+
+    result = _run_demeuk('input51', '--check-max-special', '0').splitlines()
+    assert result == ['NoSpecialsHere']
+
+    result = _run_demeuk('input51', '--check-max-digits', '9999999').splitlines()
+    assert result == ['NoSpecialsHere', '!special', 'No?Here', 'evenSpecialer#', 'Richie£Rich', '%✓⏻', '8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽']
+
+    result = _run_demeuk('input51', '--check-min-special', '1').splitlines()
+    assert result == ['!special', 'No?Here', 'evenSpecialer#', 'Richie£Rich', '%✓⏻', '8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽']
+
+    result = _run_demeuk('input51', '--check-min-special', '2').splitlines()
+    assert result == ['%✓⏻', '8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽']
+
+    result = _run_demeuk('input51', '--check-min-special', '3', '--check-max-special', '3').splitlines()
+    assert result == ['%✓⏻']
+
+    # 9 specials: 1 for * and each hand emoji is represented by 2 unicode codepoints
+    result = _run_demeuk('input51', '--check-min-special', '9', '--check-max-special', '9').splitlines()
+    assert result == ['8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽']
+
+    result = _run_demeuk('input51', '--check-min-special', '9999999').splitlines()
+    assert result == []
+

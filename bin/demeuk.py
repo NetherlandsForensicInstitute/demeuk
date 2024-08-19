@@ -69,6 +69,21 @@ r"""
         --check-empty-line              Drop lines that are empty or only contain whitespace characters
         --check-regex <string>          Drop lines that do not match the regex. Regex is a comma seperated list of
                                         regexes. Example: [a-z]{1,8},[0-9]{1,8}
+        --check-min-digits <count>      Require that entries contain at least <count> digits
+                                        (following the Python definition of a digit, see https://docs.python.org/3/library/stdtypes.html#str.isdigit)
+        --check-max-digits <count>      Require that entries contain at most <count> digits
+                                        (following the Python definition of a digit, see https://docs.python.org/3/library/stdtypes.html#str.isdigit)
+        --check-min-uppercase <count>   Require that entries contain at least <count> uppercase letters
+                                        (following the Python definition of uppercase, see https://docs.python.org/3/library/stdtypes.html#str.isupper)
+        --check-max-uppercase <count>   Require that entries contain at most <count> uppercase letters
+                                        (following the Python definition of uppercase, see https://docs.python.org/3/library/stdtypes.html#str.isupper)
+        --check-min-specials <count>    Require that entries contain at least <count> specials
+                                        (a special is defined as a non whitespace character which is not alphanumeric,
+                                        following the Python definitions of both, see https://docs.python.org/3/library/stdtypes.html#str.isspace and https://docs.python.org/3/library/stdtypes.html#str.isalnum)
+        --check-max-specials <count>    Require that entries contain at most <count> specials
+                                        (a special is defined as a non whitespace character which is not alphanumeric,
+                                        following the Python definitions of both, see https://docs.python.org/3/library/stdtypes.html#str.isspace and https://docs.python.org/3/library/stdtypes.html#str.isalnum)
+
 
     Modify modules (modify a line in place):
         --hex                           Replace lines like: $HEX[41424344] with ABCD.
@@ -805,6 +820,51 @@ def check_regex(line, regex):
     return True
 
 
+def contains_at_least(line, bound, char_property):
+    """Check if the line contains at least `bound` characters with given property.
+
+    Params:
+        line (unicode)
+        bound (int)
+        char_property (str -> bool)
+
+    Returns:
+        true if at least `bound` characters match
+        false otherwise
+    """
+    if bound == 0:
+        return True
+
+    count = 0
+    for char in line:
+        if char_property(char):
+            count += 1
+            if count >= bound:
+                return True
+    return False
+
+
+def contains_at_most(line, bound, char_property):
+    """Check if the line contains at most `bound` characters with given property.
+
+    Params:
+        line (unicode)
+        bound (int)
+        char_property (str -> bool)
+
+    Returns:
+        true if at most `bound` characters match
+        false otherwise
+    """
+    count = 0
+    for char in line:
+        if char_property(char):
+            count += 1
+            if count > bound:
+                return False
+    return True
+
+
 def try_encoding(line, encoding):
     """Tries to decode a line using supplied encoding
 
@@ -1067,6 +1127,48 @@ def clean_up(lines):
                 log.append(f'Check_regex; dropped line because it does not match the regex; {line_decoded}{linesep}')
                 stop = True
 
+        min_digits = config.get('check-min-digits')
+        if min_digits and not stop:
+            if not contains_at_least(line_decoded, min_digits, str.isdigit):
+                log.append(f'Check_min_digits; dropped line because it contains less than '
+                           f'{min_digits} digits; {line_decoded}{linesep}')
+                stop = True
+
+        max_digits = config.get('check-max-digits')
+        if max_digits != float('inf') and not stop:
+            if not contains_at_most(line_decoded, max_digits, str.isdigit):
+                log.append(f'Check_max_digits; dropped line because it contains more than '
+                           f'{max_digits} digits; {line_decoded}{linesep}')
+                stop = True
+
+        min_uppercase = config.get('check-min-uppercase')
+        if min_uppercase and not stop:
+            if not contains_at_least(line_decoded, min_uppercase, str.isupper):
+                log.append(f'Check_min_uppercase; dropped line because it contains less than '
+                           f'{min_uppercase} uppercase characters; {line_decoded}{linesep}')
+                stop = True
+
+        max_uppercase = config.get('check-max-uppercase')
+        if max_uppercase != float('inf') and not stop:
+            if not contains_at_most(line_decoded, max_uppercase, str.isupper):
+                log.append(f'Check_max_uppercase; dropped line because it contains more than '
+                           f'{max_uppercase} uppercase characters; {line_decoded}{linesep}')
+                stop = True
+
+        min_specials = config.get('check-min-specials')
+        if min_specials and not stop:
+            if not contains_at_least(line_decoded, min_specials, lambda char: not char.isalnum() and not char.isspace()):
+                log.append(f'Check_min_specials; dropped line because it contains less than '
+                           f'{min_specials} special characters; {line_decoded}{linesep}')
+                stop = True
+
+        max_specials = config.get('check-max-specials')
+        if max_specials != float('inf') and not stop:
+            if not contains_at_most(line_decoded, max_specials, lambda char: not char.isalnum() and not char.isspace()):
+                log.append(f'Check_max_specials; dropped line because it contains more than '
+                           f'{max_specials} special characters; {line_decoded}{linesep}')
+                stop = True
+
         if config.get('check-starting-with') and not stop:
             to_check = config.get("check-starting-with")
             if check_starting_with(line_decoded, to_check):
@@ -1231,6 +1333,12 @@ def main():
         'check-ending-with': False,
         'check-empty-line': False,
         'check-regex': False,
+        'check-min-digits': 0,
+        'check-max-digits': float('inf'),
+        'check-min-uppercase': 0,
+        'check-max-uppercase': float('inf'),
+        'check-min-specials': 0,
+        'check-max-specials': float('inf'),
 
         # Add
         'add-lower': False,
@@ -1390,6 +1498,24 @@ def main():
     if arguments.get('--check-regex'):
         config['check-regex'] = arguments.get('--check-regex').split(',')
 
+    if arguments.get('--check-min-digits'):
+        config['check-min-digits'] = int(arguments.get('--check-min-digits'))
+
+    if arguments.get('--check-max-digits'):
+        config['check-max-digits'] = int(arguments.get('--check-max-digits'))
+
+    if arguments.get('--check-min-uppercase'):
+        config['check-min-uppercase'] = int(arguments.get('--check-min-uppercase'))
+
+    if arguments.get('--check-max-uppercase'):
+        config['check-max-uppercase'] = int(arguments.get('--check-max-uppercase'))
+
+    if arguments.get('--check-min-specials'):
+        config['check-min-specials'] = int(arguments.get('--check-min-specials'))
+
+    if arguments.get('--check-max-specials'):
+        config['check-max-specials'] = int(arguments.get('--check-max-specials'))
+
     # Add modules
     if arguments.get('--add-lower'):
         config['add-lower'] = True
@@ -1454,13 +1580,16 @@ def main():
         config['check-replacement-character'] = True
         config['check-empty-line'] = True
 
-    if output_file and not access(path.dirname(output_file), W_OK):
-        stderr_print(f"Cannot write output file to {path(output_file)}")
+    output_file_path = path.realpath(output_file)
+    if output_file and not access(path.dirname(output_file_path), W_OK):
+        stderr_print(f"Cannot write output file to {output_file}")
+
     # check if logfile exists, or that the directory of the log file is at least writable.
-    if log_file and not (access(log_file, F_OK) or access(path.dirname(log_file), W_OK)):
+    if log_file and not (access(log_file, F_OK) or access(path.dirname(path.realpath(log_file)), W_OK)):
         stderr_print(f"Cannot write log file to {log_file}")
-    if input_file and not access(input_file, R_OK):
-        stderr_print(f"Cannot read input file to {input_file}")
+
+    if input_file and not access(path.realpath(input_file), R_OK):
+        stderr_print(f"Cannot read input file from {input_file}")
 
     #  Main worker
     stderr_print(f'Main: running demeuk - {version}')

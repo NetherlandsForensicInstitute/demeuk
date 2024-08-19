@@ -312,6 +312,52 @@ matches all of the regexes, the line will be dropped.
 Example: --check-regex '[a-z],[0-9]' will drop lines
 that do not atleast contain one lowercase char and one number.
 
+check-min-digits
+~~~~~~~~~~~~~~~~
+Checks if a line contains a minimum number of digit characters. If the line does not contain
+enough digit characters, the line will be dropped. Apart from the ASCII digits 0-9, it includes
+other unicode digits as well. It follows the Python definition of a digit,
+see https://docs.python.org/3/library/stdtypes.html#str.isdigit
+
+check-max-digits
+~~~~~~~~~~~~~~~~
+Checks if a line contains a maximum number of digit characters. If the line contains too many
+digit characters, the line will be dropped. Apart from the ASCII digits 0-9, it includes
+other unicode digits as well. It follows the Python definition of a digit,
+see https://docs.python.org/3/library/stdtypes.html#str.isdigit
+
+check-min-uppercase
+~~~~~~~~~~~~~~~~~~~
+Checks if a line contains a minimum number of uppercase characters. If the line does not contain
+enough uppercase characters, the line will be dropped. Apart from the ASCII uppercase characters A-Z, it includes
+other unicode uppercase characters as well. It follows the Python definition of an uppercase character,
+see https://docs.python.org/3/library/stdtypes.html#str.isupper
+
+check-max-uppercase
+~~~~~~~~~~~~~~~~~~~
+Checks if a line contains a maximum number of uppercase characters. If the line contains too many
+uppercase characters, the line will be dropped. Apart from the ASCII uppercase characters A-Z, it includes
+other unicode uppercase characters as well. It follows the Python definition of an uppercase character,
+see https://docs.python.org/3/library/stdtypes.html#str.isupper
+
+check-min-specials
+~~~~~~~~~~~~~~~~~~
+Checks if a line contains a minimum number of special characters. If the line does not contain
+enough special characters, the line will be dropped. A special character is defined as a character
+which is both not a whitespace and not an alphanumeric character. Apart from the ASCII special characters,
+it includes other unicode special characters as well. The definition of a whitespace and alphanumeric
+character follows those of Python, see https://docs.python.org/3/library/stdtypes.html#str.isspace
+and https://docs.python.org/3/library/stdtypes.html#str.isalnum
+
+check-max-specials
+~~~~~~~~~~~~~~~~~~
+Checks if a line contains a maximum number of special characters. If the line contains too many
+special characters, the line will be dropped. A special character is defined as a character
+which is both not a whitespace and not an alphanumeric character. Apart from the ASCII special characters,
+it includes other unicode special characters as well. The definition of a whitespace and alphanumeric
+character follows those of Python, see https://docs.python.org/3/library/stdtypes.html#str.isspace
+and https://docs.python.org/3/library/stdtypes.html#str.isalnum
+
 Modify modules
 --------------
 hex
