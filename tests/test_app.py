@@ -905,7 +905,8 @@ def test_check_special():
     assert result == ['NoSpecialsHere']
 
     result = _run_demeuk('input51', '--check-max-digits', '9999999').splitlines()
-    assert result == ['NoSpecialsHere', '!special', 'No?Here', 'evenSpecialer#', 'Richie£Rich', '%✓⏻', '8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽']
+    assert result == ['NoSpecialsHere', '!special', 'No?Here', 'evenSpecialer#', 'Richie£Rich', '%✓⏻',
+                      '8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽']
 
     result = _run_demeuk('input51', '--check-min-special', '1').splitlines()
     assert result == ['!special', 'No?Here', 'evenSpecialer#', 'Richie£Rich', '%✓⏻', '8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽']
@@ -922,4 +923,3 @@ def test_check_special():
 
     result = _run_demeuk('input51', '--check-min-special', '9999999').splitlines()
     assert result == []
-
