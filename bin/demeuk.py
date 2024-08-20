@@ -1580,16 +1580,14 @@ def main():
         config['check-replacement-character'] = True
         config['check-empty-line'] = True
 
-    output_file_path = path.realpath(output_file)
-    if output_file and not access(path.dirname(output_file_path), W_OK):
+    if output_file and not access(path.dirname(output_file), W_OK):
         stderr_print(f"Cannot write output file to {output_file}")
 
     # check if logfile exists, or that the directory of the log file is at least writable.
-    if log_file and not (access(log_file, F_OK) or access(path.dirname(path.realpath(log_file)), W_OK)):
+    if log_file and not (access(log_file, F_OK) or access(path.dirname(log_file), W_OK)):
         stderr_print(f"Cannot write log file to {log_file}")
-
-    if input_file and not access(path.realpath(input_file), R_OK):
-        stderr_print(f"Cannot read input file from {input_file}")
+    if input_file and not access(input_file, R_OK):
+        stderr_print(f"Cannot read input file to {input_file}")
 
     #  Main worker
     stderr_print(f'Main: running demeuk - {version}')
