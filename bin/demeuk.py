@@ -1165,7 +1165,8 @@ def clean_up(lines):
 
         min_specials = config.get('check-min-specials')
         if min_specials and not stop:
-            if not contains_at_least(line_decoded, min_specials, lambda char: not char.isalnum() and not char.isspace()):
+            if not contains_at_least(line_decoded, min_specials,
+                                     lambda char: not char.isalnum() and not char.isspace()):
                 log.append(f'Check_min_specials; dropped line because it contains less than '
                            f'{min_specials} special characters; {line_decoded}{linesep}')
                 stop = True
