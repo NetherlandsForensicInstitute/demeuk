@@ -1278,7 +1278,7 @@ def clean_up(lines: list[bytes], config: Config):
                 continue
 
         if config["check_min_uppercase"] > 0:
-            if not contains_at_least(line_decoded, config["check_min_uppercase"], str.islower):
+            if not contains_at_least(line_decoded, config["check_min_uppercase"], str.isupper):
                 log.append(
                     f"Check_min_lowercase; dropped line because it contains less than "
                     f"{config['check_min_uppercase']} lowercase characters; {line_decoded}{linesep}"
@@ -1623,12 +1623,12 @@ def main():
     config["check_ending_with"] = args.check_ending_with.split(",") if args.check_ending_with else False
     config["check_regex"] = args.check_regex.split(",") if args.check_regex else False
 
-    config["check_min_digits"] = args.check_min_digits if args.check_min_digits else config["check_min_digits"]
-    config["check_max_digits"] = args.check_max_digits if args.check_max_digits else config["check_max_digits"]
-    config["check_min_uppercase"] = args.check_min_uppercase if args.check_min_uppercase else config["check_min_uppercase"]
-    config["check_max_uppercase"] = args.check_max_uppercase if args.check_max_uppercase else config["check_max_uppercase"]
-    config["check_min_specials"] = args.check_min_specials if args.check_min_specials else config["check_min_specials"]
-    config["check_max_specials"] = args.check_max_specials if args.check_max_specials else config["check_max_specials"]
+    config["check_min_digits"] = args.check_min_digits if args.check_min_digits != None else config["check_min_digits"]
+    config["check_max_digits"] = args.check_max_digits if args.check_max_digits != None else config["check_max_digits"]
+    config["check_min_uppercase"] = args.check_min_uppercase if args.check_min_uppercase != None else config["check_min_uppercase"]
+    config["check_max_uppercase"] = args.check_max_uppercase if args.check_max_uppercase != None else config["check_max_uppercase"]
+    config["check_min_specials"] = args.check_min_specials if args.check_min_specials != None else config["check_min_specials"]
+    config["check_max_specials"] = args.check_max_specials if args.check_max_specials != None else config["check_max_specials"]
 
     config["add_lower"] = args.add_lower
     config["add_latin_ligatures"] = args.add_latin_ligatures
