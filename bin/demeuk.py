@@ -141,6 +141,7 @@ import argparse
 from binascii import hexlify, unhexlify
 from glob import glob
 from html import unescape
+from io import BytesIO
 from math import ceil
 from multiprocessing import Manager, Process, cpu_count
 from os import linesep, access, path, R_OK, W_OK, F_OK
@@ -151,8 +152,8 @@ from re import split as re_split
 from re import sub
 import re
 from string import punctuation as string_punctuation
-from sys import stderr, stdout, exit
-from typing import Any, Callable, Literal, TypedDict
+from sys import stderr, stdout, exit, stdin
+from typing import Any, BinaryIO, Callable, Literal, TypedDict
 from unicodedata import category
 
 
@@ -228,6 +229,9 @@ class Config(TypedDict):
     leak: bool
     leak_full: bool
 
+class InputFileData(TypedDict):
+    filename: str | BinaryIO
+    chunk_estimation: int
 
 version = "4.3.0"
 
@@ -1393,13 +1397,23 @@ def clean_up(lines: list[bytes], config: Config):
     return {"results": results, "log": log}
 
 
-def chunkify(filename: str, config: Config, size: int = CHUNK_SIZE):
-    with open(filename, "rb") as fh:
+def chunkify(filename: str | BinaryIO, config: Config, size: int = CHUNK_SIZE):
+    if isinstance(filename, str):
+        with open(filename, "rb") as fh:
+            for _ in range(0, config["skip"]):
+                fh.readline()
+
+            while True:
+                lines = [line.rstrip(b"\n") for line in fh.readlines(size)]
+                yield lines
+                if len(lines) == 0:
+                    break
+    else:
         for _ in range(0, config["skip"]):
-            fh.readline()
+            filename.readline()
 
         while True:
-            lines = [line.rstrip(b"\n") for line in fh.readlines(size)]
+            lines = [line.rstrip(b"\n") for line in filename.readlines(size)]
             yield lines
             if len(lines) == 0:
                 break
@@ -1415,7 +1429,7 @@ def stderr_print(config: Config, *args, **kwargs):
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Description of your program")
     parser.add_argument("--version", action="store_true", help="Show version and exit")
-    parser.add_argument("-i", "--input", type=str, help="Input file", required=True)
+    parser.add_argument("-i", "--input", type=str, help="Input file")
     parser.add_argument("-o", "--output", type=str, help="Output file")
     parser.add_argument("-l", "--log", type=str, help="Log file")
     parser.add_argument("-j", "--threads", type=str, help="Number of threads to use")
@@ -1674,7 +1688,7 @@ def main():
         config["check_replacement_character"] = True
         config["check_empty_line"] = True
 
-    input_files_data: list[dict[str, Any]] = []
+    input_files_data: list[InputFileData] = []
     if args.input:
         stderr_print(config, f"Main: input found in {args.input}")
         input_files = tqdm(
@@ -1698,6 +1712,16 @@ def main():
             chunk_estimation = int(ceil(path.getsize(input_file) / CHUNK_SIZE))
 
             input_files_data.append({"filename": input_file, "chunk_estimation": chunk_estimation})
+    else:
+        stderr_print(config, "Main: no input file found using stdin")
+
+        data = stdin.buffer.read()
+        buffer = BytesIO(data)
+
+        chunk_estimation = int(ceil(len(data) / CHUNK_SIZE))
+
+        buffer.seek(0)
+        input_files_data.append({"filename": buffer, "chunk_estimation": chunk_estimation})
 
     if args.output and not access(path.dirname(args.output), W_OK):
         stderr_print(config, f"Cannot write output file to {args.output}")
