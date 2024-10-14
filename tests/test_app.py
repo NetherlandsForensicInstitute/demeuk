@@ -492,7 +492,6 @@ def test_add_without_punctuation():
         assert 'standbyme' in filecontent
         assert 'theclash' in filecontent
 
-
 def test_glob():
     testargs = [
         'demeuk', '-i', 'testdata/input*', '-o', 'testdata/output30', '-l', 'testdata/log30',
@@ -923,3 +922,12 @@ def test_check_special():
 
     result = _run_demeuk('input51', '--check-min-special', '9999999').splitlines()
     assert result == []
+
+def test_add_split():
+    testargs = [
+        'demeuk', '-i', 'testdata/input52', '-o', 'testdata/output52', '-l', 'testdata/log52', '--add-split',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    assert calculate_line_numbers('testdata/output52') == 160
