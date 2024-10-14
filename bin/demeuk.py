@@ -505,6 +505,7 @@ def add_split(
     Returns:
         split line
     """
+
     parts: set[str] = set()
 
     def add_to_set(parts_to_add: list[str]):
@@ -512,11 +513,14 @@ def add_split(
             if len(part) > 1:
                 parts.add(part)
 
+    def split_line_for_punctuation(line: str, punctuation: tuple[str, ...]):
+        for p in punctuation:
+            if p in line:
+                add_to_set(line.split(p, 1))
+                add_to_set(line.rsplit(p, 1))
 
-    for p in punctuation:
-        if p in line:
-            add_to_set(line.split(p, 1))
-            add_to_set(line.rsplit(p, 1))
+
+    split_line_for_punctuation(line, punctuation)
 
     if len(parts) > 0:
         return list(parts)
@@ -1099,6 +1103,10 @@ def clean_up(lines: list[bytes], config: Config):
     results: list[str] = []
     log: list[str] = []
 
+    def add_to_lines(line: bytes):
+        if not line in lines:
+            lines.append(line)
+
     for line in lines:
         # Check if the limit is set, if so minus 1 and if 0 is reached lets quit.
         if type(config["limit"]) is int:
@@ -1142,7 +1150,7 @@ def clean_up(lines: list[bytes], config: Config):
             if status and isinstance(hex_line_decoded, bytes):  # Should be bytes always
                 # Lines contains hex, this function will return binary string, so add it back to
                 # our undecoded lines
-                lines.append(hex_line_decoded)
+                add_to_lines(hex_line_decoded)
                 if config["debug"]:
                     log.append(f"Clean_hex; replaced $HEX[], added to queue and quiting; {line}{linesep}")
                 # Aborting future processing of this line.
@@ -1154,7 +1162,7 @@ def clean_up(lines: list[bytes], config: Config):
             if status:
                 # Line contains html string, because this can be binary data (linefeeds etc)
                 # convert back to binary string and add to queue again.
-                lines.append(html_line_decoded.encode())
+                add_to_lines(html_line_decoded.encode())
                 if config["debug"]:
                     log.append(f"Clean_html; replaced html, added to queue and quiting; {line_decoded}{linesep}")
                 continue
@@ -1372,38 +1380,39 @@ def clean_up(lines: list[bytes], config: Config):
                 for modified_line in modified_lines:
                     if config["debug"]:
                         log.append(f"Add_split; new line because of split; {modified_line}{linesep}")
-                    lines.append(modified_line.encode())
+                    add_to_lines(modified_line.encode())
 
         if config["add_lower"]:
             modified_line = add_lower(line_decoded)
             if modified_line:
                 if config["debug"]:
                     log.append(f"Add_lower; new line; {modified_line}{linesep}")
-                lines.append(modified_line.encode())
+                add_to_lines(modified_line.encode())
 
         if config["add_latin_ligatures"]:
             modified_line = add_latin_ligatures(line_decoded)
             if modified_line:
                 if config["debug"]:
                     log.append(f"Add_latin_ligatures; new line; {modified_line}{linesep}")
-                lines.append(modified_line.encode())
+                add_to_lines(modified_line.encode())
 
         if config["add_umlaut"]:
             status, modified_line = clean_add_umlaut(line_decoded)
             if status:
                 if config["debug"]:
                     log.append(f"Add_umlaut; new line; {modified_line}{linesep}")
-                lines.append(modified_line.encode())
+                add_to_lines(modified_line.encode())
 
         if config["add_without_punctuation"]:
             modified_line = add_without_punctuation(line_decoded, config["punctuation"])
             if modified_line:
                 if config["debug"]:
                     log.append(f"Add_without_punctuation; new line; {modified_line}{linesep}")
-                lines.append(modified_line.encode())
+                add_to_lines(modified_line.encode())
 
         if config["debug"]:
             log.append(f"----End---- {line_decoded}{linesep}{linesep}")
+
         results.append(f"{line_decoded}{linesep}")
 
     return {"results": results, "log": log}
@@ -1810,6 +1819,9 @@ def main():
                 total=input_file_data["chunk_estimation"],
                 position=1,
             ):
+                if not chunk:
+                    continue
+
                 task_queue.put(chunk)
 
         stderr_print(config, "Main: done submitting all jobs, waiting for threads to finish")

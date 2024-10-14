@@ -381,3 +381,7 @@ with open('testdata/input51', 'w') as file:
     # emoji encoded with 8 bytes in utf-8
     # a combination of U+1F64C (raising hands) and U+1F3FD (skin tone)
     file.write(f'8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽{linesep}')
+
+with open('testdata/input52', 'w') as file:
+    # space - . : _ , ; ! ? ( ) [ ] { } \ / ' " # $ % & * + = ^ ~ | @ < > `
+    file.write("""word word-word:word_word,word;word!word?word(word)word[word]word{word}word\\word/word'word"word#word$word%word&word*word+word=word^word~word|word@word<word>word`word""" + f'{linesep}')
