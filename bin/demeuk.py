@@ -148,7 +148,6 @@ from os import linesep, access, path, R_OK, W_OK, F_OK
 import os
 from re import compile as re_compile
 from re import search
-from re import split as re_split
 from re import sub
 import re
 from string import punctuation as string_punctuation
@@ -506,9 +505,22 @@ def add_split(
     Returns:
         split line
     """
+    parts: set[str] = set()
+
+    def add_to_set(parts_to_add: list[str]):
+        for part in parts_to_add:
+            if len(part) > 1:
+                parts.add(part)
+
+
     for p in punctuation:
         if p in line:
-            return [i for i in re_split("|".join(punctuation), line) if len(i) > 1]
+            add_to_set(line.split(p, 1))
+            add_to_set(line.rsplit(p, 1))
+
+    if len(parts) > 0:
+        return list(parts)
+
     return False
 
 
