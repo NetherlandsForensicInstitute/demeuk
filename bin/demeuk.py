@@ -112,6 +112,8 @@ r"""
 
     Add modules (Modify a line, but keep the original as well):
         --add-lower                     If a line contains a capital letter this will add the lower case variant
+        --add-first-upper               If a line does not contain a capital letter this will add the capital variant
+        --add-title-case                Add a line like 'this test string' also as a 'This Test String'
         --add-latin-ligatures           If a line contains a single ligatures of a latin letter (such as ij), the line
                                         is correct but the original line contain the ligatures is also added to output.
         --add-split                     split on known chars like - and . and add those to the final dictionary.
