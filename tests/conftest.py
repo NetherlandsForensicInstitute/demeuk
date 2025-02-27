@@ -381,3 +381,9 @@ with open('testdata/input51', 'w') as file:
     # emoji encoded with 8 bytes in utf-8
     # a combination of U+1F64C (raising hands) and U+1F3FD (skin tone)
     file.write(f'8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽{linesep}')
+
+with open('testdata/input52', 'w') as file:
+    file.write(f'three doors down {linesep}')
+    file.write(f'amsterdam {linesep}')
+    file.write(f'ROTTERDAM {linesep}')
+    file.write(f'Cookie Monster {linesep}')
