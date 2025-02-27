@@ -66,6 +66,8 @@ r"""
                                         with as comma-seperated list.
         --check-ending-with <string>    Drop lines ending with string, can be multiple strings. Specify multiple
                                         with as comma-seperated list.
+        --check-if-contains <string>    Drop lines containing string, can be multiple strings. Specify multiple
+                                        with as comma-seperated list.
         --check-empty-line              Drop lines that are empty or only contain whitespace characters
         --check-regex <string>          Drop lines that do not match the regex. Regex is a comma seperated list of
                                         regexes. Example: [a-z]{1,8},[0-9]{1,8}
@@ -575,6 +577,23 @@ def check_ending_with(line, strings):
     """
     for string in strings:
         if line.endswith(string):
+            return True
+    return False
+
+
+def check_contains(line, strings):
+    """Checks if a line does not contain specific strings
+
+    Params:
+        line (unicode)
+        strings[str]
+
+    Returns:
+        true if line does contain any one of the strings
+
+    """
+    for string in strings:
+        if string in line:
             return True
     return False
 
@@ -1195,6 +1214,12 @@ def clean_up(lines):
                 log.append(f'Check_ending_with; dropped line because {to_check} found; {line_decoded}{linesep}')
                 stop = True
 
+        if config.get('check-if-contains') and not stop:
+            to_check = config.get("check-if-contains")
+            if check_contains(line_decoded, to_check):
+                log.append(f'Check-if-contains; dropped line because {to_check} found; {line_decoded}{linesep}')
+                stop = True
+
         if config.get('check-empty-line') and not stop:
             if check_empty_line(line_decoded):
                 log_line = "Check_empty_line; dropped line because is empty or only contains whitespace;"
@@ -1340,6 +1365,7 @@ def main():
         'check-starting-with': False,
         'check-uuid': False,
         'check-ending-with': False,
+        'check-if-contains': False,
         'check-empty-line': False,
         'check-regex': False,
         'check-min-digits': 0,
@@ -1497,6 +1523,12 @@ def main():
             config['check-ending-with'] = arguments.get('--check-ending-with').split(',')
         else:
             config['check-ending-with'] = [arguments.get('--check-ending-with')]
+
+    if arguments.get('--check-if-contains'):
+        if ',' in arguments.get('--check-if-contains'):
+            config['check-if-contains'] = arguments.get('--check-if-contains').split(',')
+        else:
+            config['check-if-contains'] = [arguments.get('--check-if-contains')]
 
     if arguments.get('--check-empty-line'):
         config['check-empty-line'] = True
