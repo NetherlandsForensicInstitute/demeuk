@@ -314,7 +314,7 @@ def add_first_upper(line):
 
 
 def add_title_case(line):
-    """Returns title case string where all the first letters are capitals and all others lower-case.
+    """Returns title case string where all the first letters are capitals and all others in lowercase.
 
     Param:
         line (unicode)
