@@ -112,6 +112,8 @@ r"""
 
     Add modules (Modify a line, but keep the original as well):
         --add-lower                     If a line contains a capital letter this will add the lower case variant
+        --add-first-upper               If a line does not contain a capital letter this will add the capital variant
+        --add-title-case                Add a line like 'this test string' also as a 'This Test String'
         --add-latin-ligatures           If a line contains a single ligatures of a latin letter (such as ij), the line
                                         is correct but the original line contain the ligatures is also added to output.
         --add-split                     split on known chars like - and . and add those to the final dictionary.
@@ -167,7 +169,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '4.3.0'
+version = '4.4.0'
 
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.
@@ -290,6 +292,40 @@ def add_lower(line):
     line_lower = line.lower()
     if line != line_lower:
         return line_lower
+    else:
+        return False
+
+
+def add_first_upper(line):
+    """Returns the line with the first letter capitalized and all the others in lowercase.
+
+    Param:
+        line (unicode)
+
+    Returns:
+        False if they are the same
+        Capitalized string if they are not
+    """
+    line_first_upper = line.capitalize()
+    if line != line_first_upper:
+        return line_first_upper
+    else:
+        return False
+
+
+def add_title_case(line):
+    """Returns title case string where all the first letters are capitals and all others in lowercase.
+
+    Param:
+        line (unicode)
+
+    Returns:
+        False if they are the same
+        Title string if they are not
+    """
+    line_title_case = line.title()
+    if line != line_title_case:
+        return line_title_case
     else:
         return False
 
@@ -1231,6 +1267,20 @@ def clean_up(lines):
                         log.append(f'Add_lower; new line; {modified_line}{linesep}')
                     lines.append(modified_line.encode())
 
+            if config.get('add-first-upper'):
+                modified_line = add_first_upper(line_decoded)
+                if modified_line:
+                    if config['debug']:
+                        log.append(f'Add_first_upper; new line; {modified_line}{linesep}')
+                    lines.append(modified_line.encode())
+
+            if config.get('add-title-case'):
+                modified_line = add_title_case(line_decoded)
+                if modified_line:
+                    if config['debug']:
+                        log.append(f'Add_title_case; new line; {modified_line}{linesep}')
+                    lines.append(modified_line.encode())
+
             if config.get('add-latin-ligatures'):
                 modified_line = add_latin_ligatures(line_decoded)
                 if modified_line:
@@ -1351,6 +1401,8 @@ def main():
 
         # Add
         'add-lower': False,
+        'add-first-upper': False,
+        'add-title-case': False,
         'add-latin-ligatures': False,
         'add-split': False,
         'add-umlaut': False,
@@ -1528,6 +1580,12 @@ def main():
     # Add modules
     if arguments.get('--add-lower'):
         config['add-lower'] = True
+
+    if arguments.get('--add-first-upper'):
+        config['add-first-upper'] = True
+
+    if arguments.get('--add-title-case'):
+        config['add-title-case'] = True
 
     if arguments.get('--add-latin-ligatures'):
         config['add-latin-ligatures'] = True

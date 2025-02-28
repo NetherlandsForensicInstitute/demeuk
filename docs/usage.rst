@@ -473,6 +473,20 @@ letters inside your corpora. For example the entry 'Amsterdam' or 'OpenOffice' a
 to be used in this form. But still you probably want 'amsterdam' and 'openoffice' in your
 corpora. This option keeps both the original format and the lowered part in the corpora.
 
+add-first-upper
+~~~~~~~~~
+When working with language dictionaries it can be handy to keep all-upper and all-lower
+letters inside your corpora. For example the entry 'AMSTERDAM' or 'cookies' are likely
+to be used in this form. But still you probably want 'Amsterdam' and 'Cookies' in your
+corpora. This option keeps both the original format and the capitalized part in the corpora.
+
+add-title-case
+~~~~~~~~~
+When working with language dictionaries it can be handy to keep all-lower letters inside
+your corpora. For example the entry 'my name' is likely to be used in this form. But still
+you probably want 'My Name' in your corpora. This option keeps both the original format and
+the title case format in the corpora.
+
 add-latin-ligatures
 ~~~~~~~~~~~~~~~~~~~
 In some encoding some characters can be written as one character while they can
