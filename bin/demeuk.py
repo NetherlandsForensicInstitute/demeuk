@@ -66,7 +66,7 @@ r"""
                                         with as comma-seperated list.
         --check-ending-with <string>    Drop lines ending with string, can be multiple strings. Specify multiple
                                         with as comma-seperated list.
-        --check-contains <string>    Drop lines containing string, can be multiple strings. Specify multiple
+        --check-contains <string>       Drop lines containing string, can be multiple strings. Specify multiple
                                         with as comma-seperated list.
         --check-empty-line              Drop lines that are empty or only contain whitespace characters
         --check-regex <string>          Drop lines that do not match the regex. Regex is a comma seperated list of
