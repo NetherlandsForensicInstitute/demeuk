@@ -66,7 +66,7 @@ r"""
                                         with as comma-seperated list.
         --check-ending-with <string>    Drop lines ending with string, can be multiple strings. Specify multiple
                                         with as comma-seperated list.
-        --check-if-contains <string>    Drop lines containing string, can be multiple strings. Specify multiple
+        --check-contains <string>    Drop lines containing string, can be multiple strings. Specify multiple
                                         with as comma-seperated list.
         --check-empty-line              Drop lines that are empty or only contain whitespace characters
         --check-regex <string>          Drop lines that do not match the regex. Regex is a comma seperated list of
@@ -1214,10 +1214,10 @@ def clean_up(lines):
                 log.append(f'Check_ending_with; dropped line because {to_check} found; {line_decoded}{linesep}')
                 stop = True
 
-        if config.get('check-if-contains') and not stop:
-            to_check = config.get("check-if-contains")
+        if config.get('check-contains') and not stop:
+            to_check = config.get("check-contains")
             if check_contains(line_decoded, to_check):
-                log.append(f'Check-if-contains; dropped line because {to_check} found; {line_decoded}{linesep}')
+                log.append(f'Check-contains; dropped line because {to_check} found; {line_decoded}{linesep}')
                 stop = True
 
         if config.get('check-empty-line') and not stop:
@@ -1365,7 +1365,7 @@ def main():
         'check-starting-with': False,
         'check-uuid': False,
         'check-ending-with': False,
-        'check-if-contains': False,
+        'check-contains': False,
         'check-empty-line': False,
         'check-regex': False,
         'check-min-digits': 0,
@@ -1524,11 +1524,11 @@ def main():
         else:
             config['check-ending-with'] = [arguments.get('--check-ending-with')]
 
-    if arguments.get('--check-if-contains'):
-        if ',' in arguments.get('--check-if-contains'):
-            config['check-if-contains'] = arguments.get('--check-if-contains').split(',')
+    if arguments.get('--check-contains'):
+        if ',' in arguments.get('--check-contains'):
+            config['check-contains'] = arguments.get('--check-contains').split(',')
         else:
-            config['check-if-contains'] = [arguments.get('--check-if-contains')]
+            config['check-contains'] = [arguments.get('--check-contains')]
 
     if arguments.get('--check-empty-line'):
         config['check-empty-line'] = True
