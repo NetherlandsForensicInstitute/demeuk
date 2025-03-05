@@ -970,7 +970,7 @@ def test_add_title_case():
 def test_check_contains():
     testargs = [
         'demeuk', '-i', 'testdata/input53', '-o', 'testdata/output53', '-l', 'testdata/log53',
-        '--verbose', '--check-contains 00000',
+        '--verbose', '--check-contains', '_',
     ]
     with patch.object(sys, 'argv', testargs):
         main()
@@ -978,4 +978,7 @@ def test_check_contains():
     with open('testdata/output53') as f:
         filecontent = f.read()
 
+    assert 'three_down' not in filecontent
+    assert '_amsterdam' not in filecontent
+    assert 'ROTTERDAM_' not in filecontent
     assert 'Cookie Monster' in filecontent
