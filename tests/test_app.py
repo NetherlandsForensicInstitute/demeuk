@@ -923,3 +923,45 @@ def test_check_special():
 
     result = _run_demeuk('input51', '--check-min-special', '9999999').splitlines()
     assert result == []
+
+
+def test_add_first_upper():
+    testargs = [
+        'demeuk', '-i', 'testdata/input52', '-o', 'testdata/output52', '-l', 'testdata/log52',
+        '--verbose', '--add-first-upper',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output52') as f:
+        filecontent = f.read()
+
+    assert 'three doors down' in filecontent
+    assert 'amsterdam' in filecontent
+    assert 'ROTTERDAM' in filecontent
+    assert 'Cookie Monster' in filecontent
+    assert 'Three doors down' in filecontent
+    assert 'Amsterdam' in filecontent
+    assert 'Rotterdam' in filecontent
+    assert 'Cookie monster' in filecontent
+
+
+def test_add_title_case():
+    testargs = [
+        'demeuk', '-i', 'testdata/input52', '-o', 'testdata/output52', '-l', 'testdata/log52',
+        '--verbose', '--add-title-case',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output52') as f:
+        filecontent = f.read()
+
+    assert 'three doors down' in filecontent
+    assert 'amsterdam' in filecontent
+    assert 'ROTTERDAM' in filecontent
+    assert 'Cookie Monster' in filecontent
+    assert 'Three Doors Down' in filecontent
+    assert 'Amsterdam' in filecontent
+    assert 'Rotterdam' in filecontent
+    assert 'Cookie Monster' in filecontent
