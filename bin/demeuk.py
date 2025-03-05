@@ -66,6 +66,8 @@ r"""
                                         with as comma-seperated list.
         --check-ending-with <string>    Drop lines ending with string, can be multiple strings. Specify multiple
                                         with as comma-seperated list.
+        --check-contains <string>       Drop lines containing string, can be multiple strings. Specify multiple
+                                        with as comma-seperated list.
         --check-empty-line              Drop lines that are empty or only contain whitespace characters
         --check-regex <string>          Drop lines that do not match the regex. Regex is a comma seperated list of
                                         regexes. Example: [a-z]{1,8},[0-9]{1,8}
@@ -169,7 +171,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 
-version = '4.4.0'
+version = '4.5.0'
 
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.
@@ -611,6 +613,23 @@ def check_ending_with(line, strings):
     """
     for string in strings:
         if line.endswith(string):
+            return True
+    return False
+
+
+def check_contains(line, strings):
+    """Checks if a line does not contain specific strings
+
+    Params:
+        line (unicode)
+        strings[str]
+
+    Returns:
+        true if line does contain any one of the strings
+
+    """
+    for string in strings:
+        if string in line:
             return True
     return False
 
@@ -1231,6 +1250,12 @@ def clean_up(lines):
                 log.append(f'Check_ending_with; dropped line because {to_check} found; {line_decoded}{linesep}')
                 stop = True
 
+        if config.get('check-contains') and not stop:
+            to_check = config.get("check-contains")
+            if check_contains(line_decoded, to_check):
+                log.append(f'Check-contains; dropped line because {to_check} found; {line_decoded}{linesep}')
+                stop = True
+
         if config.get('check-empty-line') and not stop:
             if check_empty_line(line_decoded):
                 log_line = "Check_empty_line; dropped line because is empty or only contains whitespace;"
@@ -1390,6 +1415,7 @@ def main():
         'check-starting-with': False,
         'check-uuid': False,
         'check-ending-with': False,
+        'check-contains': False,
         'check-empty-line': False,
         'check-regex': False,
         'check-min-digits': 0,
@@ -1549,6 +1575,12 @@ def main():
             config['check-ending-with'] = arguments.get('--check-ending-with').split(',')
         else:
             config['check-ending-with'] = [arguments.get('--check-ending-with')]
+
+    if arguments.get('--check-contains'):
+        if ',' in arguments.get('--check-contains'):
+            config['check-contains'] = arguments.get('--check-contains').split(',')
+        else:
+            config['check-contains'] = [arguments.get('--check-contains')]
 
     if arguments.get('--check-empty-line'):
         config['check-empty-line'] = True
