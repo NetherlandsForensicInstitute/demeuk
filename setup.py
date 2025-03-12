@@ -2,28 +2,28 @@ import codecs
 
 from setuptools import setup
 
-from bin.demeuk import version
+from bin.demeuk import VERSION
 
 dependencies = [
-    'docopt',
-    'chardet',
-    'nltk',
-    'ftfy',
-    'unidecode',
-    'tqdm',
+    "docopt",
+    "chardet",
+    "nltk",
+    "ftfy",
+    "unidecode",
+    "tqdm",
 ]
 
-with open('README.md', 'r') as r:
+with open("README.md", "r", encoding="utf-8") as r:
     long_description = r.read()
 
 setup(
-    name='demeuk',
-    version=version,
-    author='Netherlands Forensic Institute',
-    author_email=codecs.encode('ubyzrfay@hfref.abercyl.tvguho.pbz', 'rot-13'),
-    description='CLI tool to remove invalid chars from a corpus.',
+    name="demeuk",
+    version=VERSION,
+    author="Netherlands Forensic Institute",
+    author_email=codecs.encode("ubyzrfay@hfref.abercyl.tvguho.pbz", "rot-13"),  # type: ignore
+    description="CLI tool to remove invalid chars from a corpus.",
     install_requires=dependencies,
-    scripts=['bin/demeuk.py'],
+    scripts=["bin/demeuk.py"],
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/NetherlandsForensicInstitute/demeuk",
