@@ -322,6 +322,13 @@ matches all of the regexes, the line will be dropped.
 Example: --check-regex '[a-z],[0-9]' will drop lines
 that do not atleast contain one lowercase char and one number.
 
+Want to remove a line that does not contain an underscore?
+--check-regex '^[^_]+$'
+
+Want to remove a line that start with a specific strings?
+--check-regex '^[^this]' will remove lines starting with 'this'
+
+
 check-min-digits
 ~~~~~~~~~~~~~~~~
 Checks if a line contains a minimum number of digit characters. If the line does not contain
