@@ -292,9 +292,19 @@ characters are transfered to ':'.
 check-ending-with
 ~~~~~~~~~~~~~~~~~
 Checks if a line ends with the argument of check-ending-with. If the line ends
-with this, the line will be dropped. The string to check can be multiple strings. multiple
+with this, the line will be dropped. The string to check can be multiple strings. Multiple
 values are comma-seperated. Example: #,// would skip lines ending with '#' and with 
 '//'.
+
+If you enabled the '--tab' option and you want to drop lines ending with a tab, add
+':' to the list of strings to check. '--check ending-with :'. When using --tab tab
+characters are transfered to ':'.
+
+check-contains
+~~~~~~~~~~~~~~
+Checks if a line contains the argument of check-contains. If the line contains this,
+the line will be dropped. The string to check can be multiple strings. Multiple values
+are comma-separated. Example: #,// would skip lines containing '#' and '//'.
 
 If you enabled the '--tab' option and you want to drop lines ending with a tab, add
 ':' to the list of strings to check. '--check ending-with :'. When using --tab tab
@@ -311,6 +321,13 @@ Checks if a line matches a list of regexes. Regexes are comma-seperated. If the 
 matches all of the regexes, the line will be dropped.
 Example: --check-regex '[a-z],[0-9]' will drop lines
 that do not atleast contain one lowercase char and one number.
+
+Want to remove a line that does not contain an underscore?
+--check-regex '^[^_]+$'
+
+Want to remove a line that start with a specific strings?
+--check-regex '^[^this]' will remove lines starting with 'this'
+
 
 check-min-digits
 ~~~~~~~~~~~~~~~~
