@@ -141,28 +141,27 @@ r"""
                                             check-hash, check-mac-address, check-uuid, check-email,
                                             check-replacement-character, check-empty-line
 """
+import argparse
+import os
+import select
 import sys
 from binascii import hexlify, unhexlify
 from collections.abc import Callable
 from glob import glob
 from html import unescape
-from inspect import cleandoc
 from math import ceil
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Manager, Process, cpu_count
 from os import F_OK, R_OK, W_OK, access, linesep, path
 from re import Match
 from re import compile as re_compile
 from re import search
 from re import split as re_split
 from re import sub
-from signal import SIG_IGN, SIGINT, signal
 from string import punctuation as string_punctuation
-from time import sleep
-from typing import Any, TypedDict
+from typing import BinaryIO, TypedDict
 from unicodedata import category
 
 from chardet import detect
-from docopt import docopt  # type: ignore
 from ftfy import fix_encoding
 from ftfy.chardata import HTML_ENTITIES, HTML_ENTITY_RE
 from ftfy.fixes import fix_latin_ligatures
@@ -202,20 +201,29 @@ TRIM_BLOCKS = ("\\\\n", "\\\\r", "\\n", "\\r", "<br>", "<br />")
 CHUNK_SIZE = 1024 * 1024  # 1MB
 
 
+class InputFileData(TypedDict):
+    file: str | BinaryIO
+    chunk_estimation: int | None
+
+
 class Config(TypedDict):
     """Configuration for the demeuk tool"""
 
+    input_file: str
+    output_file: str
+    log: str
+    threads: int
     input_encoding: list[str]
+    output_encoding: str
     cut: bool
-    delimeter: str
     cut_fields: str
+    cut_before: bool
     verbose: bool
     debug: bool
     progress: bool
     limit: int | bool
     skip: int | bool
-    encode: bool
-    force: bool
+    decode: bool
     mojibake: bool
     tab: bool
     trim: bool
@@ -227,7 +235,6 @@ class Config(TypedDict):
     non_ascii: bool
     title_case: bool
     lowercase: bool
-    length: int | bool
     check_min_length: int
     check_max_length: int
     check_controlchar: bool
@@ -263,6 +270,8 @@ class Config(TypedDict):
     remove_punctuation: bool
     remove_email: bool
     googlengram: bool
+    leak: bool
+    leak_full: bool
 
     punctuation: str
     delimiter: list[str]
@@ -1178,7 +1187,7 @@ def clean_up(config: Config, original_lines: list[bytes]):  # pylint: disable=R0
             status, line = clean_tab(line)
             add_to_log(f"Clean_tab; replaced tab characters; {line}{linesep}", status)
 
-        if config["encode"]:
+        if config["decode"]:
             status, line_decoded = clean_encode(line, config["input_encoding"])
 
             add_to_log(
@@ -1559,17 +1568,49 @@ def clean_up(config: Config, original_lines: list[bytes]):  # pylint: disable=R0
     return {"results": results, "log": log}
 
 
-def chunkify(config: Config, filename: str, size: int = CHUNK_SIZE):
-    """Reads a file in chunks and yields the lines in the chunk"""
-    with open(filename, "rb") as fh:
+def chunkify(filename: str | BinaryIO, config: Config, size: int = CHUNK_SIZE):
+    if isinstance(filename, str):
+        with open(filename, "rb") as fh:
+            for _ in range(0, config["skip"]):
+                fh.readline()
+
+            while True:
+                lines = [line.rstrip(b"\n") for line in fh.readlines(size)]
+                yield lines
+                if len(lines) == 0:
+                    break
+    else:
         for _ in range(0, config["skip"]):
-            fh.readline()
+            filename.readline()
+
+        chunk = []
+        current_size = 0
 
         while True:
-            lines = [line.rstrip(b"\n") for line in fh.readlines(size)]
-            yield lines
+            # Use select to wait for data up to 'timeout' seconds.
+            r, _, _ = select.select([filename], [], [], 5)
+            if r:
+                # Read one line at a time
+                line = filename.readline()
+                if not line:
+                    # EOF reached; yield what we have and break.
+                    if chunk:
+                        yield chunk
+                    break
 
-            if len(lines) == 0:
+                # Append the line to the current chunk.
+                chunk.append(line.rstrip(b"\n"))
+                current_size += len(line)
+
+                # If we've reached the desired size, yield the chunk and reset.
+                if current_size >= size:
+                    yield chunk
+                    chunk = []
+                    current_size = 0
+            else:
+                # No data available within the timeout period.
+                if chunk:
+                    yield chunk
                 break
 
 
@@ -1581,107 +1622,202 @@ def stderr_print(config: Config, *args, **kwargs):
         print(*args, **kwargs)
 
 
-def map_arguments(arguments: dict[str, Any]) -> Config:
-    """Maps the arguments to the config dict"""
+def parse_arguments():
+    """Parse the arguments"""
+    parser = argparse.ArgumentParser(description="Demeuk - a simple tool to clean up corpora")
+    parser.add_argument("-i", "--input-file", help="Specify the input file to be cleaned, or provide a glob pattern.")
+    parser.add_argument("-o", "--output-file", help="Specify the output file to write the cleaned data to.")
+    parser.add_argument("-l", "--log", help="Specify the log file to write the log data to.")
+    parser.add_argument("-j", "--threads", help="Specify the number of threads to use.", default="all")
+    parser.add_argument("--input-encodings", help="Specify the input encodings to use.", default=["utf-8"], nargs="+")
+    parser.add_argument("--output-encoding", help="Specify the output encoding to use.", default="utf-8")
+    parser.add_argument("-v", "--verbose", help="Enable verbose output.", action="store_true")
+    parser.add_argument("--debug", help="Enable debug output.", action="store_true")
+    parser.add_argument("--progress", help="Enable progress output.", action="store_true")
+    parser.add_argument("-n", "--limit", help="Limit the number of lines per thread", default=False)
+    parser.add_argument("-s", "--skip", help="Skip the first n lines", default=0, type=int)
+    parser.add_argument("--punctuation", help="Specify the punctuation to remove", default=string_punctuation + " ")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {VERSION}")
+    parser.add_argument("-c", "--cut", help="Cut the line based on the delimiter", action="store_true")
+    parser.add_argument("--cut-before", help="Cut the line before the delimiter", action="store_true")
+    parser.add_argument("-f", "--cut-fields", help="Specify the fields to cut", default="2-")
+    parser.add_argument("-d", "--delimiter", help="Specify the delimiter to use", default=[":"], nargs="+")
+    parser.add_argument("--check-min-length", help="Check the minimum length of the line", default=0, type=int)
+    parser.add_argument("--check-max-length", help="Check the maximum length of the line", default=0, type=int)
+    parser.add_argument("--check-case", help="Check if the line is all uppercase", action="store_true")
+    parser.add_argument(
+        "--check-controlchar", help="Check if the line contains control characters", action="store_true"
+    )
+    parser.add_argument("--check-email", help="Check if the line contains an email address", action="store_true")
+    parser.add_argument("--check-hash", help="Check if the line contains a hash", action="store_true")
+    parser.add_argument("--check-mac-address", help="Check if the line contains a MAC address", action="store_true")
+    parser.add_argument(
+        "--check-non-ascii", help="Check if the line contains non-ascii characters", action="store_true"
+    )
+    parser.add_argument("--check-uuid", help="Check if the line contains a UUID", action="store_true")
+    parser.add_argument(
+        "--check-replacement-character", help="Check if the line contains a replacement character", action="store_true"
+    )
+    parser.add_argument("--check-starting-with", help="Check if the line starts with a specific character", nargs="+")
+    parser.add_argument("--check-ending-with", help="Check if the line ends with a specific character", nargs="+")
+    parser.add_argument("--check-contains", help="Check if the line contains a specific character", nargs="+")
+    parser.add_argument("--check-empty-line", help="Check if the line is empty", action="store_true")
+    parser.add_argument("--check-regex", help="Check if the line matches a specific regex", nargs="+")
+    parser.add_argument("--check-min-digits", help="Check if the line contains at least n digits", default=0, type=int)
+    parser.add_argument(
+        "--check-max-digits", help="Check if the line contains at most n digits", default=float("inf"), type=float
+    )
+    parser.add_argument(
+        "--check-min-uppercase", help="Check if the line contains at least n uppercase characters", default=0, type=int
+    )
+    parser.add_argument(
+        "--check-max-uppercase",
+        help="Check if the line contains at most n uppercase characters",
+        default=float("inf"),
+        type=float,
+    )
+    parser.add_argument(
+        "--check-min-specials", help="Check if the line contains at least n special characters", default=0, type=int
+    )
+    parser.add_argument(
+        "--check-max-specials",
+        help="Check if the line contains at most n special characters",
+        default=float("inf"),
+        type=float,
+    )
+    parser.add_argument("--hex", help="Decode hex strings", action="store_true")
+    parser.add_argument("--html", help="Decode html entities", action="store_true")
+    parser.add_argument("--html-named", help="Decode named html entities", action="store_true")
+    parser.add_argument("--lowercase", help="Convert all characters to lowercase", action="store_true")
+    parser.add_argument("--title-case", help="Convert the first letter of each word to uppercase", action="store_true")
+    parser.add_argument("--umlaut", help="Replace umlauts", action="store_true")
+    parser.add_argument("--mojibake", help="Decode mojibake", action="store_true")
+    parser.add_argument("--decode", help="Try to decode the line", action="store_true")
+    parser.add_argument("--tab", help="Replace tab characters with ':' greedy", action="store_true")
+    parser.add_argument("--newline", help="Remove leading and trailing newline characters", action="store_true")
+    parser.add_argument("--non-ascii", help="Replace non-ascii characters", action="store_true")
+    parser.add_argument("--trim", help="Remove leading and trailing whitespace", action="store_true")
+    parser.add_argument("--add-lower", help="Add a line with all characters in lowercase", action="store_true")
+    parser.add_argument(
+        "--add-first-upper", help="Add a line with the first character in uppercase", action="store_true"
+    )
+    parser.add_argument(
+        "--add-title-case", help="Add a line with the first letter of each word in uppercase", action="store_true"
+    )
+    parser.add_argument("--add-latin-ligatures", help="Add a line with latin ligatures", action="store_true")
+    parser.add_argument("--add-split", help="Add a line with split words", action="store_true")
+    parser.add_argument("--add-umlaut", help="Add a line with umlauts", action="store_true")
+    parser.add_argument("--add-without-punctuation", help="Add a line without punctuation", action="store_true")
+    parser.add_argument("--remove-strip-punctuation", help="Remove punctuation", action="store_true")
+    parser.add_argument("--remove-punctuation", help="Remove punctuation", action="store_true")
+    parser.add_argument("--remove-email", help="Remove email addresses", action="store_true")
+    parser.add_argument("-g", "--googlengram", help="Remove speech tags", action="store_true")
+    parser.add_argument("--leak", help="Leak the first line of the file", action="store_true")
+    parser.add_argument("--leak-full", help="recommended when working with leaks", action="store_true")
+
+    args = parser.parse_args()
+
+    threads = args.threads
+
+    if threads == "all":
+        threads = cpu_count()
+    else:
+        threads = int(threads)
+
+    if args.cut_fields == "2-" and args.cut_before:
+        args.cut_fields = "-1"
+
+    delimiters: list[str] = []
+    for delimiter in args.delimiter:
+        if " " in delimiter:
+            delimiters.extend(delimiter.split(" "))
+        else:
+            delimiters.append(delimiter)
+
     config: Config = {
-        "verbose": True if arguments.get("--verbose") else False,
-        "debug": True if arguments.get("--debug") else False,
-        "progress": True if arguments.get("--progress") else False,
-        "force": True if arguments.get("--force") else False,
-        "limit": int(arguments.get("--limit")) if arguments.get("--limit") else False,
-        "skip": int(arguments.get("--skip")) if arguments.get("--skip") else False,
-        "input_encoding": (
-            arguments.get("--input-encoding").split(",") if arguments.get("--input-encoding") else ["UTF-8"]
-        ),
-        "punctuation": arguments.get("--punctuation") if arguments.get("--punctuation") else string_punctuation + " ",
-        "cut": True if arguments.get("--cut") else False,
-        "delimiter": [":"],
-        "cut_fields": arguments.get("--cut-fields") or ("-1" if arguments.get("--cut-before") else "2-"),
-        "hex": True if arguments.get("--hex") else False,
-        "html": True if arguments.get("--html") else False,
-        "html_named": True if arguments.get("--html-named") else False,
-        "umlaut": True if arguments.get("--umlaut") else False,
-        "non_ascii": True if arguments.get("--non-ascii") else False,
-        "lowercase": True if arguments.get("--lowercase") else False,
-        "title_case": True if arguments.get("--title-case") else False,
-        "mojibake": True if arguments.get("--mojibake") else False,
-        "encode": True if arguments.get("--encode") else False,
-        "tab": True if arguments.get("--tab") else False,
-        "trim": True if arguments.get("--trim") else False,
-        "newline": True if arguments.get("--newline") else False,
-        "check_min_length": int(arguments.get("--check-min-length")) if arguments.get("--check-min-length") else 0,
-        "check_max_length": int(arguments.get("--check-max-length")) if arguments.get("--check-max-length") else 0,
-        "check_length": True if arguments.get("--check-min-length") or arguments.get("--check-max-length") else False,
-        "check_case": True if arguments.get("--check-case") else False,
-        "check_uuid": True if arguments.get("--check-uuid") else False,
-        "check_email": True if arguments.get("--check-email") else False,
-        "check_hash": True if arguments.get("--check-hash") else False,
-        "check_mac_address": True if arguments.get("--check-mac-address") else False,
-        "check_non_ascii": True if arguments.get("--check-non-ascii") else False,
-        "check_replacement_character": True if arguments.get("--check-replacement-character") else False,
-        "check_starting_with": (
-            arguments.get("--check-starting-with").split(",") if arguments.get("--check-starting-with") else []
-        ),
-        "check_ending_with": (
-            arguments.get("--check-ending-with").split(",") if arguments.get("--check-ending-with") else []
-        ),
-        "check_empty_line": True if arguments.get("--check-empty-line") else False,
-        "check_contains": arguments.get("--check-contains").split(",") if arguments.get("--check-contains") else [],
-        "check_controlchar": True if arguments.get("--check-controlchar") else False,
-        "check_regex": arguments.get("--check-regex").split(",") if arguments.get("--check-regex") else [],
-        "check_min_digits": int(arguments.get("--check-min-digits")) if arguments.get("--check-min-digits") else 0,
-        "check_max_digits": (
-            int(arguments.get("--check-max-digits")) if arguments.get("--check-max-digits") else float("inf")
-        ),
-        "check_min_uppercase": (
-            int(arguments.get("--check-min-uppercase")) if arguments.get("--check-min-uppercase") else 0
-        ),
-        "check_max_uppercase": (
-            int(arguments.get("--check-max-uppercase")) if arguments.get("--check-max-uppercase") else float("inf")
-        ),
-        "check_min_specials": (
-            int(arguments.get("--check-min-specials")) if arguments.get("--check-min-specials") else 0
-        ),
-        "check_max_specials": (
-            int(arguments.get("--check-max-specials")) if arguments.get("--check-max-specials") else float("inf")
-        ),
-        "add_lower": True if arguments.get("--add-lower") else False,
-        "add_first_upper": True if arguments.get("--add-first-upper") else False,
-        "add_title_case": True if arguments.get("--add-title-case") else False,
-        "add_latin_ligatures": True if arguments.get("--add-latin-ligatures") else False,
-        "add_split": True if arguments.get("--add-split") else False,
-        "add_umlaut": True if arguments.get("--add-umlaut") else False,
-        "add_without_punctuation": True if arguments.get("--add-without-punctuation") else False,
-        "remove_strip_punctuation": True if arguments.get("--remove-strip-punctuation") else False,
-        "remove_punctuation": True if arguments.get("--remove-punctuation") else False,
-        "remove_email": True if arguments.get("--remove-email") else False,
-        "googlengram": True if arguments.get("--googlengram") else False,
+        "input_file": args.input_file,
+        "output_file": args.output_file,
+        "log": args.log,
+        "threads": threads,
+        "input_encoding": args.input_encodings,
+        "output_encoding": args.output_encoding,
+        "verbose": args.verbose,
+        "debug": args.debug,
+        "progress": args.progress,
+        "limit": int(args.limit) if args.limit else False,
+        "skip": args.skip,
+        "punctuation": args.punctuation,
+        "cut": args.cut,
+        "cut_before": args.cut_before,
+        "cut_fields": args.cut_fields,
+        "delimiter": delimiters,
+        "check_min_length": args.check_min_length,
+        "check_max_length": args.check_max_length,
+        "check_length": args.check_min_length or args.check_max_length,
+        "check_case": args.check_case,
+        "check_controlchar": args.check_controlchar,
+        "check_email": args.check_email,
+        "check_hash": args.check_hash,
+        "check_mac_address": args.check_mac_address,
+        "check_non_ascii": args.check_non_ascii,
+        "check_uuid": args.check_uuid,
+        "check_replacement_character": args.check_replacement_character,
+        "check_starting_with": args.check_starting_with,
+        "check_ending_with": args.check_ending_with,
+        "check_contains": args.check_contains,
+        "check_empty_line": args.check_empty_line,
+        "check_regex": args.check_regex,
+        "check_min_digits": args.check_min_digits,
+        "check_max_digits": args.check_max_digits,
+        "check_min_uppercase": args.check_min_uppercase,
+        "check_max_uppercase": args.check_max_uppercase,
+        "check_min_specials": args.check_min_specials,
+        "check_max_specials": args.check_max_specials,
+        "hex": args.hex,
+        "html": args.html,
+        "html_named": args.html_named,
+        "lowercase": args.lowercase,
+        "title_case": args.title_case,
+        "umlaut": args.umlaut,
+        "mojibake": args.mojibake,
+        "decode": args.decode,
+        "tab": args.tab,
+        "newline": args.newline,
+        "non_ascii": args.non_ascii,
+        "trim": args.trim,
+        "add_lower": args.add_lower,
+        "add_first_upper": args.add_first_upper,
+        "add_title_case": args.add_title_case,
+        "add_latin_ligatures": args.add_latin_ligatures,
+        "add_split": args.add_split,
+        "add_umlaut": args.add_umlaut,
+        "add_without_punctuation": args.add_without_punctuation,
+        "remove_strip_punctuation": args.remove_strip_punctuation,
+        "remove_punctuation": args.remove_punctuation,
+        "remove_email": args.remove_email,
+        "googlengram": args.googlengram,
+        "leak": args.leak,
+        "leak_full": args.leak_full,
     }
 
-    if arguments.get("--delimiter"):
-        delimiter = arguments.get("--delimiter")
-        if delimiter[0] == ",":
-            config["delimiter"] = arguments.get("--delimiter").split(";")
-        else:
-            config["delimiter"] = arguments.get("--delimiter").split(",")
-
-    if arguments.get("--googlengram"):
+    if config["googlengram"]:
         config["cut"] = False
         config["remove_email"] = False
-        config["encode"] = True
+        config["decode"] = True
         config["mojibake"] = False
         config["check_controlchar"] = False
         config["tab"] = False
 
-    if arguments.get("--leak"):
+    if config["leak"]:
         config["mojibake"] = True
-        config["encode"] = True
+        config["decode"] = True
         config["newline"] = True
         config["check_controlchar"] = True
 
-    if arguments.get("--leak-full"):
-        config["mojibake"] = False
-        config["encode"] = True
+    if config["leak_full"]:
+        config["leak"] = True
+        config["mojibake"] = True
+        config["decode"] = True
         config["newline"] = True
         config["check_controlchar"] = True
         config["hex"] = True
@@ -1694,183 +1830,148 @@ def map_arguments(arguments: dict[str, Any]) -> Config:
         config["check_replacement_character"] = True
         config["check_empty_line"] = True
 
+    if not config["input_file"]:
+        config["verbose"] = False
+        config["debug"] = False
+
     return config
 
 
-def main():
-    #
-    # Config parser
-    arguments = docopt(cleandoc("\n".join(__doc__.split("\n")[2:])))
+def main():  # pylint: disable=R0912:too-many-branches
+    """Main function"""
+    config = parse_arguments()
 
-    if arguments.get("--version"):
-        print(f"demeuk - {VERSION}")
-        sys.exit()
-
-    input_file = arguments.get("--input")
-    output_file = arguments.get("--output")
-    log_file = arguments.get("--log")
-
-    if arguments.get("--threads"):
-        a_threads = arguments.get("--threads", "1")
-        if a_threads == "all":
-            a_threads = cpu_count()
-        else:
-            a_threads = int(a_threads)
-    else:
-        a_threads = cpu_count()
-
-    config = map_arguments(arguments)
-
-    # Lets create the default config
-
-    if arguments.get("--progress"):
+    if config["progress"]:
         if config["verbose"] or config["debug"]:
-            if not log_file:
-                stderr_print(config, "Progress can not be used with verbose or debug")
-                sys.exit(2)
-        if not input_file:
-            # Forcing printing error message
-            config["verbose"] = True
-            stderr_print(config, "Progress can not be used when using stdin.")
+            stderr_print(config, "Progress can not be used with verbose or debug")
             sys.exit(2)
-        config["progress"] = True
 
-    if arguments.get("--output-encoding"):
-        output_encoding = arguments.get("--output-encoding")
+    input_files_data: list[InputFileData] = []
+    if config["input_file"]:
+        stderr_print(config, f"Main: input found in {config['input_file']}")
+        input_files = tqdm(
+            glob(config["input_file"], recursive=True),
+            desc="Files processed",
+            mininterval=0.1,
+            unit=" files",
+            disable=not config["progress"],
+            position=0,
+        )
+
+        if not access(os.path.dirname(config["input_file"]), R_OK):
+            stderr_print(config, f"Cannot read input file from {config['input_file']}")
+            sys.exit(1)
+
+        for input_file in input_files:
+            if not access(input_file, R_OK):
+                stderr_print(config, f"Cannot read input file from {input_file}")
+                sys.exit(1)
+
+            chunk_estimation = int(ceil(path.getsize(input_file) / CHUNK_SIZE))
+
+            input_files_data.append({"file": input_file, "chunk_estimation": chunk_estimation})
     else:
-        output_encoding = "utf-8"
+        stderr_print(config, "Main: no input file found using stdin")
+        # Instead of reading all data from stdin, we pass sys.stdin.buffer directly
+        # and leave chunk_estimation as None because we cannot determine its length ahead of time.
+        input_files_data.append({"file": sys.stdin.buffer, "chunk_estimation": None})
 
-    if output_file and not access(path.dirname(output_file), W_OK):
-        stderr_print(config, f"Cannot write output file to {output_file}")
+    if config["output_file"] and not access(path.dirname(config["output_file"]), W_OK):
+        stderr_print(config, f"Cannot write output file to {config['output_file']}")
+        sys.exit(1)
 
-    # check if logfile exists, or that the directory of the log file is at least writable.
-    if log_file and not (access(log_file, F_OK) or access(path.dirname(log_file), W_OK)):
-        stderr_print(config, f"Cannot write log file to {log_file}")
-    if input_file and not access(input_file, R_OK):
-        stderr_print(config, f"Cannot read input file to {input_file}")
+    if config["log"] and not (access(config["log"], F_OK) or access(path.dirname(config["log"]), W_OK)):
+        stderr_print(config, f"Cannot write log file to {config['log']}")
+        sys.exit(1)
 
     #  Main worker
     stderr_print(config, f"Main: running demeuk - {VERSION}")
+    stderr_print(config, f"Main: Using {config['threads']} core(s) of total available cores: {cpu_count()}")
+    stderr_print(config, f"Main: start chunking file {config['input_file'] or 'stdin'}")
 
-    stderr_print(config, f"Main: Using {a_threads} core(s) of total available cores: {cpu_count()}")
+    if config["output_file"]:
+        stderr_print(config, f"Main: output found in {config['output_file']}")
+        output_file = open(config["output_file"], "w", encoding=config["output_encoding"])
+    else:
+        output_file = sys.stdout
 
-    stderr_print(config, f"Main: start chunking file {input_file}")
-    if output_file:
-        stderr_print(config, f"Main: output found in {output_file}")
-    if log_file:
-        stderr_print(config, f"Main: logs found in {log_file}")
+    if config["log"]:
+        stderr_print(config, f"Main: logs found in {config['log']}")
+        log_file = open(config["log"], "a", encoding="utf-8")
+    else:
+        log_file = sys.stderr
 
-    stderr_print(config, "Main: done chunking file.")
     stderr_print(config, "Main: processing started.")
 
-    if output_file:
-        p_output_file = open(output_file, "w", encoding=output_encoding)
-    else:
-        p_output_file = sys.stdout
+    def write_results(results: list[str]):
+        output_file.writelines(results)
+        output_file.flush()
 
-    if log_file:
-        p_log_file = open(log_file, "a", encoding="utf-8")
-    else:
-        p_log_file = sys.stderr
+    def write_log(log: list[str] | str):
+        if config["debug"] or config["verbose"] or config["log"]:
+            log_file.writelines(log)
+            log_file.flush()
 
-    def write_results(results):
-        p_output_file.writelines(results)
-        p_output_file.flush()
-
-    def write_log(log):
-        if config["debug"] or config["verbose"] or log_file:
-            p_log_file.writelines(log)
-            p_log_file.flush()
-
-    def write_results_and_log(async_result):
+    def write_results_and_log(async_result: dict[str, list[str]]):
         write_results(async_result["results"])
         write_log(async_result["log"])
 
-    def init_worker():
-        signal(SIGINT, SIG_IGN)
+    write_log(f"Running demeuk - {VERSION}{linesep}")
 
-    def process_jobs(config, chunk_start):
-        # Cut file in to chunks and process each trunk multi-threaded
-        while True:
+    with Manager() as manager:
+        task_queue = manager.Queue(config["threads"])
+        processes: list[Process] = []
+
+        def worker():
             while True:
-                # Process completed jobs in-order
-                if jobs and jobs[0].ready():
-                    # Housekeeping cleanup jobs completed from the list
-                    job = jobs.pop(0)
-                    write_results_and_log(job.get())
-                else:
+                try:
+                    chunk = task_queue.get(timeout=1)
+                except Exception:
+                    continue
+
+                if chunk is None:
                     break
 
-            # Find out which jobs are running
-            running_jobs = sum([not job.ready() for job in jobs])
-            if running_jobs < a_threads:
-                job = pool.apply_async(
-                    clean_up,
-                    (
-                        config,
-                        chunk,
-                    ),
-                )
-                chunk_start += len(chunk)
-                jobs.append(job)
-                break
+                try:
+                    result = clean_up(config, chunk)
+                    write_results_and_log(result)
+                finally:
+                    task_queue.task_done()
 
-            # Wait a little while for available spacing within Pool
-            sleep(1)
+        for _ in range(config["threads"]):
+            process = Process(target=worker)
+            process.start()
+            processes.append(process)
 
-    write_log(f"Running demeuk - {VERSION}{linesep}")
-    with Pool(a_threads, init_worker) as pool:
-        jobs = []
-        # chunk_start will be the started value of the combined output lines
-        chunk_start = 0
-        if input_file:
-            # Process files based on input glob
-            for filename in tqdm(
-                glob(input_file, recursive=True),
-                desc="Files processed",
-                mininterval=0.1,
-                unit=" files",
+        for input_file_data in input_files_data:
+            for chunk in tqdm(
+                chunkify(input_file_data["file"], config, CHUNK_SIZE),
+                mininterval=1,
+                unit=" chunks",
                 disable=not config["progress"],
-                position=0,
+                total=input_file_data["chunk_estimation"],
+                position=1,
             ):
-                if not access(filename, R_OK):
+                if not chunk:
                     continue
-                chunks_estimate = int(ceil(path.getsize(filename) / CHUNK_SIZE))
-                for chunk in tqdm(
-                    chunkify(config, filename, CHUNK_SIZE),
-                    desc="Chunks processed",
-                    mininterval=1,
-                    unit=" chunks",
-                    disable=not config["progress"],
-                    total=chunks_estimate,
-                    position=1,
-                ):
-                    process_jobs(config, chunk_start)
-            stderr_print(config, "Main: done submitting all jobs, waiting for threads to finish")
-            while len(jobs) > 0:
-                job = jobs.pop(0)
-                job.wait()
-                write_results_and_log(job.get())
-        else:
-            # Read chunk amount from stdin
-            chunks = sys.stdin.readlines(CHUNK_SIZE)
-            while chunks:
-                chunk = [line.rstrip("\n").encode(config["input_encoding"][0]) for line in chunks]
-                process_jobs(config, chunk_start)
 
-                chunks = sys.stdin.readlines(CHUNK_SIZE)
+                task_queue.put(chunk)
 
-            stderr_print(config, "Main: done submitting all jobs, waiting for threads to finish")
-            while len(jobs) > 0:
-                job = jobs.pop(0)
-                job.wait()
-                write_results_and_log(job.get())
+        stderr_print(config, "Main: done submitting all jobs, waiting for threads to finish")
 
-    stderr_print(config, "Main: all done")
-    if output_file:
-        p_output_file.close()
-    if log_file:
-        p_log_file.close()
+        for _ in processes:
+            task_queue.put(None)
+
+        for process in processes:
+            process.join()
+
+        stderr_print(config, "Main: all done")
+
+    if output_file is not sys.stdout:
+        output_file.close()
+
+    if log_file is not sys.stderr:
+        log_file.close()
 
 
 if __name__ == "__main__":

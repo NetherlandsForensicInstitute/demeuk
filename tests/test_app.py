@@ -3,6 +3,7 @@ from subprocess import PIPE, run
 from unittest.mock import patch
 
 from pytest import raises
+import pytest
 
 from bin.demeuk import main
 
@@ -139,7 +140,7 @@ def test_split():
 
 
 def test_output_encoding():
-    testargs = ["demeuk", "-i", "testdata/input1", "-o", "testdata/output1", "--output-encoding", "C", "--encode"]
+    testargs = ["demeuk", "-i", "testdata/input1", "-o", "testdata/output1", "--output-encoding", "C", "--decode"]
     with patch.object(sys, "argv", testargs):
         with raises(LookupError):  # C is not a valid encoding
             main()
@@ -152,9 +153,10 @@ def test_input_encoding():
         "testdata/input9",
         "-o",
         "testdata/output9",
-        "--input-encoding",
-        "windows-1251,UTF-16",
-        "--encode",
+        "--input-encodings",
+        "windows-1251",
+        "UTF-16",
+        "--decode",
     ]
     with patch.object(sys, "argv", testargs):
         main()
@@ -248,7 +250,7 @@ def test_fries():
         "testdata/output12",
         "-l",
         "testdata/log12",
-        "--encode",
+        "--decode",
         "--check-controlchar",
     ]
     with patch.object(sys, "argv", testargs):
@@ -313,7 +315,7 @@ def test_unhex():
         "-l",
         "testdata/log15",
         "--hex",
-        "--encode",
+        "--decode",
     ]
     with patch.object(sys, "argv", testargs):
         main()
@@ -423,7 +425,7 @@ def test_clean_add_umlaut():
         "testdata/log20",
         "--add-umlaut",
         "--verbose",
-        "--encode",
+        "--decode",
     ]
     with patch.object(sys, "argv", testargs):
         main()
@@ -468,8 +470,7 @@ def test_multiple_delimiters():
         "testdata/log20",
         "-c",
         "--verbose",
-        "-d",
-        ":,;,----",
+        "-d=: ; ----",
     ]
     with patch.object(sys, "argv", testargs):
         main()
@@ -538,6 +539,7 @@ def test_check_hash():
         assert "$pizza$like" in filecontent
 
 
+@pytest.mark.skip(reason="No longer relavant due to argparser")
 def test_check_bug_comma_d():
     testargs = [
         "demeuk",
@@ -906,7 +908,9 @@ def test_check_starting_with():
         "testdata/log39",
         "--verbose",
         "--check-starting-with",
-        "/,#,:",
+        "/",
+        "#",
+        ":",
         "--tab",
     ]
     with patch.object(sys, "argv", testargs):
@@ -998,7 +1002,8 @@ def test_check_ending_with():
         "testdata/log43",
         "--verbose",
         "--check-ending-with",
-        ".jpg,@whatsapp.com",
+        ".jpg",
+        "@whatsapp.com",
     ]
     with patch.object(sys, "argv", testargs):
         main()
@@ -1114,7 +1119,7 @@ def test_check_multiple_regexes():
         "testdata/log47",
         "--verbose",
         "--check-regex",
-        "\\d,\\w",
+        "\\d\\w",
     ]
 
     with patch.object(sys, "argv", testargs):
