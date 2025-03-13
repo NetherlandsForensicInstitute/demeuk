@@ -20,7 +20,7 @@ r"""
         -i --input <path to file>       Specify the input file to be cleaned, or provide a glob pattern.
                                         (default: stdin)
         -o --output <path to file>      Specify the output file name. (default: stdout)
-        -l --log <path to file>         Optional, specify where the log file needs to be writen to (default: stderr)
+        -l --log <path to file>         Optional, specify where the log file needs to be written to (default: stderr)
         -j --threads <threads>          Optional, specify amount of threads to spawn. Specify the string 'all' to make
                                         demeuk auto detect the amount of threads to start based on the CPU's
                                         (default: all threads).
@@ -63,13 +63,13 @@ r"""
                                         range) the line is dropped.
         --check-replacement-character   Drop lines containing replacement characters '�'.
         --check-starting-with <string>  Drop lines starting with string, can be multiple strings. Specify multiple
-                                        with as comma-seperated list.
+                                        with as comma-separated list.
         --check-ending-with <string>    Drop lines ending with string, can be multiple strings. Specify multiple
-                                        with as comma-seperated list.
+                                        with as comma-separated list.
         --check-contains <string>       Drop lines containing string, can be multiple strings. Specify multiple
-                                        with as comma-seperated list.
+                                        with as comma-separated list.
         --check-empty-line              Drop lines that are empty or only contain whitespace characters
-        --check-regex <string>          Drop lines that do not match the regex. Regex is a comma seperated list of
+        --check-regex <string>          Drop lines that do not match the regex. Regex is a comma separated list of
                                         regexes. Example: [a-z]{1,8},[0-9]{1,8}
         --check-min-digits <count>      Require that entries contain at least <count> digits
                                         (following the Python definition of a digit,
@@ -141,65 +141,143 @@ r"""
                                             check-hash, check-mac-address, check-uuid, check-email,
                                             check-replacement-character, check-empty-line
 """
+import argparse
+import os
+import select
+import sys
 from binascii import hexlify, unhexlify
+from collections.abc import Callable
 from glob import glob
 from html import unescape
-from inspect import cleandoc
-from locale import LC_ALL, setlocale
 from math import ceil
-from multiprocessing import cpu_count, Pool
-from os import linesep, access, path, R_OK, F_OK, W_OK
+from multiprocessing import Manager, Process, cpu_count
+from os import F_OK, R_OK, W_OK, access, linesep, path
+from re import Match
 from re import compile as re_compile
 from re import search
 from re import split as re_split
 from re import sub
-from signal import signal, SIGINT, SIG_IGN
 from string import punctuation as string_punctuation
-from time import sleep
-from sys import stderr, stdin, stdout
+from typing import BinaryIO, TypedDict
 from unicodedata import category
 
-
 from chardet import detect
-from docopt import docopt
 from ftfy import fix_encoding
 from ftfy.chardata import HTML_ENTITIES, HTML_ENTITY_RE
 from ftfy.fixes import fix_latin_ligatures
-from nltk import str2tuple
+from nltk import str2tuple  # type: ignore
 from nltk.tokenize import WhitespaceTokenizer
 from tqdm import tqdm
 from unidecode import unidecode
 
-
-version = '4.5.0'
+VERSION = "4.5.1"
 
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.
 HEX_REGEX = re_compile(r"^\$(?:HEX|hex)\[((?:[0-9a-fA-F]{2})+)\]$")
-EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]{1,63}\\.){1,3}[a-zA-Z]{2,6}'
-HASH_HEX_REGEX = '^[a-fA-F0-9]+$'
-MAC_REGEX = '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$'
-UUID_REGEX = '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+EMAIL_ALLOWED_CHARS = r"a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-"
+EMAIL_REGEX = (
+    rf"[a-zA-Z0-9][{EMAIL_ALLOWED_CHARS}]{{0,63}}@[a-zA-Z0-9](?:[a-zA-Z0-9-]{{0,61}}[a-zA-Z0-9])?(?:\.[a-zA-Z]{{2,6}})+"
+)
+HASH_HEX_REGEX = "^[a-fA-F0-9]+$"
+MAC_REGEX = "^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
+UUID_REGEX = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 
 # Officiale bcrypt hashes hae a bit more fixed size, but saw some weird once:
 # $2a$10$demo as example
-HASH_BCRYPT_REGEX = '^\\$2[ayb]\\$[0-9]{1,}\\$[\\w\\.\\/]{4,}$'
+HASH_BCRYPT_REGEX = "^\\$2[ayb]\\$[0-9]{1,}\\$[\\w\\.\\/]{4,}$"
 # Crypt hashes can look a lot like passwords. We do two options here
 # $1[$optional salt, max 16]$string of a-zA-Z0-9./ length 7 min till end of line
 # $1$a-zA-Z0-9./ min length 12 to make sure we hit somthing like: a-zA-Z0-9./
 # this will cause string like $1$JAjdna./d to still be included.
 
-HASH_CRYPT_REGEX = '^\\$[1356]\\$[\\w\\.\\/]{12,}$'
-HASH_CRYPT_SALT_REGEX = '^\\$[1356]\\$[\\w\\.\\/\\+]{,16}\\$[\\w\\.\\/]{6,}$'
-HASH_PHPBB_REGEX = '^\\$[hH]\\$[\\w\\.\\/]{6,}$'
+HASH_CRYPT_REGEX = "^\\$[1356]\\$[\\w\\.\\/]{12,}$"
+HASH_CRYPT_SALT_REGEX = "^\\$[1356]\\$[\\w\\.\\/\\+]{,16}\\$[\\w\\.\\/]{6,}$"
+HASH_PHPBB_REGEX = "^\\$[hH]\\$[\\w\\.\\/]{6,}$"
 HASH_REGEX_LIST = [HASH_BCRYPT_REGEX, HASH_CRYPT_SALT_REGEX, HASH_CRYPT_REGEX, HASH_PHPBB_REGEX]
 
-TRIM_BLOCKS = ('\\\\n', '\\\\r', '\\n', '\\r', '<br>', '<br />')
+TRIM_BLOCKS = ("\\\\n", "\\\\r", "\\n", "\\r", "<br>", "<br />")
 
-CHUNK_SIZE = 1024 * 1024
+CHUNK_SIZE = 1024 * 1024  # 1MB
 
 
-def _unescape_fixup_named(match):
+class InputFileData(TypedDict):
+    file: str | BinaryIO
+    chunk_estimation: int | None
+
+
+class Config(TypedDict):
+    """Configuration for the demeuk tool"""
+
+    input_file: str
+    output_file: str
+    log: str
+    threads: int
+    input_encoding: list[str]
+    output_encoding: str
+    cut: bool
+    cut_fields: str
+    cut_before: bool
+    verbose: bool
+    debug: bool
+    progress: bool
+    limit: int | bool
+    skip: int | bool
+    decode: bool
+    mojibake: bool
+    tab: bool
+    trim: bool
+    newline: bool
+    hex: bool
+    html: bool
+    html_named: bool
+    umlaut: bool
+    non_ascii: bool
+    title_case: bool
+    lowercase: bool
+    check_min_length: int
+    check_max_length: int
+    check_controlchar: bool
+    check_case: bool
+    check_email: bool
+    check_hash: bool
+    check_mac_address: bool
+    check_non_ascii: bool
+    check_replacement_character: bool
+    check_starting_with: list[str]
+    check_contains: list[str]
+    check_uuid: bool
+    check_ending_with: list[str]
+    check_empty_line: bool
+    check_regex: list[str]
+    check_min_digits: int
+    check_max_digits: int | float
+    check_min_uppercase: int
+    check_max_uppercase: int | float
+    check_min_specials: int
+    check_max_specials: int | float
+    check_min_length: int
+    check_max_length: int
+    check_length: bool
+    add_lower: bool
+    add_latin_ligatures: bool
+    add_split: bool
+    add_umlaut: bool
+    add_without_punctuation: bool
+    add_first_upper: bool
+    add_title_case: bool
+    remove_strip_punctuation: bool
+    remove_punctuation: bool
+    remove_email: bool
+    googlengram: bool
+    leak: bool
+    leak_full: bool
+
+    punctuation: str
+    delimiter: list[str]
+
+
+def _unescape_fixup_named(match: Match[str]):
     """
     Replace one matched HTML entity with the character it represents,
     if possible.
@@ -209,11 +287,10 @@ def _unescape_fixup_named(match):
     text = match.group(0)
     if text in HTML_ENTITIES:
         return HTML_ENTITIES[text]
-    else:
-        return text
+    return text
 
 
-def _unescape_fixup(match):
+def _unescape_fixup(match: Match[str]):
     """
     Replace one matched HTML entity with the character it represents,
     if possible.
@@ -221,20 +298,20 @@ def _unescape_fixup(match):
     Based on: ftfy.fixes._unescape_fixup
     """
     text = match.group(0)
-    if text.startswith('&#'):
+    if text.startswith("&#"):
         unescaped = unescape(text)
 
         # If html.unescape only decoded part of the string, that's not what
         # we want. The semicolon should be consumed.
-        if ';' in unescaped:
+        if ";" in unescaped:
             return text
-        else:
-            return unescaped
-    else:
-        return text
+
+        return unescaped
+
+    return text
 
 
-def clean_googlengram(line):
+def clean_googlengram(line: str):
     """Removes speechtags from line specific to the googlengram module
 
     Param:
@@ -245,28 +322,30 @@ def clean_googlengram(line):
     """
     return_line = line.split("\t")[0]  # Get the ngram, remove year, counter, etc
     clean = []
-    words = WhitespaceTokenizer().tokenize(return_line)
-    for word in words:
+    words = WhitespaceTokenizer().tokenize(return_line)  # type: ignore
+
+    for word in words:  # type: ignore
         # in >1-grams transitions to specific tags are written as:
         # The_ADJ _NOUN_ (meaning from The there is a transition to a noun
         # We remove those
-        if word[0] != '_' and word[-1] != '_':
+        if word[0] != "_" and word[-1] != "_":
             # Split the token and the tag based on the '_'
-            token, tag = str2tuple(word, '_')
+            token, tag = str2tuple(word, "_")  # type: ignore
             # Punct will be added using rules.
+
             if len(token) > 1:
-                if tag != 'PUNCT' or tag != '.' or tag != '':
+                if tag not in {"PUNCT", ".", ""}:
                     clean.append(token)
             elif token not in string_punctuation:
                 clean.append(token)
-    return_line = ' '.join(clean)
+    return_line = " ".join(clean)
     if return_line != line:
         return True, return_line
-    else:
-        return False, line
+
+    return False, line
 
 
-def remove_email(line):
+def remove_email(line: str):
     """Removes e-mail addresses from a line.
 
     Params:
@@ -275,13 +354,13 @@ def remove_email(line):
     Returns:
         line (unicode)
     """
-    if '@' in line:
-        if search(f'{EMAIL_REGEX}(:|;)', line):
-            return True, sub(f'{EMAIL_REGEX}(:|;)', '', line)
+    if "@" in line:
+        if search(f"{EMAIL_REGEX}(:|;)?", line):
+            return True, sub(f"{EMAIL_REGEX}(:|;)?", "", line)
     return False, line
 
 
-def add_lower(line):
+def add_lower(line: str):
     """Returns if the upper case string is different from the lower case line
 
     Param:
@@ -294,11 +373,11 @@ def add_lower(line):
     line_lower = line.lower()
     if line != line_lower:
         return line_lower
-    else:
-        return False
+
+    return None
 
 
-def add_first_upper(line):
+def add_first_upper(line: str):
     """Returns the line with the first letter capitalized and all the others in lowercase.
 
     Param:
@@ -311,11 +390,11 @@ def add_first_upper(line):
     line_first_upper = line.capitalize()
     if line != line_first_upper:
         return line_first_upper
-    else:
-        return False
+
+    return None
 
 
-def add_title_case(line):
+def add_title_case(line: str):
     """Returns title case string where all the first letters are capitals and all others in lowercase.
 
     Param:
@@ -328,11 +407,11 @@ def add_title_case(line):
     line_title_case = line.title()
     if line != line_title_case:
         return line_title_case
-    else:
-        return False
+
+    return None
 
 
-def add_latin_ligatures(line):
+def add_latin_ligatures(line: str):
     """Returns the line cleaned of latin ligatures if there are any.
 
     Param:
@@ -345,11 +424,11 @@ def add_latin_ligatures(line):
     cleaned_line = fix_latin_ligatures(line)
     if line != cleaned_line:
         return cleaned_line
-    else:
-        return False
+
+    return None
 
 
-def add_without_punctuation(line, punctuation):
+def add_without_punctuation(line: str, punctuation: str):
     """Returns the line cleaned of punctuation.
 
     Param:
@@ -359,15 +438,15 @@ def add_without_punctuation(line, punctuation):
         False if there are not any punctuation
         Corrected line
     """
-    cleaned_line = line.translate(str.maketrans('', '', punctuation))
+    cleaned_line = line.translate(str.maketrans("", "", punctuation))
 
     if line != cleaned_line:
         return cleaned_line
-    else:
-        return False
+
+    return None
 
 
-def clean_add_umlaut(line):
+def clean_add_umlaut(line: str):
     """Returns the line cleaned of incorrect umlauting
 
     Param:
@@ -379,27 +458,27 @@ def clean_add_umlaut(line):
     cleaned_line = line
 
     umlaut_dict = {
-        'a"': 'ä',
-        'i"': 'ï',
-        'o"': 'ö',
-        'u"': 'ü',
-        'e"': 'ë',
-        'A"': 'Ä',
-        'I"': 'Ï',
-        'O"': 'Ö',
-        'U"': 'Ü',
-        'E"': 'Ë',
+        'a"': "ä",
+        'i"': "ï",
+        'o"': "ö",
+        'u"': "ü",
+        'e"': "ë",
+        'A"': "Ä",
+        'I"': "Ï",
+        'O"': "Ö",
+        'U"': "Ü",
+        'E"': "Ë",
     }
-    for letter in umlaut_dict.keys():
-        cleaned_line = cleaned_line.replace(letter, umlaut_dict.get(letter))
+    for letter, new_letter in umlaut_dict.items():
+        cleaned_line = cleaned_line.replace(letter, new_letter)
 
     if line != cleaned_line:
         return True, cleaned_line
-    else:
-        return False, line
+
+    return False, line
 
 
-def remove_punctuation(line, punctuation):
+def remove_punctuation(line: str, punctuation: str):
     """Returns the line without punctuation
 
     Param:
@@ -409,14 +488,14 @@ def remove_punctuation(line, punctuation):
     Returns:
         line without start and end punctuation
     """
-    return_line = line.translate(str.maketrans('', '', punctuation))
+    return_line = line.translate(str.maketrans("", "", punctuation))
     if return_line != line:
         return True, return_line
-    else:
-        return False, line
+
+    return False, line
 
 
-def remove_strip_punctuation(line, punctuation):
+def remove_strip_punctuation(line: str, punctuation: str):
     """Returns the line without start and end punctuation
 
     Param:
@@ -428,11 +507,11 @@ def remove_strip_punctuation(line, punctuation):
     return_line = line.strip(punctuation)
     if return_line != line:
         return True, return_line
-    else:
-        return False, line
+
+    return False, line
 
 
-def add_split(line, punctuation=(' ', '-', r'\.')):
+def add_split(line: str, punctuation: tuple[str, ...] = (" ", "-", r"\.")) -> list[str]:
     """Split the line on the punctuation and return elements longer then 1 char.
 
     Param:
@@ -443,11 +522,11 @@ def add_split(line, punctuation=(' ', '-', r'\.')):
     """
     for p in punctuation:
         if p in line:
-            return [i for i in re_split('|'.join(punctuation), line) if len(i) > 1]
-    return False
+            return [i for i in re_split("|".join(punctuation), line) if len(i) > 1]
+    return []
 
 
-def check_case(line, ignored_chars=(' ', "'", '-')):
+def check_case(line: str, ignored_chars: tuple[str, ...] = (" ", "'", "-")):
     """Checks if an uppercase line is equal to a lowercase line.
 
     Param:
@@ -462,12 +541,12 @@ def check_case(line, ignored_chars=(' ', "'", '-')):
         if c.lower() == c.upper():
             if c in ignored_chars:
                 continue
-            else:
-                return False, c
+
+            return False, c
     return True, None
 
 
-def check_length(line, min=0, max=0):
+def check_length(line: str, min_length: int = 0, max_length: int = 0):
     """Does a length check on the line
 
     Params:
@@ -479,14 +558,14 @@ def check_length(line, min=0, max=0):
         true if length is ok
     """
     status = True
-    if min and status:
-        status = len(line) >= min
-    if max and status:
-        status = len(line) < max
+    if min_length and status:
+        status = len(line) >= min_length
+    if max_length and status:
+        status = len(line) < max_length
     return status
 
 
-def check_hash(line):
+def check_hash(line: str):
     """Check if a line contains a hash
 
     Params:
@@ -499,14 +578,14 @@ def check_hash(line):
         if len(line) in [32, 40, 64]:
             return False
     if len(line) > 0:
-        if line[0] == '$':
+        if line[0] == "$":
             for hash_regex in HASH_REGEX_LIST:
                 if search(hash_regex, line):
                     return False
     return True
 
 
-def check_mac_address(line):
+def check_mac_address(line: str):
     """Check if a line contains a MAC-address
 
     Params:
@@ -521,7 +600,7 @@ def check_mac_address(line):
     return True
 
 
-def check_email(line):
+def check_email(line: str):
     """Check if lines contain e-mail addresses with a simple regex
 
     Params:
@@ -532,11 +611,11 @@ def check_email(line):
     """
     if search(EMAIL_REGEX, line):
         return False
-    else:
-        return True
+
+    return True
 
 
-def check_non_ascii(line):
+def check_non_ascii(line: str):
     """Checks if a line contains a non ascii chars
 
     Params:
@@ -546,13 +625,13 @@ def check_non_ascii(line):
         true if line does not contain non ascii chars
     """
     try:
-        line.encode('ascii')
+        line.encode("ascii")
         return True
     except UnicodeEncodeError:
         return False
 
 
-def check_character(line, character):
+def check_character(line: str, character: str):
     """Checks if a line contains a specific character
 
     Params:
@@ -564,11 +643,11 @@ def check_character(line, character):
     """
     if character in line:
         return True
-    else:
-        return False
+
+    return False
 
 
-def check_starting_with(line, strings):
+def check_starting_with(line: str, strings: list[str]):
     """Checks if a line start with a specific strings
 
     Params:
@@ -585,7 +664,7 @@ def check_starting_with(line, strings):
     return False
 
 
-def check_uuid(line):
+def check_uuid(line: str):
     """Check if a line contains a UUID
 
     Params:
@@ -600,7 +679,7 @@ def check_uuid(line):
     return True
 
 
-def check_ending_with(line, strings):
+def check_ending_with(line: str, strings: list[str]):
     """Checks if a line ends with specific strings
 
     Params:
@@ -617,7 +696,7 @@ def check_ending_with(line, strings):
     return False
 
 
-def check_contains(line, strings):
+def check_contains(line: str, strings: list[str]):
     """Checks if a line does not contain specific strings
 
     Params:
@@ -634,7 +713,7 @@ def check_contains(line, strings):
     return False
 
 
-def check_empty_line(line):
+def check_empty_line(line: str):
     """Checks if a line is empty or only contains whitespace chars
 
     Params:
@@ -643,14 +722,16 @@ def check_empty_line(line):
     Returns:
         true of line is empty or only contains whitespace chars
     """
-    if line == '':
+    if line == "":
         return True
-    elif line.isspace():
+
+    if line.isspace():
         return True
+
     return False
 
 
-def clean_cut(line, delimiters, fields):
+def clean_cut(line: str, delimiters: list[str], fields: str):
     """Finds the first delimiter and returns the remaining string either after
     or before the delimiter.
 
@@ -664,22 +745,23 @@ def clean_cut(line, delimiters, fields):
     """
     for delimiter in delimiters:
         if delimiter in line:
-            if '-' in fields:
-                start = fields.split('-')[0]
-                stop = fields.split('-')[1]
-                if start == '':
-                    start = 1
-                if stop == '':
-                    stop = len(line)
-                fields = slice(int(start) - 1, int(stop))
+            parts = line.split(delimiter)
+            if "-" in fields:
+                start = fields.split("-")[0]
+                stop = fields.split("-")[1]
+                start = int(start) - 1 if start else 0
+                stop = int(stop) if stop else len(parts)
+                fields_slice = slice(start, stop)
             else:
-                fields = slice(int(fields) - 1, int(fields))
-            return True, delimiter.join(line.split(delimiter)[fields])
-    else:
-        return False, line
+                field = int(fields) - 1
+                fields_slice = slice(field, field + 1)
+
+            return True, delimiter.join(parts[fields_slice])
+
+    return False, line
 
 
-def clean_non_ascii(line):
+def clean_non_ascii(line: str):
     """Replace non ascii chars with there ascii representation.
 
     Params:
@@ -691,28 +773,28 @@ def clean_non_ascii(line):
     cleaned_line = unidecode(line)
     if line != cleaned_line:
         return True, cleaned_line
-    else:
-        return False, line
+
+    return False, line
 
 
-def clean_lowercase(line):
+def clean_lowercase(line: str):
     """Replace all capitals to lowercase
 
-        Params:
-            line (Unicode)
+    Params:
+        line (Unicode)
 
-        Returns:
-            line (Unicode)
+    Returns:
+        line (Unicode)
 
-        """
+    """
     cleaned_line = line.lower()
     if line != cleaned_line:
         return True, cleaned_line
-    else:
-        return False, line
+
+    return False, line
 
 
-def clean_title_case(line):
+def clean_title_case(line: str):
     """Replace words to title word (uppercasing first letter)
 
     Params:
@@ -725,11 +807,11 @@ def clean_title_case(line):
     cleaned_line = line.title()
     if line != cleaned_line:
         return True, cleaned_line
-    else:
-        return False, line
+
+    return False, line
 
 
-def clean_trim(line):
+def clean_trim(line: str):
     """Delete leading and trailing character sequences representing a newline
     from beginning end end of line.
 
@@ -745,11 +827,11 @@ def clean_trim(line):
         has_match = False
         for x in TRIM_BLOCKS:
             if cleaned_line.startswith(x):
-                cleaned_line = cleaned_line[len(x):]
+                cleaned_line = cleaned_line[len(x) :]
                 has_match = True
 
             if cleaned_line.endswith(x):
-                cleaned_line = cleaned_line[:-len(x)]
+                cleaned_line = cleaned_line[: -len(x)]
                 has_match = True
 
         if has_match is False:
@@ -757,11 +839,11 @@ def clean_trim(line):
 
     if line != cleaned_line:
         return True, cleaned_line
-    else:
-        return False, line
+
+    return False, line
 
 
-def clean_tab(line):
+def clean_tab_str(line: str):
     """Replace tab character with ':' greedy
 
     Params:
@@ -770,14 +852,31 @@ def clean_tab(line):
     Returns:
         line (bytes)
     """
-    if b'\x09' in line:
-        line = sub(b'\x09+', b'\x3a', line)
+    if "\t" in line:
+        line = sub("\t+", ":", line)
         return True, line
-    else:
-        return False, line
+
+    return False, line
 
 
-def clean_hex(line):
+def clean_tab(line: bytes):
+    """Replace tab character with ':' greedy
+
+    Params:
+        line (bytes)
+
+    Returns:
+        line (bytes)
+    """
+
+    if b"\x09" in line:
+        line = sub(b"\x09+", b"\x3a", line)
+        return True, line
+
+    return False, line
+
+
+def clean_hex(line: str):
     """Converts strings like '$HEX[]' to proper binary
 
     Params:
@@ -789,11 +888,11 @@ def clean_hex(line):
     match = HEX_REGEX.search(line)
     if match:
         return True, unhexlify(match.group(1))
-    else:
-        return False, line
+
+    return False, line
 
 
-def clean_html(line):
+def clean_html(line: str):
     """Detects html encode chars and decodes them
 
     Params:
@@ -805,11 +904,11 @@ def clean_html(line):
     return_line = HTML_ENTITY_RE.sub(_unescape_fixup, line)
     if return_line != line:
         return True, return_line
-    else:
-        return False, line
+
+    return False, line
 
 
-def clean_html_named(line):
+def clean_html_named(line: str):
     """Detects named html encode chars and decodes them
 
     Params:
@@ -821,11 +920,11 @@ def clean_html_named(line):
     return_line = HTML_ENTITY_RE.sub(_unescape_fixup_named, line)
     if return_line != line:
         return True, return_line
-    else:
-        return False, line
+
+    return False, line
 
 
-def clean_newline(line):
+def clean_newline(line: str):
     """Delete newline characters at start and end of line
 
     Params:
@@ -834,14 +933,14 @@ def clean_newline(line):
     Returns:
         line (Unicode)
     """
-    return_line = line.strip('\r\n')
+    return_line = line.strip("\r\n")
     if return_line != line:
         return True, return_line
-    else:
-        return False, line
+
+    return False, line
 
 
-def check_controlchar(line):
+def check_controlchar(line: str):
     """Detects control chars, returns True when detected
 
     Params:
@@ -859,12 +958,12 @@ def check_controlchar(line):
         # Cn -> Not assigned
         # Co -> Private use
         # Cs -> Surrogate
-        if category(c) in ['Cc', 'Cf', 'Cn', 'Co', 'Cs']:
+        if category(c) in ["Cc", "Cf", "Cn", "Co", "Cs"]:
             return True, c
     return False, None
 
 
-def check_regex(line, regex):
+def check_regex(line: str, regexes: list[str]):
     """Checks if a line matches a list of regexes
 
     Params:
@@ -875,15 +974,16 @@ def check_regex(line, regex):
         true if all regexes match
         false if line does not match regex
     """
-    for regex in regex:
+    for regex in regexes:
         if search(regex, line):
             continue
-        else:
-            return False
+
+        return False
+
     return True
 
 
-def contains_at_least(line, bound, char_property):
+def contains_at_least(line: str, bound: int, char_property: Callable[[str], bool]):
     """Check if the line contains at least `bound` characters with given property.
 
     Params:
@@ -907,7 +1007,7 @@ def contains_at_least(line, bound, char_property):
     return False
 
 
-def contains_at_most(line, bound, char_property):
+def contains_at_most(line: str, bound: int | float, char_property: Callable[[str], bool]):
     """Check if the line contains at most `bound` characters with given property.
 
     Params:
@@ -928,7 +1028,7 @@ def contains_at_most(line, bound, char_property):
     return True
 
 
-def try_encoding(line, encoding):
+def try_encoding(line: bytes, encoding: str):
     """Tries to decode a line using supplied encoding
 
     Params:
@@ -939,23 +1039,28 @@ def try_encoding(line, encoding):
         False if decoding failed
         String if decoding worked
     """
+
+    # Define a set of control character categories to exclude
+    excluded_controls = {"Cc", "Cf", "Cn", "Co", "Cs"}
+
+    # Define a set of acceptable control characters
+    acceptable_controls = {"\t", "\n", "\r", "\f", "\v"}
+
     try:
         # Try to decode the line
         line_decoded = line.decode(encoding)
         # Some encoding will decoded almost any line, lets check if we have invalid chars.
         # If we have invalid chars (except for tab like chars) we will fail
         for c in line_decoded:
-            if category(c) in ['Cc', 'Cf', 'Cn', 'Co', 'Cs']:
-                if c == '\t' or c == '\f':
-                    continue
-                else:
-                    return False
+            # Check if the character is a control character
+            if category(c) in excluded_controls and c not in acceptable_controls:
+                return False
         return line_decoded
     except UnicodeDecodeError:
         return False
 
 
-def clean_mojibake(line):
+def clean_mojibake(line: str):
     """Detects mojibake and tries to correct it.
     Mojibake are string that are decoded incorrectly and then encoded incorrectly.
     This results in strings like: Ãºnico which should be único.
@@ -969,11 +1074,11 @@ def clean_mojibake(line):
     return_line = fix_encoding(line)
     if return_line != line:
         return True, return_line
-    else:
-        return False, line
+
+    return False, line
 
 
-def clean_encode(line, input_encoding):
+def clean_encode(line: bytes, input_encoding: list[str]):
     """Detects and tries encoding
 
     Params:
@@ -987,6 +1092,19 @@ def clean_encode(line, input_encoding):
     # Single byte encodings. Also it is beter to not include iso encoding by default.
     # https://en.wikipedia.org/wiki/Character_encoding#Common_character_encodings
     # Input_encoding is by default [utf8]
+    fallback_encodings = [
+        "utf-8",
+        "latin-1",
+        "windows-1252",
+        "ascii",
+        "iso-8859-15",
+        "macroman",
+        "cp437",
+        "iso-8859-2",
+    ]
+
+    line_decoded = False
+
     for encoding in input_encoding:
         line_decoded = try_encoding(line, encoding)
         if line_decoded is not False:
@@ -994,18 +1112,27 @@ def clean_encode(line, input_encoding):
     # All other methods failed, lets run the detect library on the line and try to guess the encoding.
     if line_decoded is False:
         encode = detect(line)
-        if encode.get('encoding'):
+        found_encoding = encode.get("encoding")
+        if found_encoding:
             try:
-                line_decoded = line.decode(encode['encoding'])
-            except (UnicodeDecodeError, LookupError) as e: # noqa F841
-                return False, encode["encoding"]
-        else:
-            return False, 'Unknown'
-    # If we managed to get here, return decode line
+                line_decoded = line.decode(found_encoding)
+            except (UnicodeDecodeError, LookupError):  # noqa F841
+                pass
+
+    if line_decoded is False:
+        # Lets try some fallback encodings
+        for encoding in fallback_encodings:
+            line_decoded = try_encoding(line, encoding)
+            if line_decoded is not False:
+                break
+
+    if line_decoded is False:
+        return False, "Unknown-detect"
+
     return True, line_decoded
 
 
-def clean_up(lines):
+def clean_up(config: Config, original_lines: list[bytes]):  # pylint: disable=R0912:too-many-branches
     """Main clean loop, this calls all the other clean functions.
 
     Args:
@@ -1014,789 +1141,842 @@ def clean_up(lines):
     Returns:
         (str(Decoded line), str(Failed line))
     """
-    results = []
-    log = []
+    results: list[str] = []
+    log: list[str] = []
+    lines: list[str] = []
 
-    for line in lines:
+    def add_to_lines(line: str | bytes | None, status: bool = True):
+        if line is None:
+            return
+
+        if isinstance(line, bytes):
+            new_line = preprocess_line(line)
+            if new_line is None:
+                return
+
+            add_to_lines(new_line, status)
+            return
+
+        if status and line not in lines:
+            lines.append(line)
+
+    def add_to_log(
+        message: str,
+        status: bool = True,
+        require_debug: bool = True,
+        require_verbose: bool = False,
+        no_status_message: str | None = None,
+    ):
+        if status:
+            if require_verbose and not config["verbose"] and not config["debug"]:
+                # If verbose required and verbose and debug are not set, return
+                return
+
+            if require_debug and not require_verbose and not config["debug"]:
+                # If debug required and debug is not set and verbose is not required, return
+                return
+
+            log.append(message)
+        elif no_status_message:
+            log.append(no_status_message)
+
+    def preprocess_line(line: bytes) -> str | None:
+        add_to_log(f"----BEGIN DECODING---- {hexlify(line)}{linesep}")
+        # Replace tab chars as ':' greedy
+        if config["tab"]:
+            status, line = clean_tab(line)
+            add_to_log(f"Clean_tab; replaced tab characters; {line}{linesep}", status)
+
+        if config["decode"]:
+            status, line_decoded = clean_encode(line, config["input_encoding"])
+
+            add_to_log(
+                f"Clean_encode; decoded line; {line_decoded}{linesep}",
+                status,
+                no_status_message=f"Clean_encode; decoding error with {line_decoded}; {line}{linesep}",
+            )
+
+            if not status:
+                return None
+        else:
+            try:
+                line_decoded = line.decode(config["input_encoding"][0])
+                add_to_log(f"Clean_up; decoded using input_encoding option; {line_decoded}{linesep}")
+            except UnicodeDecodeError:  # noqa F841
+                log.append(f"Clean_up; decoding error with unknown; {line}{linesep}")
+                return None
+
+        # From here it is expected that line is correctly decoded!
+        # Check if some lines contain a hex string like $HEX[41424344]
+        if config["hex"]:
+            status, line_decoded = clean_hex(line_decoded)
+
+            add_to_log(f"Clean_hex; replaced $HEX[]; added to queue and quiting {line}{linesep}", status)
+
+            if isinstance(line_decoded, bytes):
+                return preprocess_line(line_decoded)
+
+        add_to_log(f"----END DECODING---- {line_decoded}{linesep}")
+
+        return line_decoded
+
+    for line in original_lines:
+        add_to_lines(line)
+
+    for line_decoded in lines:
         # Check if the limit is set, if so minus 1 and if 0 is reached lets quit.
-        if type(config['limit']) is int:
-            if config['limit'] > 0:
-                config['limit'] -= 1
+        if not isinstance(config["limit"], bool):
+            if config["limit"] > 0:
+                config["limit"] -= 1
             else:
                 break
 
         # When stop is set all demeuking module will be skipped for this line.
-        stop = False
-        if config['debug']:
-            log.append(f'----BEGIN---- {hexlify(line)}{linesep}')
+        add_to_log(f"----BEGIN LINE---- {line_decoded}{linesep}")
+
         # Replace tab chars as ':' greedy
-        if config.get('tab') and not stop:
-            status, line = clean_tab(line)
-            if status and config['debug']:
-                log.append(f'Clean_tab; replaced tab characters; {line}{linesep}')
-        # Converting enoding to UTF-8
-        if config.get('encode') and not stop:
-            status, line_decoded = clean_encode(line, config.get('input_encoding'))
-            if status is False:
-                log.append(f'Clean_encode; decoding error with {line_decoded}; {line}{linesep}')
-                stop = True
-            elif status is True and config['debug']:
-                log.append(f'Clean_encode; decoded line; {line_decoded}{linesep}')
-        else:
-            try:
-                line_decoded = line.decode(config.get('input_encoding')[0])
-                if config['debug']:
-                    log.append(f'Clean_up; decoded using input_encoding option; {line_decoded}{linesep}')
-            except (UnicodeDecodeError) as e: # noqa F841
-                log.append(f'Clean_up; decoding error with unknown; {line}{linesep}')
-                stop = True
+        if config["tab"]:
+            status, line_decoded = clean_tab_str(line_decoded)
+            add_to_log(f"Clean_tab; replaced tab characters; {line_decoded}{linesep}", status)
+
         # From here it is expected that line is correctly decoded!
         # Check if some lines contain a hex string like $HEX[41424344]
-        if config.get('hex') and not stop:
+        if config["hex"]:
             status, line_decoded = clean_hex(line_decoded)
-            if status:
-                # Lines contains hex, this function will return binary string, so add it back to
-                # our undecoded lines
-                lines.append(line_decoded)
-                if config['debug']:
-                    log.append(f'Clean_hex; replaced $HEX[], added to queue and quiting; {line}{linesep}')
-                # Aborting future processing of this line.
-                stop = True
+
+            add_to_log(
+                f"Clean_hex; replaced $HEX[]; added to queue and quiting {line_decoded}{linesep}",
+                status,
+            )
+            add_to_lines(line_decoded, status)
+
+            if isinstance(line_decoded, bytes):
+                continue
 
         # Check if there are html char in the line, decode them if there are
-        if config.get('html') and not stop:
+        if config["html"]:
             status, line_decoded = clean_html(line_decoded)
+
+            add_to_log(
+                f"Clean_html; replaced html, added to queue and quiting; {line_decoded}{linesep}",
+                status,
+            )
+            add_to_lines(line_decoded, status)
+
             if status:
-                # Line contains html string, because this can be binary data (linefeeds etc)
-                # convert back to binary string and add to queue again.
-                lines.append(line_decoded.encode())
-                if config['debug']:
-                    log.append(f'Clean_html; replaced html, added to queue and quiting; {line_decoded}{linesep}')
-                stop = True
+                continue
 
         # Checks if there are any mojibakes inside the line
         # You must mojibake before removing control chars! Some control chars
         # are part of a valid mojibake.
-        if config.get('mojibake') and not stop:
+        if config["mojibake"]:
             status, line_decoded = clean_mojibake(line_decoded)
-            if status and config['debug']:
-                log.append(f'Clean_mojibake; found a mojibake; {line}{linesep}')
+            add_to_log(f"Clean_mojibake; found a mojibake; {line_decoded}{linesep}", status)
 
         # Delete leading and trailing newline characters
-        if config.get('newline') and not stop:
+        if config["newline"]:
             status, line_decoded = clean_newline(line_decoded)
-            if status and config['debug']:
-                log.append(f'Clean_newline; deleted newline characters; {line_decoded!r}{linesep}')
+            add_to_log(f"Clean_newline; deleted newline characters; {line_decoded!r}{linesep}", status)
 
         # Checks if there are any control chars inside line
-        if config.get('check-controlchar') and not stop:
+        if config["check_controlchar"]:
             status, cc = check_controlchar(line_decoded)
+            add_to_log(
+                f"Check_controlchar; found controlchar {cc!r}; {line_decoded!r}{linesep}", status, require_debug=False
+            )
+
             if status:
-                # Control char detected
-                log.append(f'Check_controlchar; found controlchar {cc!r}; {line_decoded!r}{linesep}')
-                stop = True
+                continue
 
         # Check if there are named html chars in the line
-        if config.get('html-named') and not stop:
+        if config["html_named"]:
             status, line_decoded = clean_html_named(line_decoded)
-            if status and config['debug']:
-                log.append(f'Clean_html_named; found named html character; {line_decoded}{linesep}')
+
+            add_to_log(f"Clean_html_named; found named html character; {line_decoded}{linesep}", status)
 
         # Delete leading and trailing character sequences representing a newline
-        if config.get('trim') and not stop:
+        if config["trim"]:
             status, line_decoded = clean_trim(line_decoded)
-            if status and config['debug']:
-                log.append(f'Clean_trim; found trim sequence; {line_decoded!r}{linesep}')
+
+            add_to_log(f"Clean_trim; found trim sequence; {line_decoded!r}{linesep}", status)
 
         # Should we do the cut?
-        if config.get('cut') and not stop:
-            status, line_decoded = clean_cut(line_decoded, config['delimiter'], config['cut-fields'])
-            if status and config['debug']:
-                log.append(f'Clean_cut; field cutted; {line_decoded}{linesep}')
+        if config["cut"]:
+            status, line_decoded = clean_cut(line_decoded, config["delimiter"], config["cut_fields"])
+
+            add_to_log(f"Clean_cut; field cutted; {line_decoded}{linesep}", status)
 
         # Replace umlauts
-        if config.get('umlaut') and not stop:
+        if config["umlaut"]:
             status, line_decoded = clean_add_umlaut(line_decoded)
-            if status and config['debug']:
-                log.append(f'Clean_umlaut; umlaut replaced; {line_decoded}{linesep}')
+
+            add_to_log(f"Clean_umlaut; umlaut replaced; {line_decoded}{linesep}", status)
 
         # Replace non-ascii
-        if config.get('non-ascii') and not stop:
+        if config["non_ascii"]:
             status, line_decoded = clean_non_ascii(line_decoded)
-            if status and config['debug']:
-                log.append(f'Clean_non_ascii; non-ascii replaced; {line_decoded}{linesep}')
+
+            add_to_log(f"Clean_non_ascii; non-ascii replaced; {line_decoded}{linesep}", status)
 
         # Replace all letters with lowercase
-        if config.get('lowercase') and not stop:
+        if config["lowercase"]:
             status, line_decoded = clean_lowercase(line_decoded)
-            if status and config['verbose']:
-                log.append(f'Clean_lowercase; all capitals replaced; {line_decoded}{linesep}')
+
+            add_to_log(f"Clean_lowercase; all capitals replaced; {line_decoded}{linesep}", status, require_verbose=True)
 
         # Replace first letter of a word to a uppercase letter
-        if config.get('title-case') and not stop:
+        if config["title_case"]:
             status, line_decoded = clean_title_case(line_decoded)
-            if status and config['debug']:
-                log.append(f'Clean_title_case; non-ascii replaced; {line_decoded}{linesep}')
+
+            add_to_log(f"Clean_title_case; first letter of a word to uppercase; {line_decoded}{linesep}", status)
 
         # Should we remove emails?
-        if config.get('remove-email') and not stop:
+        if config["remove_email"]:
             status, line_decoded = remove_email(line_decoded)
-            if status and config['debug']:
-                log.append(f'Remove_email; email found; {line_decoded}{linesep}')
 
-        if config.get('googlengram') and not stop:
+            add_to_log(f"Remove_email; email found; {line_decoded}{linesep}", status)
+
+        if config["googlengram"]:
             status, line_decoded = clean_googlengram(line_decoded)
-            if status and config['debug']:
-                log.append(f'Clean_googlengram; tos found and removed; {line_decoded}{linesep}')
 
-        if config.get('check-case') and not stop:
+            add_to_log(f"Clean_googlengram; removed speechtags; {line_decoded}{linesep}", status)
+
+        if config["check_case"]:
             status, c = check_case(line_decoded)
-            if not status:
-                log.append(f'Check_case; dropped line because of {c}; {line_decoded}{linesep}')
-                stop = True
 
-        if config.get('check-length') and not stop:
-            if not check_length(line_decoded, min=config['check-min-length'], max=config['check-max-length']):
-                log.append(f'Check_length; dropped line because of failed length check; {line_decoded}{linesep}')
-                stop = True
+            failed = not status
 
-        if config.get('check-email') and not stop:
+            add_to_log(f"Check_case; dropped line because of {c}; {line_decoded}{linesep}", failed)
+
+            if failed:
+                continue
+
+        if config["check_length"]:
+            if not check_length(line_decoded, config["check_min_length"], config["check_max_length"]):
+                add_to_log(
+                    f"Check_length; dropped line because of failed length check; {line_decoded}{linesep}",
+                    require_debug=False,
+                )
+                continue
+
+        if config["check_email"]:
             if not check_email(line_decoded):
-                log.append(f'Check_email; dropped line because found email; {line_decoded}{linesep}')
-                stop = True
+                add_to_log(
+                    f"Check_email; dropped line because found email; {line_decoded}{linesep}", require_debug=False
+                )
+                continue
 
-        if config.get('check-hash') and not stop:
+        if config["check_hash"]:
             if not check_hash(line_decoded):
-                log.append(f'Check_hash; dropped line because found a hash; {line_decoded}{linesep}')
-                stop = True
+                add_to_log(
+                    f"Check_hash; dropped line because found a hash; {line_decoded}{linesep}", require_debug=False
+                )
+                continue
 
-        if config.get('check-mac-address') and not stop:
+        if config["check_mac_address"]:
             if not check_mac_address(line_decoded):
-                log.append(f'Check_mac_address; dropped line because found a MAC address; {line_decoded}{linesep}')
-                stop = True
+                add_to_log(
+                    f"Check_mac_address; dropped line because found a MAC address; {line_decoded}{linesep}",
+                    require_debug=False,
+                )
+                continue
 
-        if config.get('check-non-ascii') and not stop:
+        if config["check_non_ascii"]:
             if not check_non_ascii(line_decoded):
-                log.append(f'Check_non_ascii; dropped line because non ascii char found; {line_decoded}{linesep}')
-                stop = True
+                add_to_log(
+                    f"Check_non_ascii; dropped line because non ascii char found; {line_decoded}{linesep}",
+                    require_debug=False,
+                )
+                continue
 
-        if config.get('check-replacement-character') and not stop:
-            if check_character(line_decoded, '�'):
-                log.append(f'Check_replacement_character; dropped line because "�" found; {line_decoded}{linesep}')
-                stop = True
+        if config["check_replacement_character"]:
+            if check_character(line_decoded, "�"):
+                add_to_log(
+                    f"Check_replacement_character; dropped line because '�' found; {line_decoded}{linesep}",
+                    require_debug=False,
+                )
+                continue
 
-        if config.get('check-regex') and not stop:
-            if not check_regex(line_decoded, config.get('check-regex')):
-                log.append(f'Check_regex; dropped line because it does not match the regex; {line_decoded}{linesep}')
-                stop = True
+        if config["check_regex"]:
+            if not check_regex(line_decoded, config["check_regex"]):
+                add_to_log(
+                    f"Check_regex; dropped line because does not match regex; {line_decoded}{linesep}",
+                    require_debug=False,
+                )
+                continue
 
-        min_digits = config.get('check-min-digits')
-        if min_digits and not stop:
+        min_digits = config["check_min_digits"]
+        max_digits = config["check_max_digits"]
+
+        if min_digits > 0:
             if not contains_at_least(line_decoded, min_digits, str.isdigit):
-                log.append(f'Check_min_digits; dropped line because it contains less than '
-                           f'{min_digits} digits; {line_decoded}{linesep}')
-                stop = True
+                add_to_log(
+                    f"Check_min_digits; dropped line because contains less than {min_digits} digits;"
+                    f" {line_decoded}{linesep}",
+                    require_debug=False,
+                )
+                continue
 
-        max_digits = config.get('check-max-digits')
-        if max_digits != float('inf') and not stop:
+        if max_digits != float("inf"):
             if not contains_at_most(line_decoded, max_digits, str.isdigit):
-                log.append(f'Check_max_digits; dropped line because it contains more than '
-                           f'{max_digits} digits; {line_decoded}{linesep}')
-                stop = True
+                add_to_log(
+                    f"Check_max_digits; dropped line because contains more than {max_digits} digits;"
+                    f" {line_decoded}{linesep}",
+                    require_debug=False,
+                )
+                continue
 
-        min_uppercase = config.get('check-min-uppercase')
-        if min_uppercase and not stop:
+        min_uppercase = config["check_min_uppercase"]
+        max_uppercase = config["check_max_uppercase"]
+
+        if min_uppercase > 0:
             if not contains_at_least(line_decoded, min_uppercase, str.isupper):
-                log.append(f'Check_min_uppercase; dropped line because it contains less than '
-                           f'{min_uppercase} uppercase characters; {line_decoded}{linesep}')
-                stop = True
+                add_to_log(
+                    f"Check_min_uppercase; dropped line because contains less than {min_uppercase} uppercase"
+                    f" characters; {line_decoded}{linesep}",
+                    require_debug=False,
+                )
+                continue
 
-        max_uppercase = config.get('check-max-uppercase')
-        if max_uppercase != float('inf') and not stop:
+        if max_uppercase != float("inf"):
             if not contains_at_most(line_decoded, max_uppercase, str.isupper):
-                log.append(f'Check_max_uppercase; dropped line because it contains more than '
-                           f'{max_uppercase} uppercase characters; {line_decoded}{linesep}')
-                stop = True
+                add_to_log(
+                    f"Check_max_uppercase; dropped line because contains more than {max_uppercase} uppercase"
+                    f" characters; {line_decoded}{linesep}",
+                    require_debug=False,
+                )
+                continue
 
-        min_specials = config.get('check-min-specials')
-        if min_specials and not stop:
-            if not contains_at_least(line_decoded, min_specials,
-                                     lambda char: not char.isalnum() and not char.isspace()):
-                log.append(f'Check_min_specials; dropped line because it contains less than '
-                           f'{min_specials} special characters; {line_decoded}{linesep}')
-                stop = True
+        min_specials = config["check_min_specials"]
+        max_specials = config["check_max_specials"]
 
-        max_specials = config.get('check-max-specials')
-        if max_specials != float('inf') and not stop:
+        if min_specials:
+            if not contains_at_least(
+                line_decoded, min_specials, lambda char: not char.isalnum() and not char.isspace()
+            ):
+                add_to_log(
+                    f"Check_min_specials; dropped line because contains less than {min_specials} special characters;"
+                    f" {line_decoded}{linesep}",
+                    require_debug=False,
+                )
+                continue
+
+        if max_specials != float("inf"):
             if not contains_at_most(line_decoded, max_specials, lambda char: not char.isalnum() and not char.isspace()):
-                log.append(f'Check_max_specials; dropped line because it contains more than '
-                           f'{max_specials} special characters; {line_decoded}{linesep}')
-                stop = True
+                add_to_log(
+                    f"Check_max_specials; dropped line because contains more than {max_specials} special characters;"
+                    f" {line_decoded}{linesep}",
+                    require_debug=False,
+                )
+                continue
 
-        if config.get('check-starting-with') and not stop:
-            to_check = config.get("check-starting-with")
+        if config["check_starting_with"]:
+            to_check = config["check_starting_with"]
             if check_starting_with(line_decoded, to_check):
-                log.append(f'Check_starting_with; dropped line because {to_check} found; {line_decoded}{linesep}')
-                stop = True
+                add_to_log(
+                    f"Check_starting_with; dropped line because {to_check} found; {line_decoded}{linesep}",
+                    require_debug=False,
+                )
+                continue
 
-        if config.get('check-uuid') and not stop:
+        if config["check_uuid"]:
             if not check_uuid(line_decoded):
-                log.append(f'Check_uuid; dropped line because found a uuid; {line_decoded}{linesep}')
-                stop = True
+                add_to_log(
+                    f"Check_uuid; dropped line because found a uuid; {line_decoded}{linesep}", require_debug=False
+                )
+                continue
 
-        if config.get('check-ending-with') and not stop:
-            to_check = config.get("check-ending-with")
+        if config["check_ending_with"]:
+            to_check = config["check_ending_with"]
             if check_ending_with(line_decoded, to_check):
-                log.append(f'Check_ending_with; dropped line because {to_check} found; {line_decoded}{linesep}')
-                stop = True
+                add_to_log(
+                    f"Check_ending_with; dropped line because {to_check} found; {line_decoded}{linesep}",
+                    require_debug=False,
+                )
+                continue
 
-        if config.get('check-contains') and not stop:
-            to_check = config.get("check-contains")
+        if config["check_contains"]:
+            to_check = config["check_contains"]
             if check_contains(line_decoded, to_check):
-                log.append(f'Check-contains; dropped line because {to_check} found; {line_decoded}{linesep}')
-                stop = True
+                add_to_log(
+                    f"Check-contains; dropped line because {to_check} found; {line_decoded}{linesep}",
+                    require_debug=False,
+                )
+                continue
 
-        if config.get('check-empty-line') and not stop:
+        if config["check_empty_line"]:
             if check_empty_line(line_decoded):
-                log_line = "Check_empty_line; dropped line because is empty or only contains whitespace;"
-                log.append(f'{log_line} {line_decoded}{linesep}')
-                stop = True
+                add_to_log(
+                    "Check_empty_line; dropped line because is empty or only contains whitespace;"
+                    f" {line_decoded}{linesep}",
+                    require_debug=False,
+                )
+                continue
 
-        if config.get('remove-punctuation') and not stop:
-            status, line_decoded = remove_punctuation(line_decoded, config.get('punctuation'))
-            if status and config['debug']:
-                log.append(f'Remove_punctuation; stripped punctuation; {line_decoded}{linesep}')
+        if config["remove_punctuation"]:
+            status, line_decoded = remove_punctuation(line_decoded, config["punctuation"])
+            add_to_log(f"Remove_punctuation; stripped punctuation; {line_decoded}{linesep}", status)
 
-        if config.get('remove-strip-punctuation') and not stop:
-            status, line_decoded = remove_strip_punctuation(line_decoded, config.get('punctuation'))
-            if status and config['debug']:
-                log.append(f'Remove_strip_punctuation; stripped punctuation; {line_decoded}{linesep}')
+        if config["remove_strip_punctuation"]:
+            status, line_decoded = remove_strip_punctuation(line_decoded, config["punctuation"])
+            add_to_log(f"Remove_strip_punctuation; stripped punctuation; {line_decoded}{linesep}", status)
 
-        # We ran all modules
-        if not stop:
-            # Some clean modules will modify the end result, those modification will be added here.
-            # They will be added to the running thread, this might cause one thread to have more work
-            # then others.
-            if config.get('add-split'):
-                modified_lines = add_split(line_decoded)
-                if modified_lines:
-                    for modified_line in modified_lines:
-                        if config['debug']:
-                            log.append(f'Add_split; new line because of split; {modified_line}{linesep}')
-                        lines.append(modified_line.encode())
+        # Some clean modules will modify the end result, those modification will be added here.
+        # They will be added to the running thread, this might cause one thread to have more work
+        # then others.
+        if config["add_split"]:
+            modified_lines = add_split(line_decoded)
 
-            if config.get('add-lower'):
-                modified_line = add_lower(line_decoded)
-                if modified_line:
-                    if config['debug']:
-                        log.append(f'Add_lower; new line; {modified_line}{linesep}')
-                    lines.append(modified_line.encode())
+            for modified_line in modified_lines:
+                add_to_lines(modified_line)
+                add_to_log(f"Add_split; new line because of split; {modified_line}{linesep}")
 
-            if config.get('add-first-upper'):
-                modified_line = add_first_upper(line_decoded)
-                if modified_line:
-                    if config['debug']:
-                        log.append(f'Add_first_upper; new line; {modified_line}{linesep}')
-                    lines.append(modified_line.encode())
+        if config["add_lower"]:
+            modified_line = add_lower(line_decoded)
+            add_to_lines(modified_line)
+            add_to_log(f"Add_lower; new line; {modified_line}{linesep}", modified_line is not None)
 
-            if config.get('add-title-case'):
-                modified_line = add_title_case(line_decoded)
-                if modified_line:
-                    if config['debug']:
-                        log.append(f'Add_title_case; new line; {modified_line}{linesep}')
-                    lines.append(modified_line.encode())
+        if config["add_first_upper"]:
+            modified_line = add_first_upper(line_decoded)
+            add_to_lines(modified_line)
+            add_to_log(f"Add_first_upper; new line; {modified_line}{linesep}", modified_line is not None)
 
-            if config.get('add-latin-ligatures'):
-                modified_line = add_latin_ligatures(line_decoded)
-                if modified_line:
-                    if config['debug']:
-                        log.append(f'Add_latin_ligatures; new line; {modified_line}{linesep}')
-                    lines.append(modified_line.encode())
+        if config["add_title_case"]:
+            modified_line = add_title_case(line_decoded)
+            add_to_lines(modified_line)
+            add_to_log(f"Add_title_case; new line; {modified_line}{linesep}", modified_line is not None)
 
-            if config.get('add-umlaut'):
-                status, modified_line = clean_add_umlaut(line_decoded)
-                if status:
-                    if config['debug']:
-                        log.append(f'Add_umlaut; new line; {modified_line}{linesep}')
-                    lines.append(modified_line.encode())
+        if config["add_latin_ligatures"]:
+            modified_line = add_latin_ligatures(line_decoded)
+            add_to_lines(modified_line)
+            add_to_log(f"Add_latin_ligatures; new line; {modified_line}{linesep}", modified_line is not None)
 
-            if config.get('add-without-punctuation'):
-                modified_line = add_without_punctuation(line_decoded, config.get('punctuation'))
-                if modified_line:
-                    if config['debug']:
-                        log.append(f'Add_without_punctuation; new line; {modified_line}{linesep}')
-                    lines.append(modified_line.encode())
+        if config["add_umlaut"]:
+            status, modified_line = clean_add_umlaut(line_decoded)
+            add_to_lines(modified_line, status)
+            add_to_log(f"Add_umlaut; new line; {modified_line}{linesep}", status)
 
-            if config['debug']:
-                log.append(f'----End---- {line_decoded}{linesep}{linesep}')
-            results.append(f'{line_decoded}{linesep}')
+        if config["add_without_punctuation"]:
+            modified_line = add_without_punctuation(line_decoded, config["punctuation"])
+            add_to_lines(modified_line)
+            add_to_log(f"Add_without_punctuation; new line; {modified_line}{linesep}", modified_line is not None)
 
-    return ({'results': results, 'log': log})
+        add_to_log(f"----END LINE---- {line_decoded}{linesep}")
+
+        results.append(f"{line_decoded}{linesep}")
+
+    return {"results": results, "log": log}
 
 
-def chunkify(filename, size=CHUNK_SIZE):
-    with open(filename, 'rb') as fh:
-        for x in range(0, config.get('skip')):
-            fh.readline()
+def chunkify(filename: str | BinaryIO, config: Config, size: int = CHUNK_SIZE):
+    if isinstance(filename, str):
+        with open(filename, "rb") as fh:
+            for _ in range(0, config["skip"]):
+                fh.readline()
+
+            while True:
+                lines = [line.rstrip(b"\n") for line in fh.readlines(size)]
+                yield lines
+                if len(lines) == 0:
+                    break
+    else:
+        for _ in range(0, config["skip"]):
+            filename.readline()
+
+        chunk = []
+        current_size = 0
 
         while True:
-            lines = [line.rstrip(b'\n') for line in fh.readlines(size)]
-            yield lines
-            if len(lines) == 0:
+            # Use select to wait for data up to 'timeout' seconds.
+            r, _, _ = select.select([filename], [], [], 5)
+            if r:
+                # Read one line at a time
+                line = filename.readline()
+                if not line:
+                    # EOF reached; yield what we have and break.
+                    if chunk:
+                        yield chunk
+                    break
+
+                # Append the line to the current chunk.
+                chunk.append(line.rstrip(b"\n"))
+                current_size += len(line)
+
+                # If we've reached the desired size, yield the chunk and reset.
+                if current_size >= size:
+                    yield chunk
+                    chunk = []
+                    current_size = 0
+            else:
+                # No data available within the timeout period.
+                if chunk:
+                    yield chunk
                 break
 
 
 # Quick to default logging to stderr instead
-def stderr_print(*args, **kwargs):
-    if config['verbose'] is True:
-        kwargs.setdefault('file', stderr)
+def stderr_print(config: Config, *args, **kwargs):
+    """Print to stderr"""
+    if config["verbose"] is True:
+        kwargs.setdefault("file", sys.stderr)
         print(*args, **kwargs)
 
 
-def main():
-    #
-    # Config parser
-    arguments = docopt(cleandoc('\n'.join(__doc__.split('\n')[2:])))
+def parse_arguments():
+    """Parse the arguments"""
+    parser = argparse.ArgumentParser(description="Demeuk - a simple tool to clean up corpora")
+    parser.add_argument("-i", "--input-file", help="Specify the input file to be cleaned, or provide a glob pattern.")
+    parser.add_argument("-o", "--output-file", help="Specify the output file to write the cleaned data to.")
+    parser.add_argument("-l", "--log", help="Specify the log file to write the log data to.")
+    parser.add_argument("-j", "--threads", help="Specify the number of threads to use.", default="all")
+    parser.add_argument("--input-encodings", help="Specify the input encodings to use.", default=["utf-8"], nargs="+")
+    parser.add_argument("--output-encoding", help="Specify the output encoding to use.", default="utf-8")
+    parser.add_argument("-v", "--verbose", help="Enable verbose output.", action="store_true")
+    parser.add_argument("--debug", help="Enable debug output.", action="store_true")
+    parser.add_argument("--progress", help="Enable progress output.", action="store_true")
+    parser.add_argument("-n", "--limit", help="Limit the number of lines per thread", default=False)
+    parser.add_argument("-s", "--skip", help="Skip the first n lines", default=0, type=int)
+    parser.add_argument("--punctuation", help="Specify the punctuation to remove", default=string_punctuation + " ")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {VERSION}")
+    parser.add_argument("-c", "--cut", help="Cut the line based on the delimiter", action="store_true")
+    parser.add_argument("--cut-before", help="Cut the line before the delimiter", action="store_true")
+    parser.add_argument("-f", "--cut-fields", help="Specify the fields to cut", default="2-")
+    parser.add_argument("-d", "--delimiter", help="Specify the delimiter to use", default=[":"], nargs="+")
+    parser.add_argument("--check-min-length", help="Check the minimum length of the line", default=0, type=int)
+    parser.add_argument("--check-max-length", help="Check the maximum length of the line", default=0, type=int)
+    parser.add_argument("--check-case", help="Check if the line is all uppercase", action="store_true")
+    parser.add_argument(
+        "--check-controlchar", help="Check if the line contains control characters", action="store_true"
+    )
+    parser.add_argument("--check-email", help="Check if the line contains an email address", action="store_true")
+    parser.add_argument("--check-hash", help="Check if the line contains a hash", action="store_true")
+    parser.add_argument("--check-mac-address", help="Check if the line contains a MAC address", action="store_true")
+    parser.add_argument(
+        "--check-non-ascii", help="Check if the line contains non-ascii characters", action="store_true"
+    )
+    parser.add_argument("--check-uuid", help="Check if the line contains a UUID", action="store_true")
+    parser.add_argument(
+        "--check-replacement-character", help="Check if the line contains a replacement character", action="store_true"
+    )
+    parser.add_argument("--check-starting-with", help="Check if the line starts with a specific character", nargs="+")
+    parser.add_argument("--check-ending-with", help="Check if the line ends with a specific character", nargs="+")
+    parser.add_argument("--check-contains", help="Check if the line contains a specific character", nargs="+")
+    parser.add_argument("--check-empty-line", help="Check if the line is empty", action="store_true")
+    parser.add_argument("--check-regex", help="Check if the line matches a specific regex", nargs="+")
+    parser.add_argument("--check-min-digits", help="Check if the line contains at least n digits", default=0, type=int)
+    parser.add_argument(
+        "--check-max-digits", help="Check if the line contains at most n digits", default=float("inf"), type=float
+    )
+    parser.add_argument(
+        "--check-min-uppercase", help="Check if the line contains at least n uppercase characters", default=0, type=int
+    )
+    parser.add_argument(
+        "--check-max-uppercase",
+        help="Check if the line contains at most n uppercase characters",
+        default=float("inf"),
+        type=float,
+    )
+    parser.add_argument(
+        "--check-min-specials", help="Check if the line contains at least n special characters", default=0, type=int
+    )
+    parser.add_argument(
+        "--check-max-specials",
+        help="Check if the line contains at most n special characters",
+        default=float("inf"),
+        type=float,
+    )
+    parser.add_argument("--hex", help="Decode hex strings", action="store_true")
+    parser.add_argument("--html", help="Decode html entities", action="store_true")
+    parser.add_argument("--html-named", help="Decode named html entities", action="store_true")
+    parser.add_argument("--lowercase", help="Convert all characters to lowercase", action="store_true")
+    parser.add_argument("--title-case", help="Convert the first letter of each word to uppercase", action="store_true")
+    parser.add_argument("--umlaut", help="Replace umlauts", action="store_true")
+    parser.add_argument("--mojibake", help="Decode mojibake", action="store_true")
+    parser.add_argument("--decode", help="Try to decode the line", action="store_true")
+    parser.add_argument("--tab", help="Replace tab characters with ':' greedy", action="store_true")
+    parser.add_argument("--newline", help="Remove leading and trailing newline characters", action="store_true")
+    parser.add_argument("--non-ascii", help="Replace non-ascii characters", action="store_true")
+    parser.add_argument("--trim", help="Remove leading and trailing whitespace", action="store_true")
+    parser.add_argument("--add-lower", help="Add a line with all characters in lowercase", action="store_true")
+    parser.add_argument(
+        "--add-first-upper", help="Add a line with the first character in uppercase", action="store_true"
+    )
+    parser.add_argument(
+        "--add-title-case", help="Add a line with the first letter of each word in uppercase", action="store_true"
+    )
+    parser.add_argument("--add-latin-ligatures", help="Add a line with latin ligatures", action="store_true")
+    parser.add_argument("--add-split", help="Add a line with split words", action="store_true")
+    parser.add_argument("--add-umlaut", help="Add a line with umlauts", action="store_true")
+    parser.add_argument("--add-without-punctuation", help="Add a line without punctuation", action="store_true")
+    parser.add_argument("--remove-strip-punctuation", help="Remove punctuation", action="store_true")
+    parser.add_argument("--remove-punctuation", help="Remove punctuation", action="store_true")
+    parser.add_argument("--remove-email", help="Remove email addresses", action="store_true")
+    parser.add_argument("-g", "--googlengram", help="Remove speech tags", action="store_true")
+    parser.add_argument("--leak", help="Leak the first line of the file", action="store_true")
+    parser.add_argument("--leak-full", help="recommended when working with leaks", action="store_true")
 
-    if arguments.get('--version'):
-        print(f'demeuk - {version}')
-        exit()
+    args = parser.parse_args()
 
-    input_file = arguments.get('--input')
-    output_file = arguments.get('--output')
-    log_file = arguments.get('--log')
+    threads = args.threads
 
-    if arguments.get('--threads'):
-        a_threads = arguments.get('--threads')
-        if a_threads == 'all':
-            a_threads = cpu_count()
-        else:
-            a_threads = int(a_threads)
+    if threads == "all":
+        threads = cpu_count()
     else:
-        a_threads = cpu_count()
+        threads = int(threads)
 
-    # Lets create the default config
-    global config
-    config = {
-        'input_encoding': ['UTF-8'],
-        'cut': False,
-        'delimiter': ':',
-        'cut-fields': '2-',
-        'verbose': False,
-        'debug': False,
-        'progress': False,
-        'limit': False,
-        'skip': False,
+    if args.cut_fields == "2-" and args.cut_before:
+        args.cut_fields = "-1"
 
-        # Modify
-        'encode': False,
-        'mojibake': False,
-        'tab': False,
-        'trim': False,
-        'newline': False,
-        'hex': False,
-        'html': False,
-        'html-named': False,
-        'umlaut': False,
-        'non-ascii': False,
-        'title_case': False,
+    delimiters: list[str] = []
+    for delimiter in args.delimiter:
+        if " " in delimiter:
+            delimiters.extend(delimiter.split(" "))
+        else:
+            delimiters.append(delimiter)
 
-        # Check
-        'length': False,
-        'check-min-length': 0,
-        'check-max-length': 0,
-        'check-controlchar': False,
-        'check-case': False,
-        'check-email': False,
-        'check-hash': False,
-        'check-mac-address': False,
-        'check-non-ascii': False,
-        'check-replacement-character': False,
-        'check-starting-with': False,
-        'check-uuid': False,
-        'check-ending-with': False,
-        'check-contains': False,
-        'check-empty-line': False,
-        'check-regex': False,
-        'check-min-digits': 0,
-        'check-max-digits': float('inf'),
-        'check-min-uppercase': 0,
-        'check-max-uppercase': float('inf'),
-        'check-min-specials': 0,
-        'check-max-specials': float('inf'),
-
-        # Add
-        'add-lower': False,
-        'add-first-upper': False,
-        'add-title-case': False,
-        'add-latin-ligatures': False,
-        'add-split': False,
-        'add-umlaut': False,
-        'add-without-punctuation': False,
-
-        # Remove
-        'remove-strip-punctuation': False,
-        'remove-punctuation': False,
-        'remove-email': False,
+    config: Config = {
+        "input_file": args.input_file,
+        "output_file": args.output_file,
+        "log": args.log,
+        "threads": threads,
+        "input_encoding": args.input_encodings,
+        "output_encoding": args.output_encoding,
+        "verbose": args.verbose,
+        "debug": args.debug,
+        "progress": args.progress,
+        "limit": int(args.limit) if args.limit else False,
+        "skip": args.skip,
+        "punctuation": args.punctuation,
+        "cut": args.cut,
+        "cut_before": args.cut_before,
+        "cut_fields": args.cut_fields,
+        "delimiter": delimiters,
+        "check_min_length": args.check_min_length,
+        "check_max_length": args.check_max_length,
+        "check_length": args.check_min_length or args.check_max_length,
+        "check_case": args.check_case,
+        "check_controlchar": args.check_controlchar,
+        "check_email": args.check_email,
+        "check_hash": args.check_hash,
+        "check_mac_address": args.check_mac_address,
+        "check_non_ascii": args.check_non_ascii,
+        "check_uuid": args.check_uuid,
+        "check_replacement_character": args.check_replacement_character,
+        "check_starting_with": args.check_starting_with,
+        "check_ending_with": args.check_ending_with,
+        "check_contains": args.check_contains,
+        "check_empty_line": args.check_empty_line,
+        "check_regex": args.check_regex,
+        "check_min_digits": args.check_min_digits,
+        "check_max_digits": args.check_max_digits,
+        "check_min_uppercase": args.check_min_uppercase,
+        "check_max_uppercase": args.check_max_uppercase,
+        "check_min_specials": args.check_min_specials,
+        "check_max_specials": args.check_max_specials,
+        "hex": args.hex,
+        "html": args.html,
+        "html_named": args.html_named,
+        "lowercase": args.lowercase,
+        "title_case": args.title_case,
+        "umlaut": args.umlaut,
+        "mojibake": args.mojibake,
+        "decode": args.decode,
+        "tab": args.tab,
+        "newline": args.newline,
+        "non_ascii": args.non_ascii,
+        "trim": args.trim,
+        "add_lower": args.add_lower,
+        "add_first_upper": args.add_first_upper,
+        "add_title_case": args.add_title_case,
+        "add_latin_ligatures": args.add_latin_ligatures,
+        "add_split": args.add_split,
+        "add_umlaut": args.add_umlaut,
+        "add_without_punctuation": args.add_without_punctuation,
+        "remove_strip_punctuation": args.remove_strip_punctuation,
+        "remove_punctuation": args.remove_punctuation,
+        "remove_email": args.remove_email,
+        "googlengram": args.googlengram,
+        "leak": args.leak,
+        "leak_full": args.leak_full,
     }
 
-    # Default modules
-    if arguments.get('--verbose'):
-        config['verbose'] = True
+    if config["googlengram"]:
+        config["cut"] = False
+        config["remove_email"] = False
+        config["decode"] = True
+        config["mojibake"] = False
+        config["check_controlchar"] = False
+        config["tab"] = False
 
-    if arguments.get('--debug'):
-        config['debug'] = True
+    if config["leak"]:
+        config["mojibake"] = True
+        config["decode"] = True
+        config["newline"] = True
+        config["check_controlchar"] = True
 
-    if arguments.get('--progress'):
-        if config['verbose'] or config['debug']:
-            if not log_file:
-                stderr_print('Progress can not be used with verbose or debug')
-                exit(2)
-        if not input_file:
-            # Forcing printing error message
-            config['verbose'] = True
-            stderr_print('Progress can not be used when using stdin.')
-            exit(2)
-        config['progress'] = True
+    if config["leak_full"]:
+        config["leak"] = True
+        config["mojibake"] = True
+        config["decode"] = True
+        config["newline"] = True
+        config["check_controlchar"] = True
+        config["hex"] = True
+        config["html"] = True
+        config["html_named"] = True
+        config["check_hash"] = True
+        config["check_mac_address"] = True
+        config["check_uuid"] = True
+        config["check_email"] = True
+        config["check_replacement_character"] = True
+        config["check_empty_line"] = True
 
-    if arguments.get('--force'):
-        config['force'] = True
+    if not config["input_file"]:
+        config["verbose"] = False
+        config["debug"] = False
 
-    if arguments.get('--limit'):
-        config['limit'] = int(arguments.get('--limit'))
+    return config
 
-    if arguments.get('--skip'):
-        config['skip'] = int(arguments.get('--skip'))
 
-    if arguments.get('--input-encoding'):
-        config['input_encoding'] = arguments.get('--input-encoding').split(',')
+def main():  # pylint: disable=R0912:too-many-branches
+    """Main function"""
+    config = parse_arguments()
 
-    if arguments.get('--output-encoding'):
-        setlocale(LC_ALL, arguments.get('--output-encoding'))
+    if config["progress"]:
+        if config["verbose"] or config["debug"]:
+            stderr_print(config, "Progress can not be used with verbose or debug")
+            sys.exit(2)
+
+    input_files_data: list[InputFileData] = []
+    if config["input_file"]:
+        stderr_print(config, f"Main: input found in {config['input_file']}")
+        input_files = tqdm(
+            glob(config["input_file"], recursive=True),
+            desc="Files processed",
+            mininterval=0.1,
+            unit=" files",
+            disable=not config["progress"],
+            position=0,
+        )
+
+        if not access(os.path.dirname(config["input_file"]), R_OK):
+            stderr_print(config, f"Cannot read input file from {config['input_file']}")
+            sys.exit(1)
+
+        for input_file in input_files:
+            if not access(input_file, R_OK):
+                stderr_print(config, f"Cannot read input file from {input_file}")
+                sys.exit(1)
+
+            chunk_estimation = int(ceil(path.getsize(input_file) / CHUNK_SIZE))
+
+            input_files_data.append({"file": input_file, "chunk_estimation": chunk_estimation})
     else:
-        setlocale(LC_ALL, 'en_US.UTF-8')
+        stderr_print(config, "Main: no input file found using stdin")
+        # Instead of reading all data from stdin, we pass sys.stdin.buffer directly
+        # and leave chunk_estimation as None because we cannot determine its length ahead of time.
+        input_files_data.append({"file": sys.stdin.buffer, "chunk_estimation": None})
 
-    if arguments.get('--punctuation'):
-        config['punctuation'] = arguments.get('--punctuation')
-    else:
-        config['punctuation'] = string_punctuation + ' '
+    if config["output_file"] and not access(path.dirname(config["output_file"]), W_OK):
+        stderr_print(config, f"Cannot write output file to {config['output_file']}")
+        sys.exit(1)
 
-    if arguments.get('--cut'):
-        config['cut'] = True
-
-    if arguments.get('--delimiter'):
-        splitter = ','
-        if len(arguments.get('--delimiter')) >= 1:
-            if arguments.get('--delimiter')[0] == ',':
-                splitter = ';'
-        config['delimiter'] = arguments.get('--delimiter').split(splitter)
-
-    if arguments.get('--cut-before'):
-        config['cut-fields'] = '-1'
-
-    if arguments.get('--cut-fields'):
-        config['cut-fields'] = arguments.get('--cut-fields')
-
-    # Clean / modify modules
-    if arguments.get('--hex'):
-        config['hex'] = True
-
-    if arguments.get('--html'):
-        config['html'] = True
-
-    if arguments.get('--html-named'):
-        config['html-named'] = True
-
-    if arguments.get('--umlaut'):
-        config['umlaut'] = True
-
-    if arguments.get('--non-ascii'):
-        config['non-ascii'] = True
-
-    if arguments.get('--lowercase'):
-        config['lowercase'] = True
-
-    if arguments.get('--title-case'):
-        config['title-case'] = True
-
-    if arguments.get('--mojibake'):
-        config['mojibake'] = True
-
-    if arguments.get('--encode'):
-        config['encode'] = True
-
-    if arguments.get('--tab'):
-        config['tab'] = True
-
-    if arguments.get('--newline'):
-        config['newline'] = True
-
-    if arguments.get('--trim'):
-        config['trim'] = True
-
-    # Check modules
-    if arguments.get('--check-min-length'):
-        config['check-length'] = True
-        config['check-min-length'] = int(arguments.get('--check-min-length'))
-
-    if arguments.get('--check-max-length'):
-        config['check-length'] = True
-        config['check-max-length'] = int(arguments.get('--check-max-length'))
-
-    if arguments.get('--check-case'):
-        config['check-case'] = True
-
-    if arguments.get('--check-email'):
-        config['check-email'] = True
-
-    if arguments.get('--check-hash'):
-        config['check-hash'] = True
-
-    if arguments.get('--check-mac-address'):
-        config['check-mac-address'] = True
-
-    if arguments.get('--check-non-ascii'):
-        config['check-non-ascii'] = True
-
-    if arguments.get('--check-replacement-character'):
-        config['check-replacement-character'] = True
-
-    if arguments.get('--check-starting-with'):
-        if ',' in arguments.get('--check-starting-with'):
-            config['check-starting-with'] = arguments.get('--check-starting-with').split(',')
-        else:
-            config['check-starting-with'] = [arguments.get('--check-starting-with')]
-
-    if arguments.get('--check-uuid'):
-        config['check-uuid'] = True
-
-    if arguments.get('--check-ending-with'):
-        if ',' in arguments.get('--check-ending-with'):
-            config['check-ending-with'] = arguments.get('--check-ending-with').split(',')
-        else:
-            config['check-ending-with'] = [arguments.get('--check-ending-with')]
-
-    if arguments.get('--check-contains'):
-        if ',' in arguments.get('--check-contains'):
-            config['check-contains'] = arguments.get('--check-contains').split(',')
-        else:
-            config['check-contains'] = [arguments.get('--check-contains')]
-
-    if arguments.get('--check-empty-line'):
-        config['check-empty-line'] = True
-
-    if arguments.get('--check-controlchar'):
-        config['check-controlchar'] = True
-
-    if arguments.get('--check-regex'):
-        config['check-regex'] = arguments.get('--check-regex').split(',')
-
-    if arguments.get('--check-min-digits'):
-        config['check-min-digits'] = int(arguments.get('--check-min-digits'))
-
-    if arguments.get('--check-max-digits'):
-        config['check-max-digits'] = int(arguments.get('--check-max-digits'))
-
-    if arguments.get('--check-min-uppercase'):
-        config['check-min-uppercase'] = int(arguments.get('--check-min-uppercase'))
-
-    if arguments.get('--check-max-uppercase'):
-        config['check-max-uppercase'] = int(arguments.get('--check-max-uppercase'))
-
-    if arguments.get('--check-min-specials'):
-        config['check-min-specials'] = int(arguments.get('--check-min-specials'))
-
-    if arguments.get('--check-max-specials'):
-        config['check-max-specials'] = int(arguments.get('--check-max-specials'))
-
-    # Add modules
-    if arguments.get('--add-lower'):
-        config['add-lower'] = True
-
-    if arguments.get('--add-first-upper'):
-        config['add-first-upper'] = True
-
-    if arguments.get('--add-title-case'):
-        config['add-title-case'] = True
-
-    if arguments.get('--add-latin-ligatures'):
-        config['add-latin-ligatures'] = True
-
-    if arguments.get('--add-split'):
-        config['add-split'] = True
-
-    if arguments.get('--add-umlaut'):
-        config['add-umlaut'] = True
-
-    if arguments.get('--add-without-punctuation'):
-        config['add-without-punctuation'] = True
-
-    # Remove modules
-    if arguments.get('--remove-strip-punctuation'):
-        config['remove-strip-punctuation'] = True
-
-    if arguments.get('--remove-email'):
-        config['remove-email'] = True
-
-    if arguments.get('--remove-punctuation'):
-        config['remove-punctuation'] = True
-
-    # Some meta-modules, those overwrite settings
-    if arguments.get('--googlengram'):
-        config['cut'] = False
-        config['remove-email'] = False
-        config['encode'] = True
-        config['mojibake'] = False
-        config['check-controlchar'] = False
-        config['tab'] = False
-        config['googlengram'] = True
-
-    # Meta-module for leak files. Set the following defaults:
-    # mojibake, encode, newline, check-controlchar
-    if arguments.get('--leak'):
-        config['mojibake'] = True
-        config['encode'] = True
-        config['newline'] = True
-        config['check-controlchar'] = True
-
-    # Meta-module for leak fils, but more modules. Set the following defaults:
-    # --mojibake, --encode, --newline, --check-controlchar,
-    # --hex, --html, --html-named,
-    # --check-hash, --check-mac-address, --check-uuid, --check-email,
-    # --check-replacement-character, --check-empty-line
-    if arguments.get('--leak-full'):
-        config['mojibake'] = False
-        config['encode'] = True
-        config['newline'] = True
-        config['check-controlchar'] = True
-        config['hex'] = True
-        config['html'] = True
-        config['html-named'] = True
-        config['check-hash'] = True
-        config['check-mac-address'] = True
-        config['check-uuid'] = True
-        config['check-email'] = True
-        config['check-replacement-character'] = True
-        config['check-empty-line'] = True
-
-    if output_file and not access(path.dirname(output_file), W_OK):
-        stderr_print(f"Cannot write output file to {output_file}")
-
-    # check if logfile exists, or that the directory of the log file is at least writable.
-    if log_file and not (access(log_file, F_OK) or access(path.dirname(log_file), W_OK)):
-        stderr_print(f"Cannot write log file to {log_file}")
-    if input_file and not access(input_file, R_OK):
-        stderr_print(f"Cannot read input file to {input_file}")
+    if config["log"] and not (access(config["log"], F_OK) or access(path.dirname(config["log"]), W_OK)):
+        stderr_print(config, f"Cannot write log file to {config['log']}")
+        sys.exit(1)
 
     #  Main worker
-    stderr_print(f'Main: running demeuk - {version}')
+    stderr_print(config, f"Main: running demeuk - {VERSION}")
+    stderr_print(config, f"Main: Using {config['threads']} core(s) of total available cores: {cpu_count()}")
+    stderr_print(config, f"Main: start chunking file {config['input_file'] or 'stdin'}")
 
-    stderr_print(f'Main: Using {a_threads} core(s) of total available cores: {cpu_count()}')
-
-    stderr_print(f'Main: start chunking file {input_file}')
-    if output_file:
-        stderr_print(f'Main: output found in {output_file}')
-    if log_file:
-        stderr_print(f'Main: logs found in {log_file}')
-
-    stderr_print('Main: done chunking file.')
-    stderr_print('Main: processing started.')
-
-    if output_file:
-        p_output_file = open(output_file, 'w')
+    if config["output_file"]:
+        stderr_print(config, f"Main: output found in {config['output_file']}")
+        output_file = open(config["output_file"], "w", encoding=config["output_encoding"])
     else:
-        p_output_file = stdout
+        output_file = sys.stdout
 
-    if log_file:
-        p_log_file = open(log_file, 'a')
+    if config["log"]:
+        stderr_print(config, f"Main: logs found in {config['log']}")
+        log_file = open(config["log"], "a", encoding="utf-8")
     else:
-        p_log_file = stderr
+        log_file = sys.stderr
 
-    def write_results(results):
-        p_output_file.writelines(results)
-        p_output_file.flush()
+    stderr_print(config, "Main: processing started.")
 
-    def write_log(log):
-        if config['debug'] or config['verbose'] or log_file:
-            p_log_file.writelines(log)
-            p_log_file.flush()
+    def write_results(results: list[str]):
+        output_file.writelines(results)
+        output_file.flush()
 
-    def write_results_and_log(async_result):
-        write_results(async_result['results'])
-        write_log(async_result['log'])
+    def write_log(log: list[str] | str):
+        if config["debug"] or config["verbose"] or config["log"]:
+            log_file.writelines(log)
+            log_file.flush()
 
-    def init_worker():
-        signal(SIGINT, SIG_IGN)
+    def write_results_and_log(async_result: dict[str, list[str]]):
+        write_results(async_result["results"])
+        write_log(async_result["log"])
 
-    def process_jobs(chunk_start):
-        # Cut file in to chunks and process each trunk multi-threaded
-        while True:
+    write_log(f"Running demeuk - {VERSION}{linesep}")
+
+    with Manager() as manager:
+        task_queue = manager.Queue(config["threads"])
+        processes: list[Process] = []
+
+        def worker():
             while True:
-                # Process completed jobs in-order
-                if jobs and jobs[0].ready():
-                    # Housekeeping cleanup jobs completed from the list
-                    job = jobs.pop(0)
-                    write_results_and_log(job.get())
-                else:
+                try:
+                    chunk = task_queue.get(timeout=1)
+                except Exception:
+                    continue
+
+                if chunk is None:
                     break
 
-            # Find out which jobs are running
-            running_jobs = sum([not job.ready() for job in jobs])
-            if running_jobs < a_threads:
-                job = pool.apply_async(clean_up, (chunk,))
-                chunk_start += len(chunk)
-                jobs.append(job)
-                break
-            else:
-                # Wait a little while for available spacing within Pool
-                sleep(1)
+                try:
+                    result = clean_up(config, chunk)
+                    write_results_and_log(result)
+                finally:
+                    task_queue.task_done()
 
-    write_log(f'Running demeuk - {version}{linesep}')
-    with Pool(a_threads, init_worker) as pool:
-        jobs = []
-        # chunk_start will be the started value of the combined output lines
-        chunk_start = 0
-        if input_file:
-            # Process files based on input glob
-            for filename in tqdm(glob(input_file, recursive=True), desc='Files processed', mininterval=0.1,
-                                 unit=' files', disable=not config.get('progress'), position=0):
-                if not access(filename, R_OK):
+        for _ in range(config["threads"]):
+            process = Process(target=worker)
+            process.start()
+            processes.append(process)
+
+        for input_file_data in input_files_data:
+            for chunk in tqdm(
+                chunkify(input_file_data["file"], config, CHUNK_SIZE),
+                mininterval=1,
+                unit=" chunks",
+                disable=not config["progress"],
+                total=input_file_data["chunk_estimation"],
+                position=1,
+            ):
+                if not chunk:
                     continue
-                chunks_estimate = int(ceil(path.getsize(filename) / CHUNK_SIZE))
-                for chunk in tqdm(chunkify(filename, CHUNK_SIZE), desc='Chunks processed', mininterval=1,
-                                  unit=' chunks', disable=not config.get('progress'), total=chunks_estimate,
-                                  position=1):
-                    process_jobs(chunk_start)
-            stderr_print('Main: done submitting all jobs, waiting for threads to finish')
-            while len(jobs) > 0:
-                job = jobs.pop(0)
-                job.wait()
-                write_results_and_log(job.get())
-        else:
-            # Read chunk amount from stdin
-            chunks = stdin.readlines(CHUNK_SIZE)
-            while chunks:
-                chunk = [line.rstrip('\n').encode(config['input_encoding'][0]) for line in chunks]
-                process_jobs(chunk_start)
 
-                chunks = stdin.readlines(CHUNK_SIZE)
+                task_queue.put(chunk)
 
-            stderr_print('Main: done submitting all jobs, waiting for threads to finish')
-            while len(jobs) > 0:
-                job = jobs.pop(0)
-                job.wait()
-                write_results_and_log(job.get())
+        stderr_print(config, "Main: done submitting all jobs, waiting for threads to finish")
 
-    stderr_print('Main: all done')
-    if output_file:
-        p_output_file.close()
-    if log_file:
-        p_log_file.close()
+        for _ in processes:
+            task_queue.put(None)
+
+        for process in processes:
+            process.join()
+
+        stderr_print(config, "Main: all done")
+
+    if output_file is not sys.stdout:
+        output_file.close()
+
+    if log_file is not sys.stderr:
+        log_file.close()
 
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        stderr_print("ERROR: Process terminated by user! (CTRL+C)")
-        exit(3)
+        print("ERROR: Process terminated by user! (CTRL+C)")
+        sys.exit(3)
