@@ -43,7 +43,7 @@ with open('testdata/input4', 'wb') as file:
     file.write('line'.encode('utf-8') + b'\x09' + f'entry{linesep}'.encode('utf-8'))
     file.write('line2'.encode('utf-8') + b'\x09\x09' + f'entry2{linesep}'.encode('utf-8'))
 
-with open('testdata/input5', 'w') as file:
+with open('testdata/input5', 'w', encoding='utf-8') as file:
     file.write(f'line1{linesep}')
     file.write(f'line2{linesep}')
     file.write(f'line3{linesep}')
@@ -51,7 +51,7 @@ with open('testdata/input5', 'w') as file:
     file.write(f'email@example.com;line5{linesep}')
     file.write(f'test:email@example.com:line6{linesep}')
 
-with open('testdata/input6', 'w') as file:
+with open('testdata/input6', 'w', encoding='utf-8') as file:
     file.write(f'I\'Afrique_ADJ occidental_ADJ\t1927\t2\t2{linesep}')
     file.write(f'I\'Allemagne )\t2009\t1\t1{linesep}')
     file.write(f'I\'ain _VERB_\t2009\t2\t2{linesep}')
@@ -64,7 +64,7 @@ with open('testdata/input7', 'wb') as file:
     file.write(b'\x4C\x41\x4E\x43\x49\x41\x20\x41\x55\x52\x45\x4C\x49\x41\x20\x42\x32\x30\x20\x43\x4F\x55\x50\xC3\x83\xC2\x89\x20\x47\x54\x0A')  # noqa: E501
 
 
-with open('testdata/input8', 'w') as file:
+with open('testdata/input8', 'w', encoding='utf-8') as file:
     file.write(f'test@example.com:password1{linesep}')
     file.write(f'test@sub.example.com:password2{linesep}')
     file.write(f'test@example.ugur:password3{linesep}')
@@ -76,12 +76,12 @@ with open('testdata/input9', 'wb') as file:
     # Russian
     file.write(f'!!!ееместной%%@!{linesep}'.encode('WINDOWS-1251'))
 
-with open('testdata/input10', 'w') as file:
+with open('testdata/input10', 'w', encoding='utf-8') as file:
     file.write(f'cĳfer/Aa{linesep}')
     file.write(f'3M/Aa{linesep}')
     file.write(f'VERYVERYVERYVERYVERYVERYLONGLINE?{linesep}')
 
-with open('testdata/input11', 'w') as file:
+with open('testdata/input11', 'w', encoding='utf-8') as file:
     file.write(f'cĳfer/Aa{linesep}')
     file.write(f'3M-test/Aa{linesep}')
     file.write(f'St. Maarten{linesep}')
@@ -92,39 +92,39 @@ with open('testdata/input11', 'w') as file:
 with open('testdata/input12', 'wb') as file:
     file.write(b'\x57\x65\x73\x74\x2D\x46\x72\x79\x73\x6C\xC2\x89\x6E' + f'{linesep}'.encode('utf-8'))
 
-with open('testdata/input13', 'w') as file:
+with open('testdata/input13', 'w', encoding='utf-8') as file:
     file.write(f'field1:field2:field3:field4:field5:field6:field7{linesep}')
     file.write(f'onefield{linesep}')
 
-with open('testdata/input14', 'w') as file:
+with open('testdata/input14', 'w', encoding='utf-8') as file:
     file.write(f'field1:field2:field3:field4:field5:field6:field7{linesep}')
     file.write(f'onefield{linesep}')
 
-with open('testdata/input15', 'w') as file:
+with open('testdata/input15', 'w', encoding='utf-8') as file:
     file.write(f'$HEX[5045d141524f4c]{linesep}')
     file.write(f'$HEX[51574552545955494f50c5]{linesep}')
     file.write(f'$HEX[5a73f3666932303030]{linesep}')
     file.write(f'$HEX[617261f16173]{linesep}')
 
-with open('testdata/input16', 'w') as file:
+with open('testdata/input16', 'w', encoding='utf-8') as file:
     file.write(f'&#304;SMA&#304;L{linesep}')
     file.write(f'&#304;STANBUL{linesep}')
     file.write(f'&#351;ifreyok{linesep}')
     file.write(f'&gt;{linesep}')
     file.write(f'&alpha;{linesep}')
 
-with open('testdata/input17', 'w') as file:
+with open('testdata/input17', 'w', encoding='utf-8') as file:
     file.write(f'&#304;SMA&#304;L{linesep}')
     file.write(f'&#304;STANBUL{linesep}')
     file.write(f'&#351;ifreyok{linesep}')
     file.write(f'&gt;{linesep}')
     file.write(f'&alpha;{linesep}')
 
-with open('testdata/input18', 'w') as file:
+with open('testdata/input18', 'w', encoding='utf-8') as file:
     file.write(f'field1:field2:field3:field4:field5:field6:field7{linesep}')
     file.write(f'onefield{linesep}')
 
-with open('testdata/input19', 'w') as file:
+with open('testdata/input19', 'w', encoding='utf-8') as file:
     file.write(f'line01{linesep}')
     file.write(f'line02{linesep}')
     file.write(f'line03{linesep}')
@@ -136,24 +136,24 @@ with open('testdata/input19', 'w') as file:
     file.write(f'line09{linesep}')
     file.write(f'line10{linesep}')
 
-with open('testdata/input20', 'w') as file:
+with open('testdata/input20', 'w', encoding='utf-8') as file:
     file.write(f'Eselsbru"cke{linesep}')
     file.write(f'Fremdscha"men{linesep}')
     file.write(f'KA"SEHOCH{linesep}')
 
-with open('testdata/input21', 'w') as file:
+with open('testdata/input21', 'w', encoding='utf-8') as file:
     file.write(f'user;password{linesep}')
     file.write(f'user2:password2{linesep}')
     file.write(f'user3----password3{linesep}')
 
-with open('testdata/input22', 'w') as file:
+with open('testdata/input22', 'w', encoding='utf-8') as file:
     file.write(f'line1@example{linesep}')
     file.write(f'line2@example.com{linesep}')
     file.write(f'line3@ex-ample.com{linesep}')
     file.write(f'line4@ex.ample.com{linesep}')
     file.write(f'test@example.com:line5{linesep}')
 
-with open('testdata/input23', 'w') as file:
+with open('testdata/input23', 'w', encoding='utf-8') as file:
     file.write(f'line1@example.com:baabe00a81fc405af4ab9b0f99615498{linesep}')
     file.write(f'line2@example.com:$h$7/uhfibmxg83yq6y1rh5y9wjee13kh.{linesep}')
     file.write(f'line3@example.com:$6$/fasjdfsadj$safjasdfasjdfasdjf/asdfsadfasdfasdfas/fadsfasdfa{linesep}')
@@ -167,46 +167,46 @@ with open('testdata/input23', 'w') as file:
     file.write(f'$H$8abc{linesep}')
     file.write(f'$pizza$like{linesep}')
 
-with open('testdata/input24', 'w') as file:
+with open('testdata/input24', 'w', encoding='utf-8') as file:
     file.write(f'line1@example.com,angus{linesep}')
     file.write(f'line2@example.com:snow{linesep}')
     file.write(f'line3@example.com:julia{linesep}')
 
-with open('testdata/input25', 'w') as file:
+with open('testdata/input25', 'w', encoding='utf-8') as file:
     file.write(f'laténight{linesep}')
     file.write(f'thestrokes{linesep}')
 
-with open('testdata/input26', 'w') as file:
+with open('testdata/input26', 'w', encoding='utf-8') as file:
     file.write(f'polopaç{linesep}')
     file.write(f'mündster{linesep}')
 
-with open('testdata/input27', 'w') as file:
+with open('testdata/input27', 'w', encoding='utf-8') as file:
     file.write(f'rip-it.up{linesep}')
     file.write(f'orange juice{linesep}')
 
-with open('testdata/input28', 'w') as file:
+with open('testdata/input28', 'w', encoding='utf-8') as file:
     file.write(f'stand_by_me{linesep}')
     file.write(f'the clash{linesep}')
 
-with open('testdata/input29', 'w') as file:
+with open('testdata/input29', 'w', encoding='utf-8') as file:
     file.write(f'stand_by_me{linesep}')
     file.write(f'the clash{linesep}')
 
-with open('testdata/input31', 'w') as file:
+with open('testdata/input31', 'w', encoding='utf-8') as file:
     file.write(f'&#12;&#12;{linesep}')
 
-with open('testdata/input32', 'w') as file:
+with open('testdata/input32', 'w', encoding='utf-8') as file:
     file.write(f'$1$2$3$4{linesep}')
     file.write(f'$1$money$1${linesep}')
     file.write(f'$1$ilovepizza{linesep}')
     file.write(f'$1$1+l0l$aaaaaaaaaaaa./{linesep}')
     file.write(f'$4$4$4pizza{linesep}')
 
-with open('testdata/input33', 'w') as file:
+with open('testdata/input33', 'w', encoding='utf-8') as file:
     file.write(f'invalidstring�{linesep}')
     file.write(f'jungejunge{linesep}')
 
-with open('testdata/input34', 'w') as file:
+with open('testdata/input34', 'w', encoding='utf-8') as file:
     file.write(f'P@ssw0rd.1{linesep}')
     file.write(f'bar@example.com{linesep}')
     file.write(f'cr@ssT0rd{linesep}')
@@ -216,7 +216,7 @@ with open('testdata/input34', 'w') as file:
     file.write(f'p@ssW0rd.me@Home{linesep}')
     file.write(f'w@ssB0rd.we{linesep}')
 
-with open('testdata/input35', 'w') as file:
+with open('testdata/input35', 'w', encoding='utf-8') as file:
     file.write(f'Avocado{linesep}')
     file.write(f'Banana\\r\\n{linesep}')
     file.write(f'Coconut\\n{linesep}')
@@ -228,7 +228,7 @@ with open('testdata/input35', 'w') as file:
     file.write(f'Icaco&#013;&#010;{linesep}')
     file.write(f'&#013;Jambul{linesep}')
 
-with open('testdata/input36', 'w') as file:
+with open('testdata/input36', 'w', encoding='utf-8') as file:
     file.write(f'angleball\\r{linesep}')
     file.write(f'badminton\\n{linesep}')
     file.write(f'crossminton<br>{linesep}')
@@ -247,13 +247,13 @@ with open('testdata/input36', 'w') as file:
     file.write(f'<br><br />tchoukball{linesep}')
     file.write(f'vigoro{linesep}')
 
-with open('testdata/input37', 'w') as file:
+with open('testdata/input37', 'w', encoding='utf-8') as file:
     file.write(f'$HEX[e]tiredofwaiting{linesep}')
     file.write(f'$hex[6C6F73696E67746F756368]{linesep}')
     file.write(f'$HEX[6C657469746B69636B696E]123!{linesep}')
     file.write(f'$HEX[eee]{linesep}')
 
-with open('testdata/input38', 'w') as file:
+with open('testdata/input38', 'w', encoding='utf-8') as file:
     file.write(f'112345678{linesep}')
     file.write(f'#firstlovesong{linesep}')
     file.write(f'/secondlovesong{linesep}')
@@ -261,7 +261,7 @@ with open('testdata/input38', 'w') as file:
     file.write(f'\tcaliforniastars{linesep}')
     file.write(f'lastlovesong{linesep}')
 
-with open('testdata/input39', 'w') as file:
+with open('testdata/input39', 'w', encoding='utf-8') as file:
     file.write(f'112345678{linesep}')
     file.write(f'#firstlovesong{linesep}')
     file.write(f'/secondlovesong{linesep}')
@@ -269,7 +269,7 @@ with open('testdata/input39', 'w') as file:
     file.write(f'\tcaliforniastars{linesep}')
     file.write(f'lastlovesong{linesep}')
 
-with open('testdata/input40', 'w') as file:
+with open('testdata/input40', 'w', encoding='utf-8') as file:
     file.write(f'112345678{linesep}')
     file.write(f'#firstlovesong{linesep}')
     file.write(f'/secondlovesong{linesep}')
@@ -277,21 +277,21 @@ with open('testdata/input40', 'w') as file:
     file.write(f'\tcaliforniastars{linesep}')
     file.write(f'lastlovesong{linesep}')
 
-with open('testdata/input41', 'w') as file:
+with open('testdata/input41', 'w', encoding='utf-8') as file:
     file.write(f'dummy{linesep}')
     file.write(f'2C:C5:D3:70:78:2c{linesep}')
 
-with open('testdata/input42', 'w') as file:
+with open('testdata/input42', 'w', encoding='utf-8') as file:
     file.write(f'dummy{linesep}')
     file.write(f'd4662e44-00f1-4ef6-857e-76e3c61604cd{linesep}')
     file.write(f'D4662E44-00F1-4EF6-857E-76E3C61604CD{linesep}')
 
-with open('testdata/input43', 'w') as file:
+with open('testdata/input43', 'w', encoding='utf-8') as file:
     file.write(f'dummy{linesep}')
     file.write(f'test.jpg{linesep}')
     file.write(f'hello@whatsapp.com{linesep}')
 
-with open('testdata/input44', 'w') as file:
+with open('testdata/input44', 'w', encoding='utf-8') as file:
     file.write(f'3 doors down{linesep}')
 
 with open('testdata/input45', 'wb') as file:
@@ -321,7 +321,7 @@ with open('testdata/input45', 'wb') as file:
     file.write(f'{linesep}'.encode('utf-8'))
 
 
-with open('testdata/input46', 'w') as file:
+with open('testdata/input46', 'w', encoding='utf-8') as file:
     file.write(f'abc{linesep}')
     file.write(f'abcd{linesep}')
     file.write(f'a{linesep}')
@@ -329,15 +329,15 @@ with open('testdata/input46', 'w') as file:
     file.write(f'aBc{linesep}')
     file.write(f'123{linesep}')
 
-with open('testdata/input47', 'w') as file:
+with open('testdata/input47', 'w', encoding='utf-8') as file:
     file.write(f'alpha{linesep}')
     file.write(f'alpha123{linesep}')
     file.write(f'alpha1234!{linesep}')
 
-with open('testdata/input48', 'w') as file:
+with open('testdata/input48', 'w', encoding='utf-8') as file:
     file.write(f'3 Doors Down{linesep}')
 
-with open('testdata/input49', 'w') as file:
+with open('testdata/input49', 'w', encoding='utf-8') as file:
     # no digits
     file.write(f'nodigits{linesep}')
     # digit at start
@@ -351,7 +351,7 @@ with open('testdata/input49', 'w') as file:
     # multiple digits
     file.write(f'pw123!{linesep}')
 
-with open('testdata/input50', 'w') as file:
+with open('testdata/input50', 'w', encoding='utf-8') as file:
     # no uppercase
     file.write(f'noupper{linesep}')
     # uppercase at start
@@ -365,7 +365,7 @@ with open('testdata/input50', 'w') as file:
     # multiple uppercase
     file.write(f'ThisIsUpperCase!!!{linesep}')
 
-with open('testdata/input51', 'w') as file:
+with open('testdata/input51', 'w', encoding='utf-8') as file:
     # no special
     file.write(f'NoSpecialsHere{linesep}')
     # special at start
@@ -382,13 +382,13 @@ with open('testdata/input51', 'w') as file:
     # a combination of U+1F64C (raising hands) and U+1F3FD (skin tone)
     file.write(f'8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽{linesep}')
 
-with open('testdata/input52', 'w') as file:
+with open('testdata/input52', 'w', encoding='utf-8') as file:
     file.write(f'three doors down {linesep}')
     file.write(f'amsterdam {linesep}')
     file.write(f'ROTTERDAM {linesep}')
     file.write(f'Cookie Monster {linesep}')
 
-with open('testdata/input53', 'w') as file:
+with open('testdata/input53', 'w', encoding='utf-8') as file:
     file.write(f'three_down {linesep}')
     file.write(f'_amsterdam {linesep}')
     file.write(f'ROTTERDAM_ {linesep}')
