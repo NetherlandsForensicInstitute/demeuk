@@ -1357,6 +1357,7 @@ def init_worker(config_data):
 
     signal(SIGINT, SIG_IGN)
 
+
 def main():
     #
     # Config parser
