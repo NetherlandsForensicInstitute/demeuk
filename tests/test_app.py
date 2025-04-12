@@ -814,7 +814,7 @@ def test_check_multiple_regexes():
 
 def test_stdin_stdout():
     comlist = ['bin/demeuk.py']
-    #On Windows scripts cant be executed with the shebang so manually add python3 in front
+    # On Windows scripts cant be executed with the shebang so manually add python3 in front
     if name == 'nt':
         comlist.insert(0, 'python3')
     script = f'input{linesep}lines{linesep}'.encode()
@@ -822,7 +822,7 @@ def test_stdin_stdout():
               stdout=PIPE, stderr=PIPE)
     assert res.returncode == 0
     if name == 'nt':
-        #On Windows when stdout is used, there is a trailing \r in new lines, but this does not effect terminal output 
+        # On Windows when stdout is used, there is a trailing \r in new lines, but this does not effect terminal output
         assert res.stdout == b'input\r\r\nlines\r\r\n'
     else:
         assert res.stdout == script
