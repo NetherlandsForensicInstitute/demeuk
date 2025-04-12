@@ -145,7 +145,7 @@ from binascii import hexlify, unhexlify
 from glob import glob
 from html import unescape
 from inspect import cleandoc
-from locale import LC_ALL, setlocale
+from locale import LC_ALL, setlocale, getlocale
 from math import ceil
 from multiprocessing import cpu_count, Pool
 from os import linesep, access, path, R_OK, F_OK, W_OK
@@ -643,9 +643,7 @@ def check_empty_line(line):
     Returns:
         true of line is empty or only contains whitespace chars
     """
-    if line == '':
-        return True
-    elif line.isspace():
+    if line == '' or line.isspace():
         return True
     return False
 
@@ -1340,7 +1338,7 @@ def chunkify(filename, size=CHUNK_SIZE):
             fh.readline()
 
         while True:
-            lines = [line.rstrip(b'\n') for line in fh.readlines(size)]
+            lines = [line.rstrip(linesep.encode()) for line in fh.readlines(size)]
             yield lines
             if len(lines) == 0:
                 break
@@ -1351,6 +1349,13 @@ def stderr_print(*args, **kwargs):
     if config['verbose'] is True:
         kwargs.setdefault('file', stderr)
         print(*args, **kwargs)
+
+
+def init_worker(config_data):
+    global config
+    config = config_data
+
+    signal(SIGINT, SIG_IGN)
 
 
 def main():
@@ -1471,10 +1476,9 @@ def main():
     if arguments.get('--input-encoding'):
         config['input_encoding'] = arguments.get('--input-encoding').split(',')
 
+    setlocale(LC_ALL, 'en_US.UTF-8')
     if arguments.get('--output-encoding'):
         setlocale(LC_ALL, arguments.get('--output-encoding'))
-    else:
-        setlocale(LC_ALL, 'en_US.UTF-8')
 
     if arguments.get('--punctuation'):
         config['punctuation'] = arguments.get('--punctuation')
@@ -1702,13 +1706,14 @@ def main():
     stderr_print('Main: done chunking file.')
     stderr_print('Main: processing started.')
 
+    encoding = getlocale()[1]
     if output_file:
-        p_output_file = open(output_file, 'w')
+        p_output_file = open(output_file, 'w', encoding=encoding, newline='')
     else:
         p_output_file = stdout
 
     if log_file:
-        p_log_file = open(log_file, 'a')
+        p_log_file = open(log_file, 'a', encoding=encoding, newline='')
     else:
         p_log_file = stderr
 
@@ -1724,9 +1729,6 @@ def main():
     def write_results_and_log(async_result):
         write_results(async_result['results'])
         write_log(async_result['log'])
-
-    def init_worker():
-        signal(SIGINT, SIG_IGN)
 
     def process_jobs(chunk_start):
         # Cut file in to chunks and process each trunk multi-threaded
@@ -1752,7 +1754,7 @@ def main():
                 sleep(1)
 
     write_log(f'Running demeuk - {version}{linesep}')
-    with Pool(a_threads, init_worker) as pool:
+    with Pool(a_threads, init_worker, initargs=(config,)) as pool:
         jobs = []
         # chunk_start will be the started value of the combined output lines
         chunk_start = 0
