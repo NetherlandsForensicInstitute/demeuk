@@ -393,3 +393,7 @@ with open('testdata/input53', 'w') as file:
     file.write(f'_amsterdam {linesep}')
     file.write(f'ROTTERDAM_ {linesep}')
     file.write(f'Cookie Monster {linesep}')
+
+with open('testdata/input54', 'w') as file:
+    file.write(f'Golf Trip{linesep}')
+    file.write(f'Sequences{linesep}')
