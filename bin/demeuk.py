@@ -142,6 +142,7 @@ r"""
                                             check-replacement-character, check-empty-line
 """
 from binascii import hexlify, unhexlify
+from collections import deque
 from glob import glob
 from html import unescape
 from inspect import cleandoc
@@ -1016,8 +1017,16 @@ def clean_up(lines):
     """
     results = []
     log = []
+    processed_lines = set()
+    work_queue = deque(lines)
 
-    for line in lines:
+    while work_queue:
+        line = work_queue.popleft()
+
+        if line in processed_lines:
+            continue
+        processed_lines.add(line)
+
         # Check if the limit is set, if so minus 1 and if 0 is reached lets quit.
         if type(config['limit']) is int:
             if config['limit'] > 0:
@@ -1057,7 +1066,7 @@ def clean_up(lines):
             if status:
                 # Lines contains hex, this function will return binary string, so add it back to
                 # our undecoded lines
-                lines.append(line_decoded)
+                work_queue.append(line_decoded)
                 if config['debug']:
                     log.append(f'Clean_hex; replaced $HEX[], added to queue and quiting; {line}{linesep}')
                 # Aborting future processing of this line.
@@ -1069,7 +1078,7 @@ def clean_up(lines):
             if status:
                 # Line contains html string, because this can be binary data (linefeeds etc)
                 # convert back to binary string and add to queue again.
-                lines.append(line_decoded.encode())
+                work_queue.append(line_decoded.encode())
                 if config['debug']:
                     log.append(f'Clean_html; replaced html, added to queue and quiting; {line_decoded}{linesep}')
                 stop = True
@@ -1283,49 +1292,49 @@ def clean_up(lines):
                     for modified_line in modified_lines:
                         if config['debug']:
                             log.append(f'Add_split; new line because of split; {modified_line}{linesep}')
-                        lines.append(modified_line.encode())
+                        work_queue.append(modified_line.encode())
 
             if config.get('add-lower'):
                 modified_line = add_lower(line_decoded)
                 if modified_line:
                     if config['debug']:
                         log.append(f'Add_lower; new line; {modified_line}{linesep}')
-                    lines.append(modified_line.encode())
+                    work_queue.append(modified_line.encode())
 
             if config.get('add-first-upper'):
                 modified_line = add_first_upper(line_decoded)
                 if modified_line:
                     if config['debug']:
                         log.append(f'Add_first_upper; new line; {modified_line}{linesep}')
-                    lines.append(modified_line.encode())
+                    work_queue.append(modified_line.encode())
 
             if config.get('add-title-case'):
                 modified_line = add_title_case(line_decoded)
                 if modified_line:
                     if config['debug']:
                         log.append(f'Add_title_case; new line; {modified_line}{linesep}')
-                    lines.append(modified_line.encode())
+                    work_queue.append(modified_line.encode())
 
             if config.get('add-latin-ligatures'):
                 modified_line = add_latin_ligatures(line_decoded)
                 if modified_line:
                     if config['debug']:
                         log.append(f'Add_latin_ligatures; new line; {modified_line}{linesep}')
-                    lines.append(modified_line.encode())
+                    work_queue.append(modified_line.encode())
 
             if config.get('add-umlaut'):
                 status, modified_line = clean_add_umlaut(line_decoded)
                 if status:
                     if config['debug']:
                         log.append(f'Add_umlaut; new line; {modified_line}{linesep}')
-                    lines.append(modified_line.encode())
+                    work_queue.append(modified_line.encode())
 
             if config.get('add-without-punctuation'):
                 modified_line = add_without_punctuation(line_decoded, config.get('punctuation'))
                 if modified_line:
                     if config['debug']:
                         log.append(f'Add_without_punctuation; new line; {modified_line}{linesep}')
-                    lines.append(modified_line.encode())
+                    work_queue.append(modified_line.encode())
 
             if config['debug']:
                 log.append(f'----End---- {line_decoded}{linesep}{linesep}')
