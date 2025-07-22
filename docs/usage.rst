@@ -420,8 +420,8 @@ For example a line like 'kožušček' is replaced to kozuscek.
 
 transliterate
 ~~~~~~~~~~~~~
-Replaces for example cyrillic to latin. For example: жута becomes: Žuta. To take this even further.
-comebine it with --non-ascii to convert this to zuta.
+Replaces Cyrillic characters with their Latin equivalents. For example, жута becomes Žuta. To take this even further,
+combine it with --non-ascii to convert this to zuta.
 
 Specify the language with the 2 letter iso code, for example:
 
