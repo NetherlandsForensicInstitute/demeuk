@@ -418,6 +418,17 @@ https://pypi.org/project/Unidecode/
 
 For example a line like 'kožušček' is replaced to kozuscek.
 
+transliterate
+~~~~~~~~~~~~~
+Replaces for example cyrillic to latin. For example: жута becomes: Žuta. To take this even further.
+comebine it with --non-ascii to convert this to zuta.
+
+Specify the language with the 2 letter iso code, for example:
+
+--transliterate ru
+
+Check https://pypi.org/project/transliterate/ for supported languages.
+
 lowercase
 ~~~~~~~~~~
 Replace lines like 'Test Test Test' to 'test test test'. Basically lowercasing all

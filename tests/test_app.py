@@ -1003,3 +1003,19 @@ def test_infinite_loop():
     assert 'Sequences' in filecontent
     assert 'golf trip' in filecontent
     assert 'sequences' in filecontent
+
+
+def test_transliterate():
+    testargs = [
+        'demeuk', '-i', 'testdata/input55', '-o', 'testdata/output55', '-l', 'testdata/log55',
+        '--transliterate', 'sr', '--non-ascii'
+    ]
+
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output55') as f:
+        filecontent = f.read()
+
+    assert 'zdravo prijatelju' in filecontent
+    assert 'zuta banana' in filecontent
