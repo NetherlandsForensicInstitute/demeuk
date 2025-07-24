@@ -111,8 +111,8 @@ r"""
                                         becomes u, ç becomes c.
         --trim                          Enables removing newlines representations from end and beginning. Newline
                                         representations detected are '\\n', '\\r', '\n', '\r', '<br>', and '<br />'.
-        --transliterate <language>      Transliterate a strings, for example "ipsum" becomes "իպսում". Language is iso
-                                        2 letter code. Examples: ru, sr, ua
+        --transliterate <language>      Transliterate a strings, for example "ipsum" becomes "իպսում". The following
+                                        languages are supported: ka, sr, l1, ru, mn, uk, mk, el, hy and bg.
 
     Add modules (Modify a line, but keep the original as well):
         --add-lower                     If a line contains a capital letter this will add the lower case variant
