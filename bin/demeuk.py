@@ -175,7 +175,7 @@ from transliterate import translit
 from unidecode import unidecode
 
 
-version = '4.5.2'
+version = '4.6.0'
 
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.
@@ -684,10 +684,11 @@ def clean_cut(line, delimiters, fields):
 
 
 def clean_transliterate(line, language):
-    """Transliterate a strings
+    """Transliterate a string
 
     Params:
         line (Unicode)
+        language (str)
 
     Returns:
         line (Unicode)

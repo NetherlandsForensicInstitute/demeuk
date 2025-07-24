@@ -423,11 +423,11 @@ transliterate
 Replaces Cyrillic characters with their Latin equivalents. For example, жута becomes Žuta. To take this even further,
 combine it with --non-ascii to convert this to zuta.
 
-Specify the language with the 2 letter iso code, for example:
+The follow languages are supported: ka, sr, l1, ru, mn, uk, mk, el, hy and bg
 
 --transliterate ru
 
-Check https://pypi.org/project/transliterate/ for supported languages.
+Check https://pypi.org/project/transliterate/ for more details.
 
 lowercase
 ~~~~~~~~~~
