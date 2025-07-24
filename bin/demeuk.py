@@ -111,6 +111,8 @@ r"""
                                         becomes u, ç becomes c.
         --trim                          Enables removing newlines representations from end and beginning. Newline
                                         representations detected are '\\n', '\\r', '\n', '\r', '<br>', and '<br />'.
+        --transliterate <language>      Transliterate a strings, for example "ipsum" becomes "իպսում". Language is iso
+                                        2 letter code. Examples: ru, sr, ua
 
     Add modules (Modify a line, but keep the original as well):
         --add-lower                     If a line contains a capital letter this will add the lower case variant
@@ -169,10 +171,11 @@ from ftfy.fixes import fix_latin_ligatures
 from nltk import str2tuple
 from nltk.tokenize import WhitespaceTokenizer
 from tqdm import tqdm
+from transliterate import translit
 from unidecode import unidecode
 
 
-version = '4.5.1'
+version = '4.6.0'
 
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.
@@ -680,6 +683,23 @@ def clean_cut(line, delimiters, fields):
         return False, line
 
 
+def clean_transliterate(line, language):
+    """Transliterate a string
+
+    Params:
+        line (Unicode)
+        language (str)
+
+    Returns:
+        line (Unicode)
+    """
+    cleaned_line = translit(line, language, reversed=True)
+    if line != cleaned_line:
+        return True, cleaned_line
+    else:
+        return False, line
+
+
 def clean_non_ascii(line):
     """Replace non ascii chars with there ascii representation.
 
@@ -1129,6 +1149,12 @@ def clean_up(lines):
             if status and config['debug']:
                 log.append(f'Clean_umlaut; umlaut replaced; {line_decoded}{linesep}')
 
+        # Transliterate
+        if config.get('transliterate') and not stop:
+            status, line_decoded = clean_transliterate(line_decoded, config.get('transliterate'))
+            if status and config['debug']:
+                log.append(f'Clean_transliterate; translitatered; {line_decoded}{linesep}')
+
         # Replace non-ascii
         if config.get('non-ascii') and not stop:
             status, line_decoded = clean_non_ascii(line_decoded)
@@ -1409,6 +1435,7 @@ def main():
         'umlaut': False,
         'non-ascii': False,
         'title_case': False,
+        'transliterate': False,
 
         # Check
         'length': False,
@@ -1542,6 +1569,9 @@ def main():
 
     if arguments.get('--trim'):
         config['trim'] = True
+
+    if arguments.get('--transliterate'):
+        config['transliterate'] = arguments.get('--transliterate')
 
     # Check modules
     if arguments.get('--check-min-length'):

@@ -4,3 +4,4 @@ nltk
 ftfy
 unidecode
 tqdm
+transliterate
