@@ -11,6 +11,7 @@ dependencies = [
     'ftfy',
     'unidecode',
     'tqdm',
+    'transliterate'
 ]
 
 with open('README.md', 'r') as r:
