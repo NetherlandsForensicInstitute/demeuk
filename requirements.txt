@@ -5,3 +5,5 @@ ftfy
 unidecode
 tqdm
 transliterate
+
+multiprocess
