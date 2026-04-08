@@ -157,27 +157,17 @@ from string import punctuation as string_punctuation
 from time import sleep
 from sys import stderr, stdin, stdout
 
-
-from chardet import detect
 from docopt import docopt
-from ftfy import fix_encoding
-from ftfy.chardata import HTML_ENTITIES
-from ftfy.fixes import fix_latin_ligatures
-from nltk import str2tuple
-from nltk.tokenize import WhitespaceTokenizer
 from tqdm import tqdm
-from transliterate import translit
-from unidecode import unidecode
 
 from modules.modify import *
 from modules.check import *
 from modules.remove import *
 from modules.add import *
-
+from modules.macro import *
+from modules.separating import *
 
 version = '4.6.2'
-
-
 
 
 CHUNK_SIZE = 1024 * 1024
@@ -337,7 +327,7 @@ def clean_up(lines):
                 log.append(f'Remove_email; email found; {line_decoded}{linesep}')
 
         if config.get('googlengram') and not stop:
-            status, line_decoded = clean_googlengram(line_decoded)
+            status, line_decoded = clean_googlengram(line_decoded, string_punctuation)
             if status and config['debug']:
                 log.append(f'Clean_googlengram; tos found and removed; {line_decoded}{linesep}')
 
