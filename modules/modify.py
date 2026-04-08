@@ -2,12 +2,14 @@ from binascii import unhexlify
 from html import unescape
 from unicodedata import category
 
+from chardet import detect
 from ftfy.fixes import fix_encoding
 from ftfy.chardata import HTML_ENTITY_RE, HTML_ENTITIES
 
 from transliterate import translit
 from unidecode import unidecode
 
+from modules.add import clean_add_umlaut
 from modules.regexes import *
 
 
@@ -330,3 +332,7 @@ def clean_encode(line, input_encoding):
             return False, 'Unknown'
     # If we managed to get here, return decode line
     return True, line_decoded
+
+def clean_umlaut(line):
+    status, result = clean_add_umlaut(line)
+    return status, result #TODO this function does nothing

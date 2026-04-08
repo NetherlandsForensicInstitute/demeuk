@@ -143,6 +143,7 @@ r"""
                                             check-hash, check-mac-address, check-uuid, check-email,
                                             check-replacement-character, check-empty-line
 """
+import sys
 from binascii import hexlify, unhexlify
 from collections import deque
 from glob import glob
@@ -162,10 +163,12 @@ from tqdm import tqdm
 
 from modules.modify import *
 from modules.check import *
+from modules.parser import init_parser, parse_order, get_pipeline
 from modules.remove import *
 from modules.add import *
 from modules.macro import *
 from modules.separating import *
+from modules.validate import validate_input_signature
 
 version = '4.6.2'
 
@@ -528,17 +531,29 @@ def chunkify(filename, size=CHUNK_SIZE):
                 break
 
 
-# Quick to default logging to stderr instead
-def stderr_print(*args, **kwargs):
-    if config['verbose'] is True:
-        kwargs.setdefault('file', stderr)
-        print(*args, **kwargs)
-
-
 def main():
+
     #
     # Config parser
     arguments = docopt(cleandoc('\n'.join(__doc__.split('\n')[2:])))
+
+    # Initialize and get arguments
+    arg_parser = init_parser()
+    args = arg_parser.parse_args()
+
+    # Determine order of modules
+    order = parse_order(sys.argv)
+    print(order)
+    # Generate and validate function list
+    func_list = get_pipeline(order)
+    if not validate_input_signature(order, func_list):
+        # (Custom) module not correct!
+        return
+    else:
+        print("Functions validated!")
+
+
+    return
 
     if arguments.get('--version'):
         print(f'demeuk - {version}')

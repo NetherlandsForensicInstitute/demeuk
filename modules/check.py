@@ -3,18 +3,19 @@ from re import search
 
 from modules.regexes import *
 
-def check_regex(line, regex):
-    """Checks if a line matches a list of regexes
+def check_regex(line, regexes):
+    """Checks if a line matches a comma-separated list of regexes
 
     Params:
         line (unicode)
-        regex (list)
+        regexes (str)
 
     Returns:
         true if all regexes match
         false if line does not match regex
     """
-    for regex in regex:
+    regexes = regexes.split(',')
+    for regex in regexes:
         if search(regex, line):
             continue
         else:
@@ -46,6 +47,18 @@ def contains_at_least(line, bound, char_property):
     return False
 
 
+def check_min_digits(line, n):
+    return contains_at_least(line, n, str.isdigit)
+
+
+def check_min_uppercase(line, n):
+    return contains_at_least(line, n, str.isupper)
+
+
+def check_min_specials(line, n):
+    return contains_at_least(line, n, lambda c: not c.isalnum() and not c.isspace())
+
+
 def contains_at_most(line, bound, char_property):
     """Check if the line contains at most `bound` characters with given property.
 
@@ -66,6 +79,17 @@ def contains_at_most(line, bound, char_property):
                 return False
     return True
 
+
+def check_max_digits(line, n):
+    return contains_at_most(line, n, str.isdigit)
+
+
+def check_max_uppercase(line, n):
+    return contains_at_most(line, n, str.isupper)
+
+
+def check_max_specials(line, n):
+    return contains_at_most(line, n, lambda c: not c.isalnum() and not c.isspace())
 
 def check_controlchar(line):
     """Detects control chars, returns True when detected
@@ -127,6 +151,14 @@ def check_length(line, min=0, max=0):
     if max and status:
         status = len(line) < max
     return status
+
+
+def check_min_length(line, n):
+    return check_length(line, min=n)
+
+
+def check_max_length(line, n):
+    return check_length(line, max=n)
 
 
 def check_hash(line):
@@ -210,6 +242,10 @@ def check_character(line, character):
     else:
         return False
 
+
+
+def check_replacement_character(line):
+    return check_character(line, '�')
 
 def check_starting_with(line, strings):
     """Checks if a line start with a specific strings

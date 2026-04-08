@@ -102,6 +102,11 @@ def clean_add_umlaut(line):
     else:
         return False, line
 
+def add_umlaut(line):
+    status, result = clean_add_umlaut(line)
+    if status:
+        return result
+    return False
 
 def add_split(line, punctuation=(' ', '-', r'\.')):
     """Split the line on the punctuation and return elements longer then 1 char.
