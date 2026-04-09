@@ -17,7 +17,7 @@ from modules.regexes import *
 # For now we need a way to "configure" a module
 # Want to do it only once, not every loop.
 # So for now use a global variable.
-modify_store_input_encoding = 'en_US.UTF-8'
+modify_store_input_encoding = ['UTF-8']
 
 def _unescape_fixup_named(match):
     """
@@ -326,6 +326,7 @@ def clean_encode(line):
     # https://en.wikipedia.org/wiki/Character_encoding#Common_character_encodings
     # Input_encoding is by default [utf8]
     line = line.encode() # TODO What do we do here? strings are already decoded.
+    line_decoded = line # If nothing works.
     for encoding in modify_store_input_encoding:
         line = try_encoding(line, encoding)
         if line is not False:

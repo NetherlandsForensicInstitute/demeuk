@@ -484,6 +484,7 @@ def main():
     print(f"Using {a_threads} threads...")
 
     input_enc = args.input_encoding if args.input_encoding else 'UTF-8' #default input-enc.
+    set_input_encoding(input_enc)
 
     # Lets create the default config
     global config
