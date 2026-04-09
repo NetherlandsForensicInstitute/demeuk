@@ -1,5 +1,5 @@
 # Validate modules
-from modules.parser import lookup_params
+from modules.parser import *
 from modules.util import stderr_print
 
 
@@ -24,8 +24,7 @@ def validate_input_signature(order, funcs):
                 passed = False
             except ValueError:
                 passed = False
-                # TODO change msg
-                stderr_print("=== INVALID MODULE SIGNATURE === Incorrect arg type ===\n\t" +
+                stderr_print("=== INVALID INPUT SIGNATURE === Incorrect arg type ===\n\t" +
                              "expected 2 arguments " +
                              "(str, " + lookup_params[opt][1].__name__ + ") for function " +
                              func[0].__name__ + " (" + order[counter][0] + ")!")
@@ -35,13 +34,66 @@ def validate_input_signature(order, funcs):
                 func("test string")
             except TypeError:
                 # wrong amt of args
-                stderr_print("=== INVALID MODULE SIGNATURE ===\n\texpected 1 argument (str) " +
+                stderr_print("=== INVALID INPUT SIGNATURE ===\n\texpected 1 argument (str) " +
                              "for function " + func.__name__ +
                              " (" + order[counter] + ")!")
                 passed = False
         counter += 1
     return passed
 
-def validate_output_signature(order, funcs):
+
+def validate_output_check(order, funcs):
     passed = True
     # TODO continue
+    counter = 0
+    for func in funcs:
+        if isinstance(func, list):
+            if order[counter][0] not in params_check:
+                counter += 1
+                continue
+            # func = [fun, arg]
+            # Param (with arg)
+            opt = order[counter][0]  # The option being checked
+            t = lookup_params[opt][1]  # type of parameter
+
+
+            try:
+                result, debug, *rest = func[0]("test string", t(func[1]))
+                if len(rest) > 0:
+                    # module returns too much
+                    stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
+                                 "\n\texpected (bool,str) for function " +
+                                 func[0].__name__ + " (" + opt + ")!")
+                    passed = False
+            except ValueError, TypeError:
+                stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
+                             "\n\texpected (bool,str) for function " +
+                             func[0].__name__ + " (" + opt + ")!")
+                passed = False
+        else:
+            if order[counter] not in flags_check:
+                counter += 1
+                continue
+            # Flag, without argument
+            try:
+                result, debug, *rest = func("test string")
+                if len(rest) > 0:
+                    # module returns too much
+                    stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
+                                    "\n\texpected (bool,str) for function " +
+                                    func.__name__ + " (" + order[counter] + ")!")
+                    passed = False
+            except ValueError, TypeError:
+                stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
+                         "\n\texpected (bool,str) for function " +
+                         func.__name__ + " (" + order[counter] + ")!")
+                passed = False
+        counter += 1
+    return passed
+
+
+
+# Check module: (bool result, str debug)
+# Modify module: (bool status, str line, str debug)
+# Add module: (bool status, str line, str debug)
+# Rem module: (bool status, str line, str debug)

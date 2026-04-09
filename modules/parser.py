@@ -3,14 +3,13 @@ from argparse import ArgumentParser
 
 import transliterate
 
-from modules.add import clean_add_umlaut, add_lower, add_first_upper, add_title_case, \
-    add_latin_ligatures, add_split, add_without_punctuation
+from modules.add import *
 from modules.check import *
 from modules.modify import *
 from modules.remove import *
 
-# lookup table for flags (taking no argument)
-lookup_flag = dict({
+# lookup tables for flags (taking no argument)
+flags_check = dict({
     # Check flags
     '--check-case': check_case,
     '--check-controlchar': check_controlchar,
@@ -21,17 +20,22 @@ lookup_flag = dict({
     '--check-non-ascii': check_non_ascii,
     '--check-replacement-character': check_replacement_character,
     '--check-empty-line': check_empty_line,
-
-    # Modify flags
+})
+flags_modify = dict({
     '--hex': clean_hex,
     '--html': clean_html,
     '--html-named': clean_html_named,
     '--lowercase': clean_lowercase,
     '--title-case': clean_title_case,
     '--umlaut': clean_umlaut,
+    '--mojibake': clean_mojibake,
+    '--encode': clean_encode,
+    '--tab': clean_tab,
+    '--newline': clean_newline,
     '--non-ascii': clean_non_ascii,
-
-    # add flags
+    '--trim': clean_trim,
+})
+flags_add = dict({
     '--add-lower': add_lower,
     '--add-first-upper': add_first_upper,
     '--add-title-case': add_title_case,
@@ -39,8 +43,9 @@ lookup_flag = dict({
     '--add-split': add_split,
     '--add-umlaut': clean_add_umlaut,
     '--add-without-punctuation': add_without_punctuation,
+})
 
-    # remove flags
+flags_remove = dict({
     '--remove-strip-punctuation': remove_strip_punctuation,
     '--remove-punctuation': remove_punctuation,
     '--remove-email': remove_email
@@ -50,8 +55,7 @@ lookup_flag = dict({
 # key = option,
 # value = [function object, type of param]
 # Type is needed for validation, might be useful for defining custom modules
-lookup_params = dict({
-    # Check
+params_check = dict({
     '--check-min-length':       [check_min_length, int],
     '--check-max-length':       [check_max_length, int],
     '--check-starting-with':    [check_starting_with, str],
@@ -64,17 +68,18 @@ lookup_params = dict({
     '--check-max-uppercase':    [check_max_uppercase, int],
     '--check-min-specials':     [check_min_specials, int],
     '--check-max-specials':     [check_max_specials, int],
-
-    # Modify
-    '--transliterate': [clean_transliterate, str],
-
-    # Add (empty)
-
-    # Remove (empty)
 })
+params_modify = dict({
+    '--transliterate': [clean_transliterate, str],
+})
+params_add = dict({})
+params_remove = dict({})
 
 
-def init_parser():
+lookup_flag = flags_check | flags_modify | flags_add | flags_remove
+lookup_params = params_check | params_modify | params_add | params_remove
+
+def init_parser(version):
     parser = ArgumentParser(
         prog='demeuk',
         description='Demeuk - a simple tool to clean up corpora',
@@ -84,7 +89,7 @@ def init_parser():
     parser.add_argument('-i', '--input', action='store')
     parser.add_argument('-o', '--output', action='store')
     parser.add_argument('-l', '--log', action='store')
-    parser.add_argument('-j', '--threads', action='store', type=int)
+    parser.add_argument('-j', '--threads', action='store', type=int) # TODO --threads all currently not possible
     parser.add_argument('--input-encoding', action='store')
     parser.add_argument('--output-encoding', action='store')
     parser.add_argument('-v', '--verbose', action='store_true')
@@ -93,7 +98,7 @@ def init_parser():
     parser.add_argument('-n', '--limit', action='store', type=int)
     parser.add_argument('-s', '--skip', action='store', type=int)
     parser.add_argument('--punctuation', action='store')
-    parser.add_argument('--version', action='version', version='%(prog)s %(version)s')
+    parser.add_argument('--version', action='version', version='%(prog)s ' + str(version))
 
     for flag in lookup_flag:
         parser.add_argument(flag, action='store_true')
@@ -123,9 +128,9 @@ def get_pipeline(ordered_list):
     for el in ordered_list:
         if isinstance(el, list):
             # Function with arguments
-            # el = [[func, type], param]
-            func_list.append([lookup_params[el[0]][0], el[1]])
-            pass
+            # el = [param, arg]
+            func, t = lookup_params[el[0]] # [func, type]
+            func_list.append([func, t(el[1])])
         else:
             func_list.append(lookup_flag[el])
     return func_list

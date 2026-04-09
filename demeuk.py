@@ -143,6 +143,9 @@ r"""
                                             check-hash, check-mac-address, check-uuid, check-email,
                                             check-replacement-character, check-empty-line
 """
+
+# TODO: Might not be important but it looks like there is always a thread running clean_up with no words...?
+
 import sys
 from binascii import hexlify, unhexlify
 from collections import deque
@@ -168,15 +171,19 @@ from modules.remove import *
 from modules.add import *
 from modules.macro import *
 from modules.separating import *
-from modules.validate import validate_input_signature
+from modules.util import stderr_print
+from modules.validate import validate_input_signature, validate_output_check
 
-version = '4.6.2'
+version = '4.6.2' # TODO increment
 
 
 CHUNK_SIZE = 1024 * 1024
 
-
-def clean_up(lines):
+# lines = a single line
+# pipeline = the function pipeline to run
+# debug, verbose = cmd-line settings (log level)
+# TODO unsure what the difference between debug & verbose is...
+def clean_up(lines, pipeline, debug, verbose):
     """Main clean loop, this calls all the other clean functions.
 
     Args:
@@ -215,7 +222,7 @@ def clean_up(lines):
                 log.append(f'Clean_tab; replaced tab characters; {line}{linesep}')
         # Converting enoding to UTF-8
         if config.get('encode') and not stop:
-            status, line_decoded = clean_encode(line, config.get('input_encoding'))
+            status, line_decoded = clean_encode(line)
             if status is False:
                 log.append(f'Clean_encode; decoding error with {line_decoded}; {line}{linesep}')
                 stop = True
@@ -334,118 +341,26 @@ def clean_up(lines):
             if status and config['debug']:
                 log.append(f'Clean_googlengram; tos found and removed; {line_decoded}{linesep}')
 
-        if config.get('check-case') and not stop:
-            status, c = check_case(line_decoded)
-            if not status:
-                log.append(f'Check_case; dropped line because of {c}; {line_decoded}{linesep}')
-                stop = True
 
-        if config.get('check-length') and not stop:
-            if not check_length(line_decoded, min=config['check-min-length'], max=config['check-max-length']):
-                log.append(f'Check_length; dropped line because of failed length check; {line_decoded}{linesep}')
-                stop = True
-
-        if config.get('check-email') and not stop:
-            if not check_email(line_decoded):
-                log.append(f'Check_email; dropped line because found email; {line_decoded}{linesep}')
-                stop = True
-
-        if config.get('check-hash') and not stop:
-            if not check_hash(line_decoded):
-                log.append(f'Check_hash; dropped line because found a hash; {line_decoded}{linesep}')
-                stop = True
-
-        if config.get('check-mac-address') and not stop:
-            if not check_mac_address(line_decoded):
-                log.append(f'Check_mac_address; dropped line because found a MAC address; {line_decoded}{linesep}')
-                stop = True
-
-        if config.get('check-non-ascii') and not stop:
-            if not check_non_ascii(line_decoded):
-                log.append(f'Check_non_ascii; dropped line because non ascii char found; {line_decoded}{linesep}')
-                stop = True
-
-        if config.get('check-replacement-character') and not stop:
-            if check_character(line_decoded, '�'):
-                log.append(f'Check_replacement_character; dropped line because "�" found; {line_decoded}{linesep}')
-                stop = True
-
-        if config.get('check-regex') and not stop:
-            if not check_regex(line_decoded, config.get('check-regex')):
-                log.append(f'Check_regex; dropped line because it does not match the regex; {line_decoded}{linesep}')
-                stop = True
-
-        min_digits = config.get('check-min-digits')
-        if min_digits and not stop:
-            if not contains_at_least(line_decoded, min_digits, str.isdigit):
-                log.append(f'Check_min_digits; dropped line because it contains less than '
-                           f'{min_digits} digits; {line_decoded}{linesep}')
-                stop = True
-
-        max_digits = config.get('check-max-digits')
-        if max_digits != float('inf') and not stop:
-            if not contains_at_most(line_decoded, max_digits, str.isdigit):
-                log.append(f'Check_max_digits; dropped line because it contains more than '
-                           f'{max_digits} digits; {line_decoded}{linesep}')
-                stop = True
-
-        min_uppercase = config.get('check-min-uppercase')
-        if min_uppercase and not stop:
-            if not contains_at_least(line_decoded, min_uppercase, str.isupper):
-                log.append(f'Check_min_uppercase; dropped line because it contains less than '
-                           f'{min_uppercase} uppercase characters; {line_decoded}{linesep}')
-                stop = True
-
-        max_uppercase = config.get('check-max-uppercase')
-        if max_uppercase != float('inf') and not stop:
-            if not contains_at_most(line_decoded, max_uppercase, str.isupper):
-                log.append(f'Check_max_uppercase; dropped line because it contains more than '
-                           f'{max_uppercase} uppercase characters; {line_decoded}{linesep}')
-                stop = True
-
-        min_specials = config.get('check-min-specials')
-        if min_specials and not stop:
-            if not contains_at_least(line_decoded, min_specials,
-                                     lambda char: not char.isalnum() and not char.isspace()):
-                log.append(f'Check_min_specials; dropped line because it contains less than '
-                           f'{min_specials} special characters; {line_decoded}{linesep}')
-                stop = True
-
-        max_specials = config.get('check-max-specials')
-        if max_specials != float('inf') and not stop:
-            if not contains_at_most(line_decoded, max_specials, lambda char: not char.isalnum() and not char.isspace()):
-                log.append(f'Check_max_specials; dropped line because it contains more than '
-                           f'{max_specials} special characters; {line_decoded}{linesep}')
-                stop = True
-
-        if config.get('check-starting-with') and not stop:
-            to_check = config.get("check-starting-with")
-            if check_starting_with(line_decoded, to_check):
-                log.append(f'Check_starting_with; dropped line because {to_check} found; {line_decoded}{linesep}')
-                stop = True
-
-        if config.get('check-uuid') and not stop:
-            if not check_uuid(line_decoded):
-                log.append(f'Check_uuid; dropped line because found a uuid; {line_decoded}{linesep}')
-                stop = True
-
-        if config.get('check-ending-with') and not stop:
-            to_check = config.get("check-ending-with")
-            if check_ending_with(line_decoded, to_check):
-                log.append(f'Check_ending_with; dropped line because {to_check} found; {line_decoded}{linesep}')
-                stop = True
-
-        if config.get('check-contains') and not stop:
-            to_check = config.get("check-contains")
-            if check_contains(line_decoded, to_check):
-                log.append(f'Check-contains; dropped line because {to_check} found; {line_decoded}{linesep}')
-                stop = True
-
-        if config.get('check-empty-line') and not stop:
-            if check_empty_line(line_decoded):
-                log_line = "Check_empty_line; dropped line because is empty or only contains whitespace;"
-                log.append(f'{log_line} {line_decoded}{linesep}')
-                stop = True
+        # Run modules
+        # Temporarily check if this is a check function
+        counter = 0
+        for func in pipeline:
+            # Check modules
+            if isinstance(func, list):
+                # unpack func
+                fun, arg = func
+                if not stop:
+                    status, msg = fun(line_decoded, arg)
+                    if not status:
+                        log.append(f'{msg}; {line_decoded}{linesep}')
+                        stop = True
+            else:
+                if not stop:
+                    status, msg = func(line_decoded)
+                    if not status:
+                        log.append(f'{msg}; {line_decoded}{linesep}')
+                        stop = True
 
         if config.get('remove-punctuation') and not stop:
             status, line_decoded = remove_punctuation(line_decoded, config.get('punctuation'))
@@ -516,6 +431,7 @@ def clean_up(lines):
                 log.append(f'----End---- {line_decoded}{linesep}{linesep}')
             results.append(f'{line_decoded}{linesep}')
 
+    print(f"Reached end of cleanup, #results = {len(results)}, #log = {len(log)}")
     return ({'results': results, 'log': log})
 
 
@@ -535,42 +451,39 @@ def main():
 
     #
     # Config parser
-    arguments = docopt(cleandoc('\n'.join(__doc__.split('\n')[2:])))
+    # arguments = docopt(cleandoc('\n'.join(__doc__.split('\n')[2:])))
 
     # Initialize and get arguments
-    arg_parser = init_parser()
+    arg_parser = init_parser(version)
     args = arg_parser.parse_args()
 
     # Determine order of modules
     order = parse_order(sys.argv)
-    print(order)
     # Generate and validate function list
     func_list = get_pipeline(order)
     if not validate_input_signature(order, func_list):
         # (Custom) module not correct!
         return
-    else:
-        print("Functions validated!")
+    print("All input args validated!")
+    #NB: output check is not conclusive. do we want more rigid type checking?
+    if not validate_output_check(order, func_list):
+        # validate check module
+        return
+    print("Output args validated for check modules!")
 
 
-    return
 
-    if arguments.get('--version'):
-        print(f'demeuk - {version}')
-        exit()
+    input_file = args.input
+    output_file = args.output
+    log_file = args.log
 
-    input_file = arguments.get('--input')
-    output_file = arguments.get('--output')
-    log_file = arguments.get('--log')
-
-    if arguments.get('--threads'):
-        a_threads = arguments.get('--threads')
-        if a_threads == 'all':
-            a_threads = cpu_count()
-        else:
-            a_threads = int(a_threads)
+    if args.threads:
+        a_threads = int(args.threads)
     else:
         a_threads = cpu_count()
+    print(f"Using {a_threads} threads...")
+
+    input_enc = args.input_encoding if args.input_encoding else 'UTF-8' #default input-enc.
 
     # Lets create the default config
     global config
@@ -639,6 +552,7 @@ def main():
     }
 
     # Default modules
+    '''
     if arguments.get('--verbose'):
         config['verbose'] = True
 
@@ -879,6 +793,7 @@ def main():
         config['check-email'] = True
         config['check-replacement-character'] = True
         config['check-empty-line'] = True
+    '''
 
     if output_file and not access(path.dirname(output_file), W_OK):
         stderr_print(f"Cannot write output file to {output_file}")
@@ -944,7 +859,9 @@ def main():
             # Find out which jobs are running
             running_jobs = sum([not job.ready() for job in jobs])
             if running_jobs < a_threads:
-                job = pool.apply_async(clean_up, (chunk,))
+                # pass debug/verbose flags to clean_up.
+                # Do we want a bigger config container?
+                job = pool.apply_async(clean_up, (chunk, func_list, args.debug, args.verbose))
                 chunk_start += len(chunk)
                 jobs.append(job)
                 break

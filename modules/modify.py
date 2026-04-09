@@ -12,7 +12,12 @@ from unidecode import unidecode
 from modules.add import clean_add_umlaut
 from modules.regexes import *
 
-
+# TODO
+# This should become a member of an instantiated Module later.
+# For now we need a way to "configure" a module
+# Want to do it only once, not every loop.
+# So for now use a global variable.
+modify_store_input_encoding = 'en_US.UTF-8'
 
 def _unescape_fixup_named(match):
     """
@@ -301,8 +306,12 @@ def try_encoding(line, encoding):
         return False
 
 
+def set_input_encoding(input_encoding):
+    global modify_store_input_encoding
+    modify_store_input_encoding = input_encoding.split(',')
 
-def clean_encode(line, input_encoding):
+
+def clean_encode(line):
     """Detects and tries encoding
 
     Params:
@@ -316,12 +325,13 @@ def clean_encode(line, input_encoding):
     # Single byte encodings. Also it is beter to not include iso encoding by default.
     # https://en.wikipedia.org/wiki/Character_encoding#Common_character_encodings
     # Input_encoding is by default [utf8]
-    for encoding in input_encoding:
-        line_decoded = try_encoding(line, encoding)
-        if line_decoded is not False:
+    line = line.encode() # TODO What do we do here? strings are already decoded.
+    for encoding in modify_store_input_encoding:
+        line = try_encoding(line, encoding)
+        if line is not False:
             break
     # All other methods failed, lets run the detect library on the line and try to guess the encoding.
-    if line_decoded is False:
+    if line is False:
         encode = detect(line)
         if encode.get('encoding'):
             try:
