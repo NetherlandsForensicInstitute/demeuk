@@ -455,14 +455,7 @@ def main():
         'remove-email': False,
     }
 
-    # Default modules
     '''
-    if arguments.get('--verbose'):
-        config['verbose'] = True
-
-    if arguments.get('--debug'):
-        config['debug'] = True
-
     if arguments.get('--progress'):
         if config['verbose'] or config['debug']:
             if not log_file:
@@ -474,15 +467,6 @@ def main():
             stderr_print('Progress can not be used when using stdin.')
             exit(2)
         config['progress'] = True
-
-    if arguments.get('--force'):
-        config['force'] = True
-
-    if arguments.get('--limit'):
-        config['limit'] = int(arguments.get('--limit'))
-
-    if arguments.get('--skip'):
-        config['skip'] = int(arguments.get('--skip'))
 
     if arguments.get('--input-encoding'):
         config['input_encoding'] = arguments.get('--input-encoding').split(',')
@@ -497,9 +481,6 @@ def main():
     else:
         config['punctuation'] = string_punctuation + ' '
 
-    if arguments.get('--cut'):
-        config['cut'] = True
-
     if arguments.get('--delimiter'):
         splitter = ','
         if len(arguments.get('--delimiter')) >= 1:
@@ -513,81 +494,11 @@ def main():
     if arguments.get('--cut-fields'):
         config['cut-fields'] = arguments.get('--cut-fields')
 
-    # Clean / modify modules
-    if arguments.get('--hex'):
-        config['hex'] = True
-
-    if arguments.get('--html'):
-        config['html'] = True
-
-    if arguments.get('--html-named'):
-        config['html-named'] = True
-
-    if arguments.get('--umlaut'):
-        config['umlaut'] = True
-
-    if arguments.get('--non-ascii'):
-        config['non-ascii'] = True
-
-    if arguments.get('--lowercase'):
-        config['lowercase'] = True
-
-    if arguments.get('--title-case'):
-        config['title-case'] = True
-
-    if arguments.get('--mojibake'):
-        config['mojibake'] = True
-
-    if arguments.get('--encode'):
-        config['encode'] = True
-
-    if arguments.get('--tab'):
-        config['tab'] = True
-
-    if arguments.get('--newline'):
-        config['newline'] = True
-
-    if arguments.get('--trim'):
-        config['trim'] = True
-
-    if arguments.get('--transliterate'):
-        config['transliterate'] = arguments.get('--transliterate')
-
-    # Check modules
-    if arguments.get('--check-min-length'):
-        config['check-length'] = True
-        config['check-min-length'] = int(arguments.get('--check-min-length'))
-
-    if arguments.get('--check-max-length'):
-        config['check-length'] = True
-        config['check-max-length'] = int(arguments.get('--check-max-length'))
-
-    if arguments.get('--check-case'):
-        config['check-case'] = True
-
-    if arguments.get('--check-email'):
-        config['check-email'] = True
-
-    if arguments.get('--check-hash'):
-        config['check-hash'] = True
-
-    if arguments.get('--check-mac-address'):
-        config['check-mac-address'] = True
-
-    if arguments.get('--check-non-ascii'):
-        config['check-non-ascii'] = True
-
-    if arguments.get('--check-replacement-character'):
-        config['check-replacement-character'] = True
-
     if arguments.get('--check-starting-with'):
         if ',' in arguments.get('--check-starting-with'):
             config['check-starting-with'] = arguments.get('--check-starting-with').split(',')
         else:
             config['check-starting-with'] = [arguments.get('--check-starting-with')]
-
-    if arguments.get('--check-uuid'):
-        config['check-uuid'] = True
 
     if arguments.get('--check-ending-with'):
         if ',' in arguments.get('--check-ending-with'):
@@ -601,64 +512,8 @@ def main():
         else:
             config['check-contains'] = [arguments.get('--check-contains')]
 
-    if arguments.get('--check-empty-line'):
-        config['check-empty-line'] = True
-
-    if arguments.get('--check-controlchar'):
-        config['check-controlchar'] = True
-
     if arguments.get('--check-regex'):
         config['check-regex'] = arguments.get('--check-regex').split(',')
-
-    if arguments.get('--check-min-digits'):
-        config['check-min-digits'] = int(arguments.get('--check-min-digits'))
-
-    if arguments.get('--check-max-digits'):
-        config['check-max-digits'] = int(arguments.get('--check-max-digits'))
-
-    if arguments.get('--check-min-uppercase'):
-        config['check-min-uppercase'] = int(arguments.get('--check-min-uppercase'))
-
-    if arguments.get('--check-max-uppercase'):
-        config['check-max-uppercase'] = int(arguments.get('--check-max-uppercase'))
-
-    if arguments.get('--check-min-specials'):
-        config['check-min-specials'] = int(arguments.get('--check-min-specials'))
-
-    if arguments.get('--check-max-specials'):
-        config['check-max-specials'] = int(arguments.get('--check-max-specials'))
-
-    # Add modules
-    if arguments.get('--add-lower'):
-        config['add-lower'] = True
-
-    if arguments.get('--add-first-upper'):
-        config['add-first-upper'] = True
-
-    if arguments.get('--add-title-case'):
-        config['add-title-case'] = True
-
-    if arguments.get('--add-latin-ligatures'):
-        config['add-latin-ligatures'] = True
-
-    if arguments.get('--add-split'):
-        config['add-split'] = True
-
-    if arguments.get('--add-umlaut'):
-        config['add-umlaut'] = True
-
-    if arguments.get('--add-without-punctuation'):
-        config['add-without-punctuation'] = True
-
-    # Remove modules
-    if arguments.get('--remove-strip-punctuation'):
-        config['remove-strip-punctuation'] = True
-
-    if arguments.get('--remove-email'):
-        config['remove-email'] = True
-
-    if arguments.get('--remove-punctuation'):
-        config['remove-punctuation'] = True
 
     # Some meta-modules, those overwrite settings
     if arguments.get('--googlengram'):
