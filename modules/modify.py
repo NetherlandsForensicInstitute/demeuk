@@ -362,4 +362,7 @@ def clean_encode(line):
 
 def clean_umlaut(line):
     status, result = clean_add_umlaut(line)
-    return status, result #TODO this function does nothing
+    if status:
+        return True, result, f'Clean_umlaut; umlaut replaced'
+    else:
+        return False, result, None

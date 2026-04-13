@@ -41,7 +41,7 @@ flags_add = dict({
     '--add-title-case': add_title_case,
     '--add-latin-ligatures': add_latin_ligatures,
     '--add-split': add_split,
-    '--add-umlaut': clean_add_umlaut,
+    '--add-umlaut': add_umlaut,
     '--add-without-punctuation': add_without_punctuation,
 })
 

@@ -1,3 +1,13 @@
+### - Add modules -
+# Add modules take a line as input, and output either a list of lines or a single line
+# which is to be added to the work queue.
+# Input is a single str
+# Output is either bool result, str out_line, str log OR:
+# bool result, list[str] out_lines, str log.
+# result should be true if it out_line or out_lines need to be added to the queue
+# Q: should we always return a list[str]? Or be nice to future contributors and allow str?
+# First case simplifies control flow in main loop, second case simplifies the modules.
+# NB: Add modules are not the opposite of remove modules!
 from ftfy.fixes import fix_latin_ligatures
 
 from re import split as re_split
@@ -21,9 +31,9 @@ def add_lower(line):
     """
     line_lower = line.lower()
     if line != line_lower:
-        return line_lower
+        return True, line_lower, f'Add_lower; new line'
     else:
-        return False
+        return False, line, None
 
 
 def add_first_upper(line):
@@ -38,9 +48,9 @@ def add_first_upper(line):
     """
     line_first_upper = line.capitalize()
     if line != line_first_upper:
-        return line_first_upper
+        return True, line_first_upper, "Add_first_upper; new line"
     else:
-        return False
+        return False, line, None
 
 
 def add_title_case(line):
@@ -55,9 +65,9 @@ def add_title_case(line):
     """
     line_title_case = line.title()
     if line != line_title_case:
-        return line_title_case
+        return True, line_title_case, "Add_title_case; new line"
     else:
-        return False
+        return False, line, None
 
 
 def add_latin_ligatures(line):
@@ -72,9 +82,9 @@ def add_latin_ligatures(line):
     """
     cleaned_line = fix_latin_ligatures(line)
     if line != cleaned_line:
-        return cleaned_line
+        return True, cleaned_line, f'Add_latin_ligatures; new line'
     else:
-        return False
+        return False, line, None
 
 
 def clean_add_umlaut(line):
@@ -111,8 +121,8 @@ def clean_add_umlaut(line):
 def add_umlaut(line):
     status, result = clean_add_umlaut(line)
     if status:
-        return result
-    return False
+        return True, result, f'Add_umlaut; new line'
+    return False, line, None
 
 def add_split(line, punctuation=(' ', '-', r'\.')):
     """Split the line on the punctuation and return elements longer then 1 char.
@@ -144,6 +154,6 @@ def add_without_punctuation(line):
     cleaned_line = line.translate(str.maketrans('', '', global_store_punctuation))
 
     if line != cleaned_line:
-        return cleaned_line
+        return True, cleaned_line, f'Add_without_punctuation; new line'
     else:
-        return False
+        return False, line, None
