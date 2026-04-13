@@ -302,17 +302,17 @@ def clean_encode(line):
     # Single byte encodings. Also it is beter to not include iso encoding by default.
     # https://en.wikipedia.org/wiki/Character_encoding#Common_character_encodings
     # Input_encoding is by default [utf8]
-    line_decoded = ''
     for encoding in global_store_input_encoding:
-        line = try_encoding(line, encoding)
-        if line is not False:
+        line_decoded = try_encoding(line, encoding)
+        if line_decoded is not False:
             break
     # All other methods failed, lets run the detect library on the line and try to guess the encoding.
-    if line is False:
+    if line_decoded is False:
         encode = detect(line)
         if encode.get('encoding'):
             try:
                 line_decoded = line.decode(encode['encoding'])
+                return True, line_decoded
             except (UnicodeDecodeError, LookupError) as e: # noqa F841
                 return False, encode["encoding"]
         else:
