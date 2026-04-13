@@ -256,6 +256,7 @@ def clean_up(lines, pipeline, debug, verbose):
         # Checks if there are any mojibakes inside the line
         # You must mojibake before removing control chars! Some control chars
         # are part of a valid mojibake.
+        # TODO do we want to enforce this somehow?
         if config.get('mojibake') and not stop:
             status, line_decoded = clean_mojibake(line_decoded)
             if status and config['debug']:
@@ -298,30 +299,6 @@ def clean_up(lines, pipeline, debug, verbose):
             status, line_decoded = clean_add_umlaut(line_decoded)
             if status and config['debug']:
                 log.append(f'Clean_umlaut; umlaut replaced; {line_decoded}{linesep}')
-
-        # Transliterate
-        if config.get('transliterate') and not stop:
-            status, line_decoded = clean_transliterate(line_decoded, config.get('transliterate'))
-            if status and config['debug']:
-                log.append(f'Clean_transliterate; translitatered; {line_decoded}{linesep}')
-
-        # Replace non-ascii
-        if config.get('non-ascii') and not stop:
-            status, line_decoded = clean_non_ascii(line_decoded)
-            if status and config['debug']:
-                log.append(f'Clean_non_ascii; non-ascii replaced; {line_decoded}{linesep}')
-
-        # Replace all letters with lowercase
-        if config.get('lowercase') and not stop:
-            status, line_decoded = clean_lowercase(line_decoded)
-            if status and config['verbose']:
-                log.append(f'Clean_lowercase; all capitals replaced; {line_decoded}{linesep}')
-
-        # Replace first letter of a word to a uppercase letter
-        if config.get('title-case') and not stop:
-            status, line_decoded = clean_title_case(line_decoded)
-            if status and config['debug']:
-                log.append(f'Clean_title_case; non-ascii replaced; {line_decoded}{linesep}')
 
         if config.get('googlengram') and not stop:
             status, line_decoded = clean_googlengram(line_decoded, string_punctuation)

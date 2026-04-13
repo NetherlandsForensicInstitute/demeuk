@@ -4,7 +4,7 @@
 # The module should return a bool result, a str out_line and a str log
 # result is False if nothing was changed.
 # out_line is the result of the operation
-# log is a debug string which can be None. Logged when result is True (smoething changed)
+# log is a debug string which can be None. Logged when result is True (something changed)
 from modules.add import global_store_punctuation
 from modules.regexes import *
 
