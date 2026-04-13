@@ -133,8 +133,8 @@ def check_controlchar(line):
         # Co -> Private use
         # Cs -> Surrogate
         if category(c) in ['Cc', 'Cf', 'Cn', 'Co', 'Cs']:
-            return True, c
-    return False, None
+            return False, f'Check_controlchar; found controlchar {c}'
+    return True, None
 
 
 def check_case(line, ignored_chars=(' ', "'", '-')):

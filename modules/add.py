@@ -1,6 +1,12 @@
 from ftfy.fixes import fix_latin_ligatures
 
 from re import split as re_split
+from string import punctuation as string_punctuation
+
+global_store_punctuation = string_punctuation
+def set_punctuation(punc):
+    global global_store_punctuation
+    global_store_punctuation = punc
 
 
 def add_lower(line):
@@ -125,7 +131,7 @@ def add_split(line, punctuation=(' ', '-', r'\.')):
 
 
 
-def add_without_punctuation(line, punctuation):
+def add_without_punctuation(line):
     """Returns the line cleaned of punctuation.
 
     Param:
@@ -135,7 +141,7 @@ def add_without_punctuation(line, punctuation):
         False if there are not any punctuation
         Corrected line
     """
-    cleaned_line = line.translate(str.maketrans('', '', punctuation))
+    cleaned_line = line.translate(str.maketrans('', '', global_store_punctuation))
 
     if line != cleaned_line:
         return cleaned_line

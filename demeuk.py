@@ -166,13 +166,13 @@ from tqdm import tqdm
 
 from modules.modify import *
 from modules.check import *
-from modules.parser import init_parser, parse_order, get_pipeline
+from modules.parser import *
 from modules.remove import *
 from modules.add import *
 from modules.macro import *
 from modules.separating import *
 from modules.util import stderr_print
-from modules.validate import validate_input_signature, validate_output_check
+from modules.validate import *
 
 version = '4.6.2' # TODO increment
 
@@ -344,23 +344,38 @@ def clean_up(lines, pipeline, debug, verbose):
 
         # Run modules
         # Temporarily check if this is a check function
-        counter = 0
         for func in pipeline:
-            # Check modules
             if isinstance(func, list):
                 # unpack func
                 fun, arg = func
                 if not stop:
-                    status, msg = fun(line_decoded, arg)
-                    if not status:
-                        log.append(f'{msg}; {line_decoded}{linesep}')
-                        stop = True
+                    # NB: rest is here used as a flag if func is a check module
+                    # Check modules return (bool, str) while other return (bool, str, str)
+                    # So here we can discern between the two.
+                    status, *rest = fun(line_decoded, arg)
+                    if len(rest) == 1:
+                        msg = rest[0]
+                        if not status:
+                            # Tripped check module
+                            log.append(f'{msg}; {line_decoded}{linesep}')
+                            stop = True
+                    else:
+                        line_decoded, msg = rest
+                        if status:
+                            log.append(f'{msg}; {line_decoded}{linesep}')
             else:
                 if not stop:
-                    status, msg = func(line_decoded)
-                    if not status:
-                        log.append(f'{msg}; {line_decoded}{linesep}')
-                        stop = True
+                    status, *rest = func(line_decoded)
+                    if len(rest) == 1:
+                        msg = rest[0]
+                        if not status:
+                            # Tripped check module
+                            log.append(f'{msg}; {line_decoded}{linesep}')
+                            stop = True
+                    else:
+                        line_decoded, msg = rest
+                        if status:
+                            log.append(f'{msg}; {line_decoded}{linesep}')
 
         if config.get('remove-punctuation') and not stop:
             status, line_decoded = remove_punctuation(line_decoded, config.get('punctuation'))
@@ -469,7 +484,10 @@ def main():
     if not validate_output_check(order, func_list):
         # validate check module
         return
-    print("Output args validated for check modules!")
+    if not validate_output_signature(order, func_list):
+        # validate other modules
+        return
+    print("All output args validated!")
 
 
 

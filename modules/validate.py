@@ -2,6 +2,7 @@
 from modules.parser import *
 from modules.util import stderr_print
 
+# Clean up, repeating structure over these three functions
 
 # Check if all the functions take the correct input
 def validate_input_signature(order, funcs):
@@ -31,10 +32,14 @@ def validate_input_signature(order, funcs):
         else:
             # Here, we pass nothing. So the function expects a string
             try:
-                func("test string")
+                # allow clean_encode and clean_tab. as they operate on bytes instead of strings
+                # TODO Do we want to give these special status?
+                if func not in [clean_encode, clean_tab]:
+                    func("test string")
             except TypeError:
                 # wrong amt of args
-                stderr_print("=== INVALID INPUT SIGNATURE ===\n\texpected 1 argument (str) " +
+                stderr_print("=== INVALID INPUT SIGNATURE === Incorrect arg type\n\t" +
+                             "expected 1 argument (str) " +
                              "for function " + func.__name__ +
                              " (" + order[counter] + ")!")
                 passed = False
@@ -44,7 +49,6 @@ def validate_input_signature(order, funcs):
 
 def validate_output_check(order, funcs):
     passed = True
-    # TODO continue
     counter = 0
     for func in funcs:
         if isinstance(func, list):
@@ -92,6 +96,54 @@ def validate_output_check(order, funcs):
     return passed
 
 
+# Validate output for modify/add/remove modules
+def validate_output_signature(order, funcs):
+    passed = True
+    counter = 0
+    for func in funcs:
+        if isinstance(func, list):
+            if order[counter][0] not in params_modify | params_add | params_remove:
+                counter += 1
+                continue
+            # func = [fun, arg]
+            # Param (with arg)
+            opt = order[counter][0]  # The option being checked
+            t = lookup_params[opt][1]  # type of parameter
+
+
+            try:
+                result, line, debug, *rest = func[0]("test string", t(func[1]))
+                if len(rest) > 0:
+                    # module returns too much
+                    stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
+                                 "\n\texpected (bool,str,str) for function " +
+                                 func[0].__name__ + " (" + opt + ")!")
+                    passed = False
+            except ValueError, TypeError:
+                stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
+                             "\n\texpected (bool,str,str) for function " +
+                             func[0].__name__ + " (" + opt + ")!")
+                passed = False
+        else:
+            if order[counter] not in flags_modify | flags_add | flags_remove:
+                counter += 1
+                continue
+            # Flag, without argument
+            try:
+                result, line, debug, *rest = func("test string")
+                if len(rest) > 0:
+                    # module returns too much
+                    stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
+                                 "\n\texpected (bool,str,str) for function " +
+                                 func.__name__ + " (" + order[counter] + ")!")
+                    passed = False
+            except ValueError, TypeError:
+                stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
+                             "\n\texpected (bool,str,str) for function " +
+                             func.__name__ + " (" + order[counter] + ")!")
+                passed = False
+        counter += 1
+    return passed
 
 # Check module: (bool result, str debug)
 # Modify module: (bool status, str line, str debug)
