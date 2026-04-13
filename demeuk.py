@@ -157,18 +157,11 @@ from math import ceil
 from multiprocess import cpu_count, Pool # multiprocess has better serialization capabilities
 from os import linesep, access, path, R_OK, F_OK, W_OK
 from signal import signal, SIGINT, SIG_IGN
-from string import punctuation as string_punctuation
 from time import sleep
 from sys import stderr, stdin, stdout
 
-from docopt import docopt
 from tqdm import tqdm
 
-from modules.modify import *
-from modules.check import *
-from modules.parser import *
-from modules.remove import *
-from modules.add import *
 from modules.macro import *
 from modules.separating import *
 from modules.util import stderr_print
@@ -330,12 +323,6 @@ def clean_up(lines, pipeline, debug, verbose):
             if status and config['debug']:
                 log.append(f'Clean_title_case; non-ascii replaced; {line_decoded}{linesep}')
 
-        # Should we remove emails?
-        if config.get('remove-email') and not stop:
-            status, line_decoded = remove_email(line_decoded)
-            if status and config['debug']:
-                log.append(f'Remove_email; email found; {line_decoded}{linesep}')
-
         if config.get('googlengram') and not stop:
             status, line_decoded = clean_googlengram(line_decoded, string_punctuation)
             if status and config['debug']:
@@ -343,7 +330,6 @@ def clean_up(lines, pipeline, debug, verbose):
 
 
         # Run modules
-        # Temporarily check if this is a check function
         for func in pipeline:
             if isinstance(func, list):
                 # unpack func
@@ -376,16 +362,6 @@ def clean_up(lines, pipeline, debug, verbose):
                         line_decoded, msg = rest
                         if status:
                             log.append(f'{msg}; {line_decoded}{linesep}')
-
-        if config.get('remove-punctuation') and not stop:
-            status, line_decoded = remove_punctuation(line_decoded, config.get('punctuation'))
-            if status and config['debug']:
-                log.append(f'Remove_punctuation; stripped punctuation; {line_decoded}{linesep}')
-
-        if config.get('remove-strip-punctuation') and not stop:
-            status, line_decoded = remove_strip_punctuation(line_decoded, config.get('punctuation'))
-            if status and config['debug']:
-                log.append(f'Remove_strip_punctuation; stripped punctuation; {line_decoded}{linesep}')
 
         # We ran all modules
         if not stop:
