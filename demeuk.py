@@ -175,8 +175,9 @@ CHUNK_SIZE = 1024 * 1024
 # lines = a single line
 # pipeline = the function pipeline to run
 # debug, verbose = cmd-line settings (log level)
-# TODO unsure what the difference between debug & verbose is...
-def clean_up(lines, pipeline, debug, verbose):
+# We pass both the function pipeline and the string representation (order)
+#   to figure out the type of module we run.
+def clean_up(lines, pipeline, order, debug, verbose):
     """Main clean loop, this calls all the other clean functions.
 
     Args:
@@ -306,40 +307,52 @@ def clean_up(lines, pipeline, debug, verbose):
                 log.append(f'Clean_googlengram; tos found and removed; {line_decoded}{linesep}')
 
 
+        # Hard to understand what's going on here
         # Run modules
+        # Note that here we assume the input/output signature of the module functions is what we expect.
+        # This is checked by the validate_* functions.
+        counter = 0 # Should we track module type separately?
+        #stop = False
         for func in pipeline:
-            if isinstance(func, list):
-                # unpack func
-                fun, arg = func
-                if not stop:
-                    # NB: rest is here used as a flag if func is a check module
-                    # Check modules return (bool, str) while other return (bool, str, str)
-                    # So here we can discern between the two.
-                    status, *rest = fun(line_decoded, arg)
-                    if len(rest) == 1:
-                        msg = rest[0]
-                        if not status:
-                            # Tripped check module
-                            log.append(f'{msg}; {line_decoded}{linesep}')
-                            stop = True
-                    else:
-                        line_decoded, msg = rest
-                        if status:
-                            log.append(f'{msg}; {line_decoded}{linesep}')
-            else:
-                if not stop:
-                    status, *rest = func(line_decoded)
-                    if len(rest) == 1:
-                        msg = rest[0]
-                        if not status:
-                            # Tripped check module
-                            log.append(f'{msg}; {line_decoded}{linesep}')
-                            stop = True
-                    else:
-                        line_decoded, msg = rest
-                        if status:
-                            log.append(f'{msg}; {line_decoded}{linesep}')
 
+            # Run the module first, then process the output later.
+            has_param = isinstance(func, list)
+            # The name of the (text) option
+            opt = order[counter][0] if has_param else order[counter]
+            if not stop:
+                status, *rest = func[0](line_decoded, func[1]) if has_param else func(line_decoded)
+                if opt in flags_check | params_check:
+                    msg = rest[0]
+                    if not status:
+                        # Tripped check module
+                        log.append(f'{msg}; {line_decoded}{linesep}')
+                        stop = True
+                elif opt in flags_modify | params_modify | flags_remove | params_remove:
+                    line_decoded, msg = rest
+                    if status:
+                        log.append(f'{msg}; {line_decoded}{linesep}')
+                elif opt in flags_add | params_add:
+                    result, msg = rest
+                    if status:
+                        # We have modified lines
+                        if isinstance(result, list):
+                            for new_line in result:
+                                if debug:
+                                    log.append(f'{msg}; {new_line}{linesep}')
+                                work_queue.append(new_line.encode())
+                        else:
+                            # The result is a string
+                            if debug:
+                                log.append(f'{msg}; {result}{linesep}')
+                            work_queue.append(result.encode())
+
+            counter += 1
+
+        # If we got through the whole function pipeline:
+        if not stop:
+            results.append(f'{line_decoded}{linesep}')
+
+        '''
         # We ran all modules
         if not stop:
             # Some clean modules will modify the end result, those modification will be added here.
@@ -398,7 +411,7 @@ def clean_up(lines, pipeline, debug, verbose):
             if config['debug']:
                 log.append(f'----End---- {line_decoded}{linesep}{linesep}')
             results.append(f'{line_decoded}{linesep}')
-
+        '''
     print(f"Reached end of cleanup, #results = {len(results)}, #log = {len(log)}")
     return ({'results': results, 'log': log})
 
@@ -833,7 +846,7 @@ def main():
             if running_jobs < a_threads:
                 # pass debug/verbose flags to clean_up.
                 # Do we want a bigger config container?
-                job = pool.apply_async(clean_up, (chunk, func_list, args.debug, args.verbose))
+                job = pool.apply_async(clean_up, (chunk, func_list, order, args.debug, args.verbose))
                 chunk_start += len(chunk)
                 jobs.append(job)
                 break

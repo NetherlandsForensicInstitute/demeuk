@@ -124,7 +124,7 @@ def add_umlaut(line):
         return True, result, f'Add_umlaut; new line'
     return False, line, None
 
-def add_split(line, punctuation=(' ', '-', r'\.')):
+def add_split(line):
     """Split the line on the punctuation and return elements longer then 1 char.
 
     Param:
@@ -133,10 +133,11 @@ def add_split(line, punctuation=(' ', '-', r'\.')):
     Returns:
         split line
     """
+    punctuation = (' ', '-', r'\.')
     for p in punctuation:
         if p in line:
-            return [i for i in re_split('|'.join(punctuation), line) if len(i) > 1]
-    return False
+            return True, [i for i in re_split('|'.join(punctuation), line) if len(i) > 1], f'Add_split; new line because of split'
+    return False, line, None
 
 
 
