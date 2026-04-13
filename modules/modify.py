@@ -1,3 +1,6 @@
+### - Modify module -
+# Modify modules modify a line
+# Module signature is the same as that of a remove module
 from binascii import unhexlify
 from html import unescape
 from unicodedata import category
@@ -97,11 +100,23 @@ def clean_html_named(line):
     """
     return_line = HTML_ENTITY_RE.sub(_unescape_fixup_named, line)
     if return_line != line:
-        return True, return_line
+        return True, return_line, f'Clean_html_named; found named html character'
     else:
-        return False, line
+        return False, line, None
 
-def clean_cut(line, delimiters, fields):
+global_store_delims = [':']
+global_store_cut_fields = '2-'
+
+def set_delim(delim):
+    global global_store_delims
+    global_store_delims = delim
+
+
+def set_cut_fields(cut_fields):
+    global global_store_cut_fields
+    global_store_cut_fields = cut_fields
+
+def clean_cut(line):
     """Finds the first delimiter and returns the remaining string either after
     or before the delimiter.
 
@@ -113,21 +128,21 @@ def clean_cut(line, delimiters, fields):
     Returns:
         line (unicode)
     """
-    for delimiter in delimiters:
+    for delimiter in global_store_delims:
         if delimiter in line:
-            if '-' in fields:
-                start = fields.split('-')[0]
-                stop = fields.split('-')[1]
+            if '-' in global_store_cut_fields:
+                start = global_store_cut_fields.split('-')[0]
+                stop = global_store_cut_fields.split('-')[1]
                 if start == '':
                     start = 1
                 if stop == '':
                     stop = len(line)
                 fields = slice(int(start) - 1, int(stop))
             else:
-                fields = slice(int(fields) - 1, int(fields))
-            return True, delimiter.join(line.split(delimiter)[fields])
+                fields = slice(int(global_store_cut_fields) - 1, int(global_store_cut_fields))
+            return True, delimiter.join(line.split(delimiter)[fields]), f'Clean_cut; field cutted'
     else:
-        return False, line
+        return False, line, None
 
 
 def clean_transliterate(line, language):
@@ -142,9 +157,9 @@ def clean_transliterate(line, language):
     """
     cleaned_line = translit(line, language, reversed=True)
     if line != cleaned_line:
-        return True, cleaned_line
+        return True, cleaned_line, f'Clean_transliterate; transliterated';
     else:
-        return False, line
+        return False, line, None
 
 
 def clean_non_ascii(line):
@@ -158,9 +173,9 @@ def clean_non_ascii(line):
     """
     cleaned_line = unidecode(line)
     if line != cleaned_line:
-        return True, cleaned_line
+        return True, cleaned_line, f'Clean_non_ascii; non-ascii replaced'
     else:
-        return False, line
+        return False, line, None
 
 
 def clean_lowercase(line):
@@ -175,9 +190,9 @@ def clean_lowercase(line):
         """
     cleaned_line = line.lower()
     if line != cleaned_line:
-        return True, cleaned_line
+        return True, cleaned_line, f'Clean_lowercase; all capitals replaced'
     else:
-        return False, line
+        return False, line, None
 
 
 def clean_title_case(line):
@@ -192,9 +207,10 @@ def clean_title_case(line):
     """
     cleaned_line = line.title()
     if line != cleaned_line:
-        return True, cleaned_line
+        # Verbose message was a typo in original
+        return True, cleaned_line, f'Clean_title_case; lowercase characters replaced'
     else:
-        return False, line
+        return False, line, None
 
 
 def clean_trim(line):
@@ -224,9 +240,9 @@ def clean_trim(line):
             break
 
     if line != cleaned_line:
-        return True, cleaned_line
+        return True, cleaned_line, f'Clean_trim; found trim sequence'
     else:
-        return False, line
+        return False, line, None
 
 
 def clean_tab(line):
@@ -256,9 +272,9 @@ def clean_newline(line):
     """
     return_line = line.strip('\r\n')
     if return_line != line:
-        return True, return_line
+        return True, return_line, f'Clean_newline; deleted newline characters'
     else:
-        return False, line
+        return False, line, None
 
 
 def clean_mojibake(line):
@@ -274,9 +290,9 @@ def clean_mojibake(line):
     """
     return_line = fix_encoding(line)
     if return_line != line:
-        return True, return_line
+        return True, return_line, f'Clean_mojibake; found a mojibake'
     else:
-        return False, line
+        return False, line, None
 
 
 def try_encoding(line, encoding):
