@@ -254,52 +254,11 @@ def clean_up(lines, pipeline, order, debug, verbose):
                     log.append(f'Clean_html; replaced html, added to queue and quiting; {line_decoded}{linesep}')
                 stop = True
 
-        # Checks if there are any mojibakes inside the line
-        # You must mojibake before removing control chars! Some control chars
-        # are part of a valid mojibake.
-        # TODO do we want to enforce this somehow?
-        if config.get('mojibake') and not stop:
-            status, line_decoded = clean_mojibake(line_decoded)
-            if status and config['debug']:
-                log.append(f'Clean_mojibake; found a mojibake; {line}{linesep}')
-
-        # Delete leading and trailing newline characters
-        if config.get('newline') and not stop:
-            status, line_decoded = clean_newline(line_decoded)
-            if status and config['debug']:
-                log.append(f'Clean_newline; deleted newline characters; {line_decoded!r}{linesep}')
-
-        # Checks if there are any control chars inside line
-        if config.get('check-controlchar') and not stop:
-            status, cc = check_controlchar(line_decoded)
-            if status:
-                # Control char detected
-                log.append(f'Check_controlchar; found controlchar {cc!r}; {line_decoded!r}{linesep}')
-                stop = True
-
-        # Check if there are named html chars in the line
-        if config.get('html-named') and not stop:
-            status, line_decoded = clean_html_named(line_decoded)
-            if status and config['debug']:
-                log.append(f'Clean_html_named; found named html character; {line_decoded}{linesep}')
-
-        # Delete leading and trailing character sequences representing a newline
-        if config.get('trim') and not stop:
-            status, line_decoded = clean_trim(line_decoded)
-            if status and config['debug']:
-                log.append(f'Clean_trim; found trim sequence; {line_decoded!r}{linesep}')
-
         # Should we do the cut?
         if config.get('cut') and not stop:
             status, line_decoded = clean_cut(line_decoded, config['delimiter'], config['cut-fields'])
             if status and config['debug']:
                 log.append(f'Clean_cut; field cutted; {line_decoded}{linesep}')
-
-        # Replace umlauts
-        if config.get('umlaut') and not stop:
-            status, line_decoded = clean_add_umlaut(line_decoded)
-            if status and config['debug']:
-                log.append(f'Clean_umlaut; umlaut replaced; {line_decoded}{linesep}')
 
         if config.get('googlengram') and not stop:
             status, line_decoded = clean_googlengram(line_decoded, string_punctuation)
@@ -352,68 +311,8 @@ def clean_up(lines, pipeline, order, debug, verbose):
         if not stop:
             results.append(f'{line_decoded}{linesep}')
 
-        '''
-        # We ran all modules
-        if not stop:
-            # Some clean modules will modify the end result, those modification will be added here.
-            # They will be added to the running thread, this might cause one thread to have more work
-            # then others.
-            if config.get('add-split'):
-                modified_lines = add_split(line_decoded)
-                if modified_lines:
-                    for modified_line in modified_lines:
-                        if config['debug']:
-                            log.append(f'Add_split; new line because of split; {modified_line}{linesep}')
-                        work_queue.append(modified_line.encode())
-
-            if config.get('add-lower'):
-                modified_line = add_lower(line_decoded)
-                if modified_line:
-                    if config['debug']:
-                        log.append(f'Add_lower; new line; {modified_line}{linesep}')
-                    work_queue.append(modified_line.encode())
-
-            if config.get('add-first-upper'):
-                modified_line = add_first_upper(line_decoded)
-                if modified_line:
-                    if config['debug']:
-                        log.append(f'Add_first_upper; new line; {modified_line}{linesep}')
-                    work_queue.append(modified_line.encode())
-
-            if config.get('add-title-case'):
-                modified_line = add_title_case(line_decoded)
-                if modified_line:
-                    if config['debug']:
-                        log.append(f'Add_title_case; new line; {modified_line}{linesep}')
-                    work_queue.append(modified_line.encode())
-
-            if config.get('add-latin-ligatures'):
-                modified_line = add_latin_ligatures(line_decoded)
-                if modified_line:
-                    if config['debug']:
-                        log.append(f'Add_latin_ligatures; new line; {modified_line}{linesep}')
-                    work_queue.append(modified_line.encode())
-
-            if config.get('add-umlaut'):
-                status, modified_line = clean_add_umlaut(line_decoded)
-                if status:
-                    if config['debug']:
-                        log.append(f'Add_umlaut; new line; {modified_line}{linesep}')
-                    work_queue.append(modified_line.encode())
-
-            if config.get('add-without-punctuation'):
-                modified_line = add_without_punctuation(line_decoded, config.get('punctuation'))
-                if modified_line:
-                    if config['debug']:
-                        log.append(f'Add_without_punctuation; new line; {modified_line}{linesep}')
-                    work_queue.append(modified_line.encode())
-
-            if config['debug']:
-                log.append(f'----End---- {line_decoded}{linesep}{linesep}')
-            results.append(f'{line_decoded}{linesep}')
-        '''
     print(f"Reached end of cleanup, #results = {len(results)}, #log = {len(log)}")
-    return ({'results': results, 'log': log})
+    return {'results': results, 'log': log}
 
 
 def chunkify(filename, size=CHUNK_SIZE):
