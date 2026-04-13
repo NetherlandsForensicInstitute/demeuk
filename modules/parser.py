@@ -22,15 +22,15 @@ flags_check = dict({
     '--check-empty-line': check_empty_line,
 })
 flags_modify = dict({
-    '--hex': clean_hex,
-    '--html': clean_html,
+    #'--hex': clean_hex, And here
+    #'--html': clean_html,  TODO figure out what is going on with encoding here
     '--html-named': clean_html_named,
     '--lowercase': clean_lowercase,
     '--title-case': clean_title_case,
     '--umlaut': clean_umlaut,
     '--mojibake': clean_mojibake,
-    '--encode': clean_encode,
-    '--tab': clean_tab,
+    #'--encode': clean_encode,  # Q: Do we want this as a normal Modify module of give it special status?
+    # '--tab': clean_tab, # This is also an operation on bytes
     '--newline': clean_newline,
     '--non-ascii': clean_non_ascii,
     '--trim': clean_trim,
@@ -48,7 +48,9 @@ flags_add = dict({
 flags_remove = dict({
     '--remove-strip-punctuation': remove_strip_punctuation,
     '--remove-punctuation': remove_punctuation,
-    '--remove-email': remove_email
+    '--remove-email': remove_email,
+
+    #'--cut': clean_cut, #TODO implement cut module
 })
 
 # For command-line arguments with one argument.
@@ -100,6 +102,18 @@ def init_parser(version):
     parser.add_argument('--punctuation', action='store')
     parser.add_argument('--version', action='version', version='%(prog)s ' + str(version))
 
+    # Configuring modules
+    parser.add_argument('-f', '--cut-fields', action='store')
+    parser.add_argument('--cut-before', action='store_true')
+    parser.add_argument('-d', '--delimiter', action='store')
+
+    # Misc
+    parser.add_argument('--encode', action='store_true') # For now, treat this as a special "module"
+    parser.add_argument('--tab', action='store_true')
+    parser.add_argument('--hex', action='store_true')
+    parser.add_argument('--html', action='store_true')
+
+    # The modules in here are all executed in the order given on the command-line.
     for flag in lookup_flag:
         parser.add_argument(flag, action='store_true')
 

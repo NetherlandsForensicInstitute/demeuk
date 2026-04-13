@@ -34,7 +34,8 @@ def validate_input_signature(order, funcs):
             try:
                 # allow clean_encode and clean_tab. as they operate on bytes instead of strings
                 # TODO Do we want to give these special status?
-                if func not in [clean_encode, clean_tab]:
+                # TODO bad, hardcoded exception.
+                if func not in [clean_encode, clean_tab, clean_hex, clean_html]:
                     func("test string")
             except TypeError:
                 # wrong amt of args
@@ -130,13 +131,15 @@ def validate_output_signature(order, funcs):
                 continue
             # Flag, without argument
             try:
-                result, line, debug, *rest = func("test string")
-                if len(rest) > 0:
-                    # module returns too much
-                    stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
-                                 "\n\texpected (bool,str,str) for function " +
-                                 func.__name__ + " (" + order[counter] + ")!")
-                    passed = False
+                # TODO also here, hardcoded exception.
+                if func not in [clean_encode, clean_tab, clean_hex, clean_html]:
+                    result, line, debug, *rest = func("test string")
+                    if len(rest) > 0:
+                        # module returns too much
+                        stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
+                                     "\n\texpected (bool,str,str) for function " +
+                                     func.__name__ + " (" + order[counter] + ")!")
+                        passed = False
             except ValueError, TypeError:
                 stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
                              "\n\texpected (bool,str,str) for function " +

@@ -163,7 +163,6 @@ from sys import stderr, stdin, stdout
 from tqdm import tqdm
 
 from modules.macro import *
-from modules.separating import *
 from modules.util import stderr_print
 from modules.validate import *
 
@@ -174,10 +173,10 @@ CHUNK_SIZE = 1024 * 1024
 
 # lines = a single line
 # pipeline = the function pipeline to run
-# debug, verbose = cmd-line settings (log level)
+# Pass the args construction, TODO reconsider if this is still needed later
 # We pass both the function pipeline and the string representation (order)
 #   to figure out the type of module we run.
-def clean_up(lines, pipeline, order, debug, verbose):
+def clean_up(lines, pipeline, order, args):
     """Main clean loop, this calls all the other clean functions.
 
     Args:
@@ -209,51 +208,58 @@ def clean_up(lines, pipeline, order, debug, verbose):
         stop = False
         if config['debug']:
             log.append(f'----BEGIN---- {hexlify(line)}{linesep}')
+
+
+        # Do we want to have a special category of modules which get run BEFORE encoding?
         # Replace tab chars as ':' greedy
-        if config.get('tab') and not stop:
-            status, line = clean_tab(line)
-            if status and config['debug']:
-                log.append(f'Clean_tab; replaced tab characters; {line}{linesep}')
-        # Converting enoding to UTF-8
-        if config.get('encode') and not stop:
+        if args.tab and not stop:
+            status, line, msg = clean_tab(line)
+            if status and args.debug:
+                log.append(f'{msg}; {line}{linesep}')
+
+        # Converting encoding to UTF-8
+        if args.encode and not stop:
             status, line_decoded = clean_encode(line)
             if status is False:
                 log.append(f'Clean_encode; decoding error with {line_decoded}; {line}{linesep}')
                 stop = True
-            elif status is True and config['debug']:
+            elif status is True and args.debug:
                 log.append(f'Clean_encode; decoded line; {line_decoded}{linesep}')
         else:
             try:
-                line_decoded = line.decode(config.get('input_encoding')[0])
-                if config['debug']:
+                line_decoded = line.decode(global_store_input_encoding[0])
+                if args.debug:
                     log.append(f'Clean_up; decoded using input_encoding option; {line_decoded}{linesep}')
             except (UnicodeDecodeError) as e: # noqa F841
                 log.append(f'Clean_up; decoding error with unknown; {line}{linesep}')
                 stop = True
         # From here it is expected that line is correctly decoded!
+
+        #print(f'type of line_decoded is {type(line_decoded)}')
+
         # Check if some lines contain a hex string like $HEX[41424344]
-        if config.get('hex') and not stop:
-            status, line_decoded = clean_hex(line_decoded)
+        if args.hex and not stop:
+            status, line_decoded, msg = clean_hex(line_decoded)
             if status:
                 # Lines contains hex, this function will return binary string, so add it back to
                 # our undecoded lines
                 work_queue.append(line_decoded)
-                if config['debug']:
-                    log.append(f'Clean_hex; replaced $HEX[], added to queue and quiting; {line}{linesep}')
+                if args.debug:
+                    log.append(f'{msg}; {line}{linesep}')
                 # Aborting future processing of this line.
                 stop = True
 
         # Check if there are html char in the line, decode them if there are
-        if config.get('html') and not stop:
-            status, line_decoded = clean_html(line_decoded)
+        if args.html and not stop:
+            status, line_decoded, msg = clean_html(line_decoded)
             if status:
                 # Line contains html string, because this can be binary data (linefeeds etc)
                 # convert back to binary string and add to queue again.
                 work_queue.append(line_decoded.encode())
-                if config['debug']:
-                    log.append(f'Clean_html; replaced html, added to queue and quiting; {line_decoded}{linesep}')
+                if args.debug:
+                    log.append(f'{msg}; {line_decoded}{linesep}')
                 stop = True
-
+        '''
         # Should we do the cut?
         if config.get('cut') and not stop:
             status, line_decoded = clean_cut(line_decoded, config['delimiter'], config['cut-fields'])
@@ -264,7 +270,7 @@ def clean_up(lines, pipeline, order, debug, verbose):
             status, line_decoded = clean_googlengram(line_decoded, string_punctuation)
             if status and config['debug']:
                 log.append(f'Clean_googlengram; tos found and removed; {line_decoded}{linesep}')
-
+        '''
 
         # Hard to understand what's going on here
         # Run modules
@@ -289,19 +295,28 @@ def clean_up(lines, pipeline, order, debug, verbose):
                 elif opt in flags_modify | params_modify | flags_remove | params_remove:
                     line_decoded, msg = rest
                     if status:
-                        log.append(f'{msg}; {line_decoded}{linesep}')
+                        if args.debug:
+                            log.append(f'{msg}; {line_decoded}{linesep}')
+                        # Do we also need have a "re-encode" module type?
+                        if opt == '--hex': # Later we can determine this by looking at object type
+                            work_queue.append(line_decoded)
+                            stop = True
+                        elif opt == '--html':
+                            work_queue.append(line_decoded.encode())
+                            stop = True
+
                 elif opt in flags_add | params_add:
                     result, msg = rest
                     if status:
                         # We have modified lines
                         if isinstance(result, list):
                             for new_line in result:
-                                if debug:
+                                if args.debug:
                                     log.append(f'{msg}; {new_line}{linesep}')
                                 work_queue.append(new_line.encode())
                         else:
                             # The result is a string
-                            if debug:
+                            if args.debug:
                                 log.append(f'{msg}; {result}{linesep}')
                             work_queue.append(result.encode())
 
@@ -355,7 +370,7 @@ def main():
     print("All output args validated!")
 
 
-
+    # Config options
     input_file = args.input
     output_file = args.output
     log_file = args.log
@@ -368,6 +383,11 @@ def main():
 
     input_enc = args.input_encoding if args.input_encoding else 'UTF-8' #default input-enc.
     set_input_encoding(input_enc)
+
+    if args.delimiter:
+        set_delim(args.delimiter)
+
+
 
     # Lets create the default config
     global config
@@ -745,7 +765,7 @@ def main():
             if running_jobs < a_threads:
                 # pass debug/verbose flags to clean_up.
                 # Do we want a bigger config container?
-                job = pool.apply_async(clean_up, (chunk, func_list, order, args.debug, args.verbose))
+                job = pool.apply_async(clean_up, (chunk, func_list, order, args))
                 chunk_start += len(chunk)
                 jobs.append(job)
                 break

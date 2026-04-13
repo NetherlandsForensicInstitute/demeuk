@@ -20,7 +20,7 @@ from modules.regexes import *
 # For now we need a way to "configure" a module
 # Want to do it only once, not every loop.
 # So for now use a global variable.
-modify_store_input_encoding = ['UTF-8']
+global_store_input_encoding = ['UTF-8']
 
 def _unescape_fixup_named(match):
     """
@@ -68,9 +68,9 @@ def clean_hex(line):
     """
     match = HEX_REGEX.search(line)
     if match:
-        return True, unhexlify(match.group(1))
+        return True, unhexlify(match.group(1)), f'Clean_hex; replaced $HEX[], added to queue and quitting'
     else:
-        return False, line
+        return False, line, None
 
 
 def clean_html(line):
@@ -84,9 +84,9 @@ def clean_html(line):
     """
     return_line = HTML_ENTITY_RE.sub(_unescape_fixup, line)
     if return_line != line:
-        return True, return_line
+        return True, return_line, f'Clean_html; replaced html, added to queue and quitting'
     else:
-        return False, line
+        return False, line, None
 
 
 def clean_html_named(line):
@@ -104,45 +104,6 @@ def clean_html_named(line):
     else:
         return False, line, None
 
-global_store_delims = [':']
-global_store_cut_fields = '2-'
-
-def set_delim(delim):
-    global global_store_delims
-    global_store_delims = delim
-
-
-def set_cut_fields(cut_fields):
-    global global_store_cut_fields
-    global_store_cut_fields = cut_fields
-
-def clean_cut(line):
-    """Finds the first delimiter and returns the remaining string either after
-    or before the delimiter.
-
-    Params:
-        line (unicode)
-        delimiters list(unicode)
-        fields (unicode)
-
-    Returns:
-        line (unicode)
-    """
-    for delimiter in global_store_delims:
-        if delimiter in line:
-            if '-' in global_store_cut_fields:
-                start = global_store_cut_fields.split('-')[0]
-                stop = global_store_cut_fields.split('-')[1]
-                if start == '':
-                    start = 1
-                if stop == '':
-                    stop = len(line)
-                fields = slice(int(start) - 1, int(stop))
-            else:
-                fields = slice(int(global_store_cut_fields) - 1, int(global_store_cut_fields))
-            return True, delimiter.join(line.split(delimiter)[fields]), f'Clean_cut; field cutted'
-    else:
-        return False, line, None
 
 
 def clean_transliterate(line, language):
@@ -256,9 +217,9 @@ def clean_tab(line):
     """
     if b'\x09' in line:
         line = sub(b'\x09+', b'\x3a', line)
-        return True, line
+        return True, line, 'Clean_tab; replaced tab characters'
     else:
-        return False, line
+        return False, line, None
 
 
 def clean_newline(line):
@@ -323,8 +284,8 @@ def try_encoding(line, encoding):
 
 
 def set_input_encoding(input_encoding):
-    global modify_store_input_encoding
-    modify_store_input_encoding = input_encoding.split(',')
+    global global_store_input_encoding
+    global_store_input_encoding = input_encoding.split(',')
 
 
 def clean_encode(line):
@@ -341,9 +302,8 @@ def clean_encode(line):
     # Single byte encodings. Also it is beter to not include iso encoding by default.
     # https://en.wikipedia.org/wiki/Character_encoding#Common_character_encodings
     # Input_encoding is by default [utf8]
-    line = line.encode() # TODO What do we do here? strings are already decoded.
-    line_decoded = line # If nothing works.
-    for encoding in modify_store_input_encoding:
+    line_decoded = ''
+    for encoding in global_store_input_encoding:
         line = try_encoding(line, encoding)
         if line is not False:
             break
