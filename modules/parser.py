@@ -102,6 +102,11 @@ def init_parser(version):
     parser.add_argument('--punctuation', action='store')
     parser.add_argument('--version', action='version', version='%(prog)s ' + str(version))
 
+    # Macro modules
+    parser.add_argument('--googlengram', action='store_true')
+    parser.add_argument('--leak', action='store_true')
+    parser.add_argument('--leak-full', action='store_true')
+
     # Configuring modules
     parser.add_argument('-f', '--cut-fields', action='store')
     parser.add_argument('--cut-before', action='store_true')

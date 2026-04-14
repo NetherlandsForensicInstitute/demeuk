@@ -328,10 +328,11 @@ def clean_up(lines, pipeline, order, args):
     return {'results': results, 'log': log}
 
 
-def chunkify(filename, size=CHUNK_SIZE):
+def chunkify(filename, args, size=CHUNK_SIZE):
     with open(filename, 'rb') as fh:
-        for x in range(0, config.get('skip')):
-            fh.readline()
+        if args.skip:
+            for x in range(0, args.skip):
+                fh.readline()
 
         while True:
             lines = [line.rstrip(b'\n') for line in fh.readlines(size)]
@@ -402,7 +403,7 @@ def main():
     if args.punctuation:
         set_punctuation(args.punctuation)
     else:
-        set_punctuation(string.punctuation + ' ')
+        set_punctuation(string_punctuation + ' ')
 
     if args.delimiter:
         # TODO does not split on ','
@@ -417,7 +418,42 @@ def main():
     if args.cut_fields:
         set_cut_fields(args.cut_fields)
 
+    # Some meta-modules, those overwrite settings
+    if args.googlengram:
+        args.cut = False
+        args.remove_email = False
+        args.encode = True
+        args.mojibake = False
+        args.check_controlchar = False
+        args.tab = False
 
+    # Meta-module for leak files. Set the following defaults:
+    # mojibake, encode, newline, check-controlchar
+    if args.leak:
+        args.mojibake = True
+        args.encode = True
+        args.newline = True
+        args.check_controlchar = True
+
+    # Meta-module for leak fils, but more modules. Set the following defaults:
+    # --mojibake, --encode, --newline, --check-controlchar,
+    # --hex, --html, --html-named,
+    # --check-hash, --check-mac-address, --check-uuid, --check-email,
+    # --check-replacement-character, --check-empty-line
+    if args.leak_full:
+        args.mojibake = True
+        args.encode = True
+        args.newline = True
+        args.check_controlchar = True
+        args.hex = True
+        args.html = True
+        args.html_named = True
+        args.check_hash = True
+        args.check_mac_address = True
+        args.check_uuid = True
+        args.check_email = True
+        args.check_replacement_character = True
+        args.check_empty_line = True
 
     # Lets create the default config
     global config
@@ -486,36 +522,6 @@ def main():
     }
 
     '''
-    if arguments.get('--delimiter'):
-        splitter = ','
-        if len(arguments.get('--delimiter')) >= 1:
-            if arguments.get('--delimiter')[0] == ',':
-                splitter = ';'
-        config['delimiter'] = arguments.get('--delimiter').split(splitter)
-
-    # Some meta-modules, those overwrite settings
-    if arguments.get('--googlengram'):
-        config['cut'] = False
-        config['remove-email'] = False
-        config['encode'] = True
-        config['mojibake'] = False
-        config['check-controlchar'] = False
-        config['tab'] = False
-        config['googlengram'] = True
-
-    # Meta-module for leak files. Set the following defaults:
-    # mojibake, encode, newline, check-controlchar
-    if arguments.get('--leak'):
-        config['mojibake'] = True
-        config['encode'] = True
-        config['newline'] = True
-        config['check-controlchar'] = True
-
-    # Meta-module for leak fils, but more modules. Set the following defaults:
-    # --mojibake, --encode, --newline, --check-controlchar,
-    # --hex, --html, --html-named,
-    # --check-hash, --check-mac-address, --check-uuid, --check-email,
-    # --check-replacement-character, --check-empty-line
     if arguments.get('--leak-full'):
         config['mojibake'] = False
         config['encode'] = True
@@ -618,7 +624,7 @@ def main():
                 if not access(filename, R_OK):
                     continue
                 chunks_estimate = int(ceil(path.getsize(filename) / CHUNK_SIZE))
-                for chunk in tqdm(chunkify(filename, CHUNK_SIZE), desc='Chunks processed', mininterval=1,
+                for chunk in tqdm(chunkify(filename, args, CHUNK_SIZE), desc='Chunks processed', mininterval=1,
                                   unit=' chunks', disable=not config.get('progress'), total=chunks_estimate,
                                   position=1):
                     process_jobs(chunk_start)
