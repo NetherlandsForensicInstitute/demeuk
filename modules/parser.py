@@ -75,8 +75,8 @@ params_check = dict({
     '--check-max-digits':       [check_max_digits, int],
     '--check-min-uppercase':    [check_min_uppercase, int],
     '--check-max-uppercase':    [check_max_uppercase, int],
-    '--check-min-specials':     [check_min_specials, int],
-    '--check-max-specials':     [check_max_specials, int],
+    '--check-min-special':      [check_min_specials, int],
+    '--check-max-special':      [check_max_specials, int],
 })
 params_modify = dict({
     '--transliterate': [clean_transliterate, str],
