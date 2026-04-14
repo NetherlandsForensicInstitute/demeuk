@@ -24,8 +24,7 @@ def check_regex(line, regexes):
         true if all regexes match
         false if line does not match regex
     """
-    regexes = regexes.split(',')
-    for regex in regexes:
+    for regex in regexes.split(','):
         if search(regex, line):
             continue
         else:

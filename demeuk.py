@@ -198,9 +198,9 @@ def clean_up(lines, pipeline, order, args):
         processed_lines.add(line)
 
         # Check if the limit is set, if so minus 1 and if 0 is reached lets quit.
-        if type(config['limit']) is int:
-            if config['limit'] > 0:
-                config['limit'] -= 1
+        if args.limit is not None:
+            if args.limit > 0:
+                args.limit -= 1
             else:
                 break
 
@@ -234,8 +234,6 @@ def clean_up(lines, pipeline, order, args):
                 log.append(f'Clean_up; decoding error with unknown; {line}{linesep}')
                 stop = True
         # From here it is expected that line is correctly decoded!
-
-        #print(f'type of line_decoded is {type(line_decoded)}')
 
         # Check if some lines contain a hex string like $HEX[41424344]
         if args.hex and not stop:
@@ -381,11 +379,43 @@ def main():
         a_threads = cpu_count()
     print(f"Using {a_threads} threads...")
 
+
+    if args.progress:
+        if args.verbose or args.debug:
+            if not log_file:
+                stderr_print('Progress can not be used with verbose or debug')
+                exit(2)
+        if not input_file:
+            # Forcing printing error message
+            args.verbose = True
+            stderr_print('Progress can not be used when using stdin.')
+            exit(2)
+
     input_enc = args.input_encoding if args.input_encoding else 'UTF-8' #default input-enc.
     set_input_encoding(input_enc)
 
+    if args.output_encoding:
+        setlocale(LC_ALL, args.output_encoding)
+    else:
+        setlocale(LC_ALL, 'en_US.UTF-8')
+
+    if args.punctuation:
+        set_punctuation(args.punctuation)
+    else:
+        set_punctuation(string.punctuation + ' ')
+
     if args.delimiter:
+        # TODO does not split on ','
+        # Do we want to pass this check on to splitter?
+        splitter = ','
         set_delim(args.delimiter)
+
+    if args.cut_before:
+        args.cut_fields = '-1'
+
+    # This overrides --cut-before
+    if args.cut_fields:
+        set_cut_fields(args.cut_fields)
 
 
 
@@ -456,64 +486,12 @@ def main():
     }
 
     '''
-    if arguments.get('--progress'):
-        if config['verbose'] or config['debug']:
-            if not log_file:
-                stderr_print('Progress can not be used with verbose or debug')
-                exit(2)
-        if not input_file:
-            # Forcing printing error message
-            config['verbose'] = True
-            stderr_print('Progress can not be used when using stdin.')
-            exit(2)
-        config['progress'] = True
-
-    if arguments.get('--input-encoding'):
-        config['input_encoding'] = arguments.get('--input-encoding').split(',')
-
-    if arguments.get('--output-encoding'):
-        setlocale(LC_ALL, arguments.get('--output-encoding'))
-    else:
-        setlocale(LC_ALL, 'en_US.UTF-8')
-
-    if arguments.get('--punctuation'):
-        config['punctuation'] = arguments.get('--punctuation')
-    else:
-        config['punctuation'] = string_punctuation + ' '
-
     if arguments.get('--delimiter'):
         splitter = ','
         if len(arguments.get('--delimiter')) >= 1:
             if arguments.get('--delimiter')[0] == ',':
                 splitter = ';'
         config['delimiter'] = arguments.get('--delimiter').split(splitter)
-
-    if arguments.get('--cut-before'):
-        config['cut-fields'] = '-1'
-
-    if arguments.get('--cut-fields'):
-        config['cut-fields'] = arguments.get('--cut-fields')
-
-    if arguments.get('--check-starting-with'):
-        if ',' in arguments.get('--check-starting-with'):
-            config['check-starting-with'] = arguments.get('--check-starting-with').split(',')
-        else:
-            config['check-starting-with'] = [arguments.get('--check-starting-with')]
-
-    if arguments.get('--check-ending-with'):
-        if ',' in arguments.get('--check-ending-with'):
-            config['check-ending-with'] = arguments.get('--check-ending-with').split(',')
-        else:
-            config['check-ending-with'] = [arguments.get('--check-ending-with')]
-
-    if arguments.get('--check-contains'):
-        if ',' in arguments.get('--check-contains'):
-            config['check-contains'] = arguments.get('--check-contains').split(',')
-        else:
-            config['check-contains'] = [arguments.get('--check-contains')]
-
-    if arguments.get('--check-regex'):
-        config['check-regex'] = arguments.get('--check-regex').split(',')
 
     # Some meta-modules, those overwrite settings
     if arguments.get('--googlengram'):
