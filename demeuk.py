@@ -257,16 +257,16 @@ def clean_up(lines, pipeline, order, args):
                 if args.debug:
                     log.append(f'{msg}; {line_decoded}{linesep}')
                 stop = True
-        '''
+
         # Should we do the cut?
-        if config.get('cut') and not stop:
+        if args.cut and not stop:
             status, line_decoded = clean_cut(line_decoded, config['delimiter'], config['cut-fields'])
-            if status and config['debug']:
+            if status and args.debug:
                 log.append(f'Clean_cut; field cutted; {line_decoded}{linesep}')
-        '''
+
         if args.googlengram and not stop:
             status, line_decoded = clean_googlengram(line_decoded, string_punctuation)
-            if status and config['debug']:
+            if status and args.debug:
                 log.append(f'Clean_googlengram; tos found and removed; {line_decoded}{linesep}')
 
 
@@ -385,8 +385,6 @@ def main():
 
     if args.punctuation:
         set_punctuation(args.punctuation)
-    else:
-        set_punctuation(string_punctuation + ' ')
 
     if args.delimiter:
         # TODO does not split on ','
@@ -417,6 +415,7 @@ def main():
         args.encode = True
         args.newline = True
         args.check_controlchar = True
+
 
     # Meta-module for leak fils, but more modules. Set the following defaults:
     # --mojibake, --encode, --newline, --check-controlchar,

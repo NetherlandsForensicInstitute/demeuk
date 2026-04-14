@@ -13,7 +13,7 @@ from ftfy.fixes import fix_latin_ligatures
 from re import split as re_split
 from string import punctuation as string_punctuation
 
-global_store_punctuation = string_punctuation
+global_store_punctuation = string_punctuation + ' '
 def set_punctuation(punc):
     global global_store_punctuation
     global_store_punctuation = punc

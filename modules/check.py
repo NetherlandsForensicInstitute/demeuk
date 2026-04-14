@@ -132,7 +132,7 @@ def check_controlchar(line):
         # Co -> Private use
         # Cs -> Surrogate
         if category(c) in ['Cc', 'Cf', 'Cn', 'Co', 'Cs']:
-            return False, f'Check_controlchar; found controlchar {c}'
+            return False, f'Check_controlchar; found controlchar {c!r}'
     return True, None
 
 
