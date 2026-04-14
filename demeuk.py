@@ -263,12 +263,12 @@ def clean_up(lines, pipeline, order, args):
             status, line_decoded = clean_cut(line_decoded, config['delimiter'], config['cut-fields'])
             if status and config['debug']:
                 log.append(f'Clean_cut; field cutted; {line_decoded}{linesep}')
-
-        if config.get('googlengram') and not stop:
+        '''
+        if args.googlengram and not stop:
             status, line_decoded = clean_googlengram(line_decoded, string_punctuation)
             if status and config['debug']:
                 log.append(f'Clean_googlengram; tos found and removed; {line_decoded}{linesep}')
-        '''
+
 
         # Hard to understand what's going on here
         # Run modules
@@ -350,23 +350,6 @@ def main():
     # Initialize and get arguments
     arg_parser = init_parser(version)
     args = arg_parser.parse_args()
-
-    # Determine order of modules
-    order = parse_order(sys.argv)
-    # Generate and validate function list
-    func_list = get_pipeline(order)
-    if not validate_input_signature(order, func_list):
-        # (Custom) module not correct!
-        return
-    print("All input args validated!")
-    #NB: output check is not conclusive. do we want more rigid type checking?
-    if not validate_output_check(order, func_list):
-        # validate check module
-        return
-    if not validate_output_signature(order, func_list):
-        # validate other modules
-        return
-    print("All output args validated!")
 
 
     # Config options
@@ -454,6 +437,27 @@ def main():
         args.check_email = True
         args.check_replacement_character = True
         args.check_empty_line = True
+
+    # Determine order of modules (NB: need to do this when the pipeline is finalized)
+    order = parse_order(sys.argv)
+
+    print(f"parsed order = {order}")
+
+    # Generate and validate function list
+    func_list = get_pipeline(order)
+    if not validate_input_signature(order, func_list):
+        # (Custom) module not correct!
+        return
+    print("All input args validated!")
+    #NB: output check is not conclusive. do we want more rigid type checking?
+    if not validate_output_check(order, func_list):
+        # validate check module
+        return
+    if not validate_output_signature(order, func_list):
+        # validate other modules
+        return
+    print("All output args validated!")
+
 
     # Lets create the default config
     global config

@@ -53,6 +53,13 @@ flags_remove = dict({
     #'--cut': clean_cut, #TODO implement cut module
 })
 
+flags_collections = dict({
+    '--leak': '--mojibake --encode --newline --check-controlchar',
+    '--leak-full': '--mojibake --encode --newline --check-controlchar, --hex, --html, --html-named, --check-hash, --check-mac-address ---check-uuid --check-email --check-replacement-character --check-empty-line',
+    '-g': '--encoding',
+    '--googlengram': '--encoding',
+})
+
 # For command-line arguments with one argument.
 # key = option,
 # value = [function object, type of param]
@@ -103,7 +110,7 @@ def init_parser(version):
     parser.add_argument('--version', action='version', version='%(prog)s ' + str(version))
 
     # Macro modules
-    parser.add_argument('--googlengram', action='store_true')
+    parser.add_argument('-g', '--googlengram', action='store_true')
     parser.add_argument('--leak', action='store_true')
     parser.add_argument('--leak-full', action='store_true')
 
@@ -140,6 +147,11 @@ def parse_order(argv):
         elif arg in lookup_params:
             # Existence of argv[i+1] should be guaranteed by argparse check.
             ordered_list.append([arg, argv[i + 1]])
+        elif arg in flags_collections:
+            for a in flags_collections[arg].split(' '):
+                # TODO: now leak does not add --encode
+                if a in lookup_flag:
+                    ordered_list.append(a)
 
     return ordered_list
 
