@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from pytest import raises, mark
 
-from bin.demeuk import main
+from demeuk import main
 
 
 def calculate_line_numbers(file_name):
