@@ -521,23 +521,6 @@ def main():
         'remove-email': False,
     }
 
-    '''
-    if arguments.get('--leak-full'):
-        config['mojibake'] = False
-        config['encode'] = True
-        config['newline'] = True
-        config['check-controlchar'] = True
-        config['hex'] = True
-        config['html'] = True
-        config['html-named'] = True
-        config['check-hash'] = True
-        config['check-mac-address'] = True
-        config['check-uuid'] = True
-        config['check-email'] = True
-        config['check-replacement-character'] = True
-        config['check-empty-line'] = True
-    '''
-
     if output_file and not access(path.dirname(output_file), W_OK):
         stderr_print(f"Cannot write output file to {output_file}")
 
