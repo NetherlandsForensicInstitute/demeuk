@@ -386,9 +386,9 @@ def main():
     if args.punctuation:
         set_punctuation(args.punctuation)
 
-    if args.delimiter:
+    if args.delimiter is not None:
         # TODO does not split on ','
-        # Do we want to pass this check on to splitter?
+        # Do we want to pass this check on to set_delim?
         splitter = ','
         set_delim(args.delimiter)
 

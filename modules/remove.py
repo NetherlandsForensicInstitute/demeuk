@@ -62,6 +62,10 @@ def set_delim(delim):
     global global_store_delims
     global_store_delims = delim
 
+# TODO looks like we need getters/setters for global var?
+def get_delim():
+    return global_store_delims
+
 
 def set_cut_fields(cut_fields):
     global global_store_cut_fields
