@@ -117,6 +117,7 @@ def init_parser(version):
     parser.add_argument('--tab', action='store_true')
     parser.add_argument('--hex', action='store_true')
     parser.add_argument('--html', action='store_true')
+    parser.add_argument('-c', '--cut', action='store_true')
 
     # The modules in here are all executed in the order given on the command-line.
     for flag in lookup_flag:
