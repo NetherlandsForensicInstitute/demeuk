@@ -15,6 +15,9 @@ from demeuk import main
 #   It looks like chardet behaviour changed, it detects the QWERTY line as cp424 (hebrew)
 #   This test also fails on the current master branch of demeuk.
 
+# test_check_hash (23)
+#   The test assumed cut would run before check-hash
+
 
 def calculate_line_numbers(file_name):
     lines = 0
@@ -400,7 +403,11 @@ def test_check_hash():
         'demeuk', '-i', 'testdata/input23', '-o', 'testdata/output23', '-l', 'testdata/log23',
         '--verbose', '--check-hash', '-c',
     ]
-    with patch.object(sys, 'argv', testargs):
+    testargs2 = [
+        'demeuk', '-i', 'testdata/input23', '-o', 'testdata/output23', '-l', 'testdata/log23',
+        '--verbose', '-c', '--check-hash',
+    ]
+    with patch.object(sys, 'argv', testargs2):
         main()
     with open('testdata/output23') as f:
         filecontent = f.read()
