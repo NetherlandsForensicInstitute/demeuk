@@ -1,7 +1,9 @@
 from nltk import WhitespaceTokenizer, str2tuple
 
+from string import punctuation as string_punctuation
 
-def clean_googlengram(line, punc):
+
+def clean_googlengram(line):
     """Removes speechtags from line specific to the googlengram module
 
     Param:
@@ -24,7 +26,7 @@ def clean_googlengram(line, punc):
             if len(token) > 1:
                 if tag != 'PUNCT' or tag != '.' or tag != '':
                     clean.append(token)
-            elif token not in punc:
+            elif token not in string_punctuation:
                 clean.append(token)
     return_line = ' '.join(clean)
     if return_line != line:

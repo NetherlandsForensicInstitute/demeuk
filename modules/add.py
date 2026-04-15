@@ -1,4 +1,4 @@
-### - Add modules -
+# - Add modules -
 # Add modules take a line as input, and output either a list of lines or a single line
 # which is to be added to the work queue.
 # Input is a single str
@@ -8,15 +8,18 @@
 # Q: should we always return a list[str]? Or be nice to future contributors and allow str?
 # First case simplifies control flow in main loop, second case simplifies the modules.
 # NB: Add modules are not the opposite of remove modules!
-from ftfy.fixes import fix_latin_ligatures
-
 from re import split as re_split
 from string import punctuation as string_punctuation
 
+from ftfy.fixes import fix_latin_ligatures
+
 global_store_punctuation = string_punctuation + ' '
+
+
 def set_punctuation(punc):
     global global_store_punctuation
     global_store_punctuation = punc
+
 
 def get_punctuation():
     return global_store_punctuation
@@ -121,11 +124,13 @@ def clean_add_umlaut(line):
     else:
         return False, line
 
+
 def add_umlaut(line):
     status, result = clean_add_umlaut(line)
     if status:
         return True, result, 'Add_umlaut; new line'
     return False, line, None
+
 
 def add_split(line):
     """Split the line on the punctuation and return elements longer then 1 char.
@@ -139,10 +144,9 @@ def add_split(line):
     punctuation = (' ', '-', r'\.')
     for p in punctuation:
         if p in line:
-            return True, [i for i in re_split('|'.join(punctuation), line) if len(i) > 1], 'Add_split; new line because of split'
+            return True, [i for i in re_split('|'.join(punctuation), line) if
+                          len(i) > 1], 'Add_split; new line because of split'
     return False, line, None
-
-
 
 
 def add_without_punctuation(line):

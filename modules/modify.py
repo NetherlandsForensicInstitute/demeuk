@@ -1,4 +1,4 @@
-### - Modify module -
+# - Modify module -
 # Modify modules modify a line
 # Module signature is the same as that of a remove module
 from binascii import unhexlify
@@ -8,12 +8,12 @@ from unicodedata import category
 from chardet import detect
 from ftfy import fix_encoding
 from ftfy.chardata import HTML_ENTITY_RE, HTML_ENTITIES
-
+from re import sub
 from transliterate import translit
 from unidecode import unidecode
 
 from modules.add import clean_add_umlaut
-from modules.regexes import *
+from modules.regexes import HEX_REGEX, TRIM_BLOCKS
 
 # TODO
 # This should become a member of an instantiated Module later.
@@ -21,6 +21,7 @@ from modules.regexes import *
 # Want to do it only once, not every loop.
 # So for now use a global variable.
 global_store_input_encoding = ['UTF-8']
+
 
 def _unescape_fixup_named(match):
     """
@@ -68,7 +69,8 @@ def clean_hex(line):
     """
     match = HEX_REGEX.search(line)
     if match:
-        return True, unhexlify(match.group(1)), 'Clean_hex; replaced $HEX[], added to queue and quitting'
+        return True, unhexlify(
+            match.group(1)), 'Clean_hex; replaced $HEX[], added to queue and quitting'
     else:
         return False, line, None
 
@@ -105,7 +107,6 @@ def clean_html_named(line):
         return False, line, None
 
 
-
 def clean_transliterate(line, language):
     """Transliterate a string
 
@@ -118,7 +119,7 @@ def clean_transliterate(line, language):
     """
     cleaned_line = translit(line, language, reversed=True)
     if line != cleaned_line:
-        return True, cleaned_line, 'Clean_transliterate; transliterated';
+        return True, cleaned_line, 'Clean_transliterate; transliterated'
     else:
         return False, line, None
 
@@ -287,7 +288,8 @@ def set_input_encoding(input_encoding):
     global global_store_input_encoding
     global_store_input_encoding = input_encoding.split(',')
 
-def get_input_encoding() :
+
+def get_input_encoding():
     return global_store_input_encoding
 
 
@@ -316,12 +318,13 @@ def clean_encode(line):
             try:
                 line_decoded = line.decode(encode['encoding'])
                 return True, line_decoded
-            except (UnicodeDecodeError, LookupError) as e: # noqa F841
+            except (UnicodeDecodeError, LookupError) as e:  # noqa F841
                 return False, encode["encoding"]
         else:
             return False, 'Unknown'
     # If we managed to get here, return decode line
     return True, line_decoded
+
 
 def clean_umlaut(line):
     status, result = clean_add_umlaut(line)

@@ -1,6 +1,4 @@
 from re import compile as re_compile
-from re import search
-from re import sub
 
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.

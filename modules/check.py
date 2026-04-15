@@ -1,4 +1,4 @@
-### - Check module -
+# - Check module -
 # Check modules check some property of a line.
 # These should take a line as input, possibly with one argument.
 # The module should return a bool result and a str log
@@ -8,10 +8,12 @@
 # TODO: change docstrings, return values are wrong.
 
 from unicodedata import category
+from re import search
 
-from modules.regexes import *
+import modules.regexes as regexes
 
-def check_regex(line, regexes):
+
+def check_regex(line, regex_list):
     """Checks if a line matches a comma-separated list of regexes
 
     Params:
@@ -22,7 +24,7 @@ def check_regex(line, regexes):
         true if all regexes match
         false if line does not match regex
     """
-    for regex in regexes.split(','):
+    for regex in regex_list.split(','):
         if search(regex, line):
             continue
         else:
@@ -65,11 +67,11 @@ def check_min_uppercase(line, n):
         return True, None
     return False, f'Check_min_uppercase; dropped line because it contains less than {n} uppercase characters'
 
+
 def check_min_specials(line, n):
     if contains_at_least(line, n, lambda c: not c.isalnum() and not c.isspace()):
         return True, None
     return False, f'Check_min_specials; dropped line because it contains less than {n} special characters'
-
 
 
 def contains_at_most(line, bound, char_property):
@@ -184,6 +186,7 @@ def check_max_length(line, n):
         return True, None
     return False, f'Check_max_length; dropped line because length is more than {n}'
 
+
 def check_hash(line):
     """Check if a line contains a hash
 
@@ -193,13 +196,13 @@ def check_hash(line):
     Returns:
         true if line does not contain hash
     """
-    if search(HASH_HEX_REGEX, line):
+    if search(regexes.HASH_HEX_REGEX, line):
         if len(line) in [32, 40, 64]:
             # TODO is it not cheaper to check length first before running regexes?
             return False, 'Check_hash; dropped line because found a hash'
     if len(line) > 0:
         if line[0] == '$':
-            for hash_regex in HASH_REGEX_LIST:
+            for hash_regex in regexes.HASH_REGEX_LIST:
                 if search(hash_regex, line):
                     return False, 'Check_hash; dropped line because found a hash'
     return True, None
@@ -214,7 +217,7 @@ def check_mac_address(line):
     Returns:
         true if line does not contain a MAC-address
     """
-    if search(MAC_REGEX, line):
+    if search(regexes.MAC_REGEX, line):
         return False, 'Check_mac_address; dropped line because found a MAC address'
 
     return True, None
@@ -229,7 +232,7 @@ def check_email(line):
     Returns:
         true is line does not contain email
     """
-    if search(EMAIL_REGEX, line):
+    if search(regexes.EMAIL_REGEX, line):
         return False, 'Check_email; dropped line because found email'
     else:
         return True, None
@@ -267,12 +270,12 @@ def check_character(line, character):
         return False
 
 
-
 def check_replacement_character(line):
     if check_character(line, '�'):
         return False, 'Check_replacement_character; dropped line because "�" found'
     else:
         return True, None
+
 
 def check_starting_with(line, strings):
     """Checks if a line start with a specific strings
@@ -300,7 +303,7 @@ def check_uuid(line):
     Returns:
         true if line does not contain a UUID
     """
-    if search(UUID_REGEX, line):
+    if search(regexes.UUID_REGEX, line):
         return False, 'Check_uuid; dropped line because found a uuid'
 
     return True, None
@@ -350,5 +353,5 @@ def check_empty_line(line):
         true of line is empty or only contains whitespace chars
     """
     if line == '' or line.isspace():
-        return False, f'Check_empty_line; dropped line because is empty or only contains whitespace'
+        return False, 'Check_empty_line; dropped line because is empty or only contains whitespace'
     return True, None

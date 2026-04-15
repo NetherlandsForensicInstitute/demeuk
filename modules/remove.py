@@ -1,12 +1,15 @@
-### - Remove module -
+# - Remove module -
 # Remove modules can remove parts of a line.
 # These take a line as input, possibly with an argument.
 # The module should return a bool result, a str out_line and a str log
 # result is False if nothing was changed.
 # out_line is the result of the operation
 # log is a debug string which can be None. Logged when result is True (something changed)
+from re import search, sub
+
 from modules.add import global_store_punctuation, get_punctuation
-from modules.regexes import *
+from modules.regexes import EMAIL_REGEX
+
 
 def remove_strip_punctuation(line):
     """Returns the line without start and end punctuation
@@ -22,6 +25,7 @@ def remove_strip_punctuation(line):
         return True, return_line, 'Remove_strip_punctuation; stripped punctuation'
     else:
         return False, line, None
+
 
 def remove_punctuation(line):
     """Returns the line without punctuation
@@ -55,12 +59,15 @@ def remove_email(line):
             return True, sub(f'{EMAIL_REGEX}(:|;)', '', line), 'Remove_email; email found'
     return False, line, None
 
+
 global_store_delims = [':']
 global_store_cut_fields = '2-'
+
 
 def set_delim(delim):
     global global_store_delims
     global_store_delims = delim
+
 
 # TODO looks like we need getters/setters for global var?
 def get_delim():
@@ -71,8 +78,10 @@ def set_cut_fields(cut_fields):
     global global_store_cut_fields
     global_store_cut_fields = cut_fields
 
+
 def get_cut_fields():
     return global_store_cut_fields
+
 
 # In the docs, cut is a separating module
 # I think it cna also be viewed as a remove module.

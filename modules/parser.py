@@ -1,9 +1,16 @@
 from argparse import ArgumentParser
 
-from modules.add import *
-from modules.check import *
-from modules.modify import *
-from modules.remove import *
+from modules.add import add_first_upper, add_latin_ligatures, add_without_punctuation, add_split, \
+    add_umlaut, add_lower, add_title_case
+from modules.check import check_starting_with, check_mac_address, check_min_length, check_uuid, \
+    check_empty_line, check_max_length, check_max_specials, check_hash, check_email, \
+    check_min_digits, check_case, check_min_specials, check_non_ascii, check_regex, \
+    check_min_uppercase, check_max_uppercase, check_replacement_character, check_max_digits, \
+    check_ending_with, check_contains, check_controlchar
+from modules.modify import clean_transliterate, clean_umlaut, clean_trim, clean_hex, clean_encode, \
+    clean_tab, clean_newline, clean_mojibake, clean_html, clean_title_case, clean_non_ascii, \
+    clean_lowercase, clean_html_named
+from modules.remove import clean_cut, remove_strip_punctuation, remove_email, remove_punctuation
 
 # lookup tables for flags (taking no argument)
 flags_check = dict({
@@ -49,7 +56,9 @@ flags_remove = dict({
 
 flags_collections = dict({
     '--leak': '--mojibake --encode --newline --check-controlchar',
-    '--leak-full': '--mojibake --encode --newline --check-controlchar --hex --html --html-named --check-hash --check-mac-address --check-uuid --check-email --check-replacement-character --check-empty-line',
+    '--leak-full': '--mojibake --encode --newline --check-controlchar --hex --html --html-named '
+                   '--check-hash --check-mac-address --check-uuid --check-email '
+                   '--check-replacement-character --check-empty-line',
     '-g': '--encoding',
     '--googlengram': '--encoding',
 })
@@ -61,8 +70,9 @@ flags_fixed = dict({
     # Modify
     '--hex': clean_hex,
     '--html': clean_html,
-    '--encode': clean_encode,  # Q: Do we want this as a normal Modify module of give it special status?
-    '--tab': clean_tab, # This is also an operation on bytes
+    '--encode': clean_encode,
+    # Q: Do we want this as a normal Modify module of give it special status?
+    '--tab': clean_tab,  # This is also an operation on bytes
 })
 
 # For command-line arguments with one argument.
@@ -70,18 +80,18 @@ flags_fixed = dict({
 # value = [function object, type of param]
 # Type is needed for validation, might be useful for defining custom modules
 params_check = dict({
-    '--check-min-length':       [check_min_length, int],
-    '--check-max-length':       [check_max_length, int],
-    '--check-starting-with':    [check_starting_with, str],
-    '--check-ending-with':      [check_ending_with, str],
-    '--check-contains':         [check_contains, str],
-    '--check-regex':            [check_regex, str],
-    '--check-min-digits':       [check_min_digits, int],
-    '--check-max-digits':       [check_max_digits, int],
-    '--check-min-uppercase':    [check_min_uppercase, int],
-    '--check-max-uppercase':    [check_max_uppercase, int],
-    '--check-min-special':      [check_min_specials, int],
-    '--check-max-special':      [check_max_specials, int],
+    '--check-min-length': [check_min_length, int],
+    '--check-max-length': [check_max_length, int],
+    '--check-starting-with': [check_starting_with, str],
+    '--check-ending-with': [check_ending_with, str],
+    '--check-contains': [check_contains, str],
+    '--check-regex': [check_regex, str],
+    '--check-min-digits': [check_min_digits, int],
+    '--check-max-digits': [check_max_digits, int],
+    '--check-min-uppercase': [check_min_uppercase, int],
+    '--check-max-uppercase': [check_max_uppercase, int],
+    '--check-min-special': [check_min_specials, int],
+    '--check-max-special': [check_max_specials, int],
 })
 params_modify = dict({
     '--transliterate': [clean_transliterate, str],
@@ -89,9 +99,9 @@ params_modify = dict({
 params_add = dict({})
 params_remove = dict({})
 
-
 lookup_flag = flags_check | flags_modify | flags_add | flags_remove
 lookup_params = params_check | params_modify | params_add | params_remove
+
 
 def init_parser(version):
     parser = ArgumentParser(
@@ -103,7 +113,8 @@ def init_parser(version):
     parser.add_argument('-i', '--input', action='store')
     parser.add_argument('-o', '--output', action='store')
     parser.add_argument('-l', '--log', action='store')
-    parser.add_argument('-j', '--threads', action='store', type=int) # TODO --threads all currently not possible
+    parser.add_argument('-j', '--threads', action='store',
+                        type=int)  # TODO --threads all currently not possible
     parser.add_argument('--input-encoding', action='store')
     parser.add_argument('--output-encoding', action='store')
     parser.add_argument('-v', '--verbose', action='store_true')
@@ -155,13 +166,14 @@ def parse_order(argv):
 
     return ordered_list
 
+
 def get_pipeline(ordered_list):
     func_list = []
     for el in ordered_list:
         if isinstance(el, list):
             # Function with arguments
             # el = [param, arg]
-            func, t = lookup_params[el[0]] # [func, type]
+            func, t = lookup_params[el[0]]  # [func, type]
             func_list.append([func, t(el[1])])
         else:
             func_list.append(lookup_flag[el])

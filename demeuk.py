@@ -147,29 +147,36 @@ r"""
 # TODO: Might not be important but it looks like there is always a thread running clean_up with no words...?
 
 import sys
-from binascii import hexlify, unhexlify
+from binascii import hexlify
 from collections import deque
 from glob import glob
-from html import unescape
-from inspect import cleandoc
 from locale import LC_ALL, setlocale
 from math import ceil
-from multiprocess import cpu_count, Pool # multiprocess has better serialization capabilities
 from os import linesep, access, path, R_OK, F_OK, W_OK
 from signal import signal, SIGINT, SIG_IGN
+from string import punctuation as string_punctuation
+from sys import stdin, stdout
 from time import sleep
-from sys import stderr, stdin, stdout
 
+from modules.parser import init_parser, parse_order, get_pipeline
+from modules.remove import set_delim, set_cut_fields
+from multiprocess import cpu_count, Pool  # multiprocess has better serialization capabilities
 from tqdm import tqdm
 
-from modules.macro import *
-from modules.util import *
-from modules.validate import *
+from modules.add import set_punctuation
+# Do we want do do imports like this? or add modules.***.func_name everywhere?
+from modules.macro import clean_googlengram
+from modules.modify import get_input_encoding, set_input_encoding
+from modules.util import set_verbose, unset_verbose, stderr
+from modules.validate import params_check, params_modify, validate_output_check, \
+    validate_output_signature, validate_input_signature, clean_hex, flags_add, params_remove, \
+    flags_modify, clean_encode, clean_tab, stderr_print, clean_html, params_add, flags_remove, \
+    flags_check
 
-version = '4.6.2' # TODO increment
-
+version = '4.6.2'  # TODO increment
 
 CHUNK_SIZE = 1024 * 1024
+
 
 # lines = a single line
 # pipeline = the function pipeline to run
@@ -209,7 +216,6 @@ def clean_up(lines, pipeline, order, args):
         if args.debug:
             log.append(f'----BEGIN---- {hexlify(line)}{linesep}')
 
-
         # Do we want to have a special category of modules which get run BEFORE encoding?
         # Replace tab chars as ':' greedy
         if args.tab and not stop:
@@ -227,10 +233,11 @@ def clean_up(lines, pipeline, order, args):
                 log.append(f'Clean_encode; decoded line; {line_decoded}{linesep}')
         else:
             try:
-                line_decoded = line.decode(get_input_encoding()[0]) #TODO DO we want this?
+                line_decoded = line.decode(get_input_encoding()[0])  # TODO DO we want this?
                 if args.debug:
-                    log.append(f'Clean_up; decoded using input_encoding option; {line_decoded}{linesep}')
-            except (UnicodeDecodeError) as e: # noqa F841
+                    log.append(
+                        f'Clean_up; decoded using input_encoding option; {line_decoded}{linesep}')
+            except (UnicodeDecodeError) as e:  # noqa F841
                 log.append(f'Clean_up; decoding error with unknown; {line}{linesep}')
                 stop = True
         # From here it is expected that line is correctly decoded!
@@ -259,17 +266,16 @@ def clean_up(lines, pipeline, order, args):
                 stop = True
 
         if args.googlengram and not stop:
-            status, line_decoded = clean_googlengram(line_decoded, string_punctuation)
+            status, line_decoded = clean_googlengram(line_decoded)
             if status and args.debug:
                 log.append(f'Clean_googlengram; tos found and removed; {line_decoded}{linesep}')
-
 
         # Hard to understand what's going on here
         # Run modules
         # Note that here we assume the input/output signature of the module functions is what we expect.
         # This is checked by the validate_* functions.
-        counter = 0 # Should we track module type separately?
-        #stop = False
+        counter = 0  # Should we track module type separately?
+        # stop = False
         for func in pipeline:
 
             # Run the module first, then process the output later.
@@ -290,7 +296,7 @@ def clean_up(lines, pipeline, order, args):
                         if args.debug:
                             log.append(f'{msg}; {line_decoded}{linesep}')
                         # Do we also need have a "re-encode" module type?
-                        if opt == '--hex': # Later we can determine this by looking at object type
+                        if opt == '--hex':  # Later we can determine this by looking at object type
                             work_queue.append(line_decoded)
                             stop = True
                         elif opt == '--html':
@@ -335,11 +341,9 @@ def chunkify(filename, args, size=CHUNK_SIZE):
 
 
 def main():
-
     # Initialize and get arguments
     arg_parser = init_parser(version)
     args = arg_parser.parse_args()
-
 
     # Configure program based on args
     input_file = args.input
@@ -367,7 +371,7 @@ def main():
             stderr_print('Progress can not be used when using stdin.')
             exit(2)
 
-    input_enc = args.input_encoding if args.input_encoding else 'UTF-8' #default input-enc.
+    input_enc = args.input_encoding if args.input_encoding else 'UTF-8'  # default input-enc.
     set_input_encoding(input_enc)
 
     if args.output_encoding:
@@ -379,7 +383,7 @@ def main():
         set_punctuation(args.punctuation)
     else:
         set_punctuation(string_punctuation + ' ')
-    #TODO it looks like we need to set defaults for patch testing...
+    # TODO it looks like we need to set defaults for patch testing...
     # because of global?
 
     if args.delimiter:
@@ -416,7 +420,6 @@ def main():
         args.newline = True
         args.check_controlchar = True
 
-
     # Meta-module for leak fils, but more modules. Set the following defaults:
     # --mojibake, --encode, --newline, --check-controlchar,
     # --hex, --html, --html-named,
@@ -451,14 +454,13 @@ def main():
     if not validate_input_signature(order, func_list):
         # (Custom) module not correct!
         return
-    #NB: output check is not conclusive. do we want more rigid type checking?
+    # NB: output check is not conclusive. do we want more rigid type checking?
     if not validate_output_check(order, func_list):
         # validate check module
         return
     if not validate_output_signature(order, func_list):
         # validate other modules
         return
-
 
     if output_file and not access(path.dirname(output_file), W_OK):
         stderr_print(f"Cannot write output file to {output_file}")
@@ -539,12 +541,14 @@ def main():
         chunk_start = 0
         if input_file:
             # Process files based on input glob
-            for filename in tqdm(glob(input_file, recursive=True), desc='Files processed', mininterval=0.1,
+            for filename in tqdm(glob(input_file, recursive=True), desc='Files processed',
+                                 mininterval=0.1,
                                  unit=' files', disable=not args.progress, position=0):
                 if not access(filename, R_OK):
                     continue
                 chunks_estimate = int(ceil(path.getsize(filename) / CHUNK_SIZE))
-                for chunk in tqdm(chunkify(filename, args, CHUNK_SIZE), desc='Chunks processed', mininterval=1,
+                for chunk in tqdm(chunkify(filename, args, CHUNK_SIZE), desc='Chunks processed',
+                                  mininterval=1,
                                   unit=' chunks', disable=not args.progress, total=chunks_estimate,
                                   position=1):
                     process_jobs(chunk_start)
