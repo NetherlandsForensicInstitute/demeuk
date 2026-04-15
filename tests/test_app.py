@@ -262,13 +262,9 @@ def test_cut_fields_single():
 def test_unhex():
     testargs = [
         'demeuk', '-i', 'testdata/input15', '-o', 'testdata/output15', '-l', 'testdata/log15',
-        '--hex', '--encode',
-    ]
-    testargs2 = [
-        'demeuk', '-i', 'testdata/input15', '-o', 'testdata/output15', '-l', 'testdata/log15',
         '--hex', '--encode', '--input-encoding', 'ISO-8859-1'
     ]
-    with patch.object(sys, 'argv', testargs2):
+    with patch.object(sys, 'argv', testargs):
         main()
     with open('testdata/output15') as f:
         filecontent = f.read()
@@ -384,13 +380,9 @@ def test_multiple_delimiters():
 def test_check_email():
     testargs = [
         'demeuk', '-i', 'testdata/input22', '-o', 'testdata/output22', '-l', 'testdata/log22',
-        '--verbose', '--check-email', '--remove-email',
-    ]
-    testargs2 = [
-        'demeuk', '-i', 'testdata/input22', '-o', 'testdata/output22', '-l', 'testdata/log22',
         '--verbose', '--remove-email', '--check-email'
     ]
-    with patch.object(sys, 'argv', testargs2):
+    with patch.object(sys, 'argv', testargs):
         main()
 
     with open('testdata/output22') as f:
@@ -405,13 +397,9 @@ def test_check_email():
 def test_check_hash():
     testargs = [
         'demeuk', '-i', 'testdata/input23', '-o', 'testdata/output23', '-l', 'testdata/log23',
-        '--verbose', '--check-hash', '-c',
-    ]
-    testargs2 = [
-        'demeuk', '-i', 'testdata/input23', '-o', 'testdata/output23', '-l', 'testdata/log23',
         '--verbose', '-c', '--check-hash',
     ]
-    with patch.object(sys, 'argv', testargs2):
+    with patch.object(sys, 'argv', testargs):
         main()
     with open('testdata/output23') as f:
         filecontent = f.read()
