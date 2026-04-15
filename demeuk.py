@@ -324,7 +324,6 @@ def clean_up(lines, pipeline, order, args):
         if not stop:
             results.append(f'{line_decoded}{linesep}')
 
-    print(f"Reached end of cleanup, #results = {len(results)}, #log = {len(log)}")
     return {'results': results, 'log': log}
 
 
@@ -361,8 +360,6 @@ def main():
         a_threads = int(args.threads)
     else:
         a_threads = cpu_count()
-    print(f"Using {a_threads} threads...")
-
 
     if args.progress:
         if args.verbose or args.debug:
