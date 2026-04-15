@@ -22,15 +22,11 @@ flags_check = dict({
     '--check-empty-line': check_empty_line,
 })
 flags_modify = dict({
-    #'--hex': clean_hex, And here
-    #'--html': clean_html,  TODO figure out what is going on with encoding here
     '--html-named': clean_html_named,
     '--lowercase': clean_lowercase,
     '--title-case': clean_title_case,
     '--umlaut': clean_umlaut,
     '--mojibake': clean_mojibake,
-    #'--encode': clean_encode,  # Q: Do we want this as a normal Modify module of give it special status?
-    # '--tab': clean_tab, # This is also an operation on bytes
     '--newline': clean_newline,
     '--non-ascii': clean_non_ascii,
     '--trim': clean_trim,
@@ -50,7 +46,6 @@ flags_remove = dict({
     '--remove-punctuation': remove_punctuation,
     '--remove-email': remove_email,
 
-    #'--cut': clean_cut, #TODO implement cut module
 })
 
 flags_collections = dict({
@@ -58,6 +53,20 @@ flags_collections = dict({
     '--leak-full': '--mojibake --encode --newline --check-controlchar --hex --html --html-named --check-hash --check-mac-address --check-uuid --check-email --check-replacement-character --check-empty-line',
     '-g': '--encoding',
     '--googlengram': '--encoding',
+})
+
+# These modules are part of the _fixed part_ of the function pipeline,
+# meaning they are not order-dependent.
+# You can implement modules with non-standard behaviour in the fixed pipeline.
+flags_fixed = dict({
+    # Modify
+    '--hex': clean_hex,
+    '--html': clean_html,
+    '--encode': clean_encode,  # Q: Do we want this as a normal Modify module of give it special status?
+    '--tab': clean_tab, # This is also an operation on bytes
+    # Remove
+    '-c': clean_cut,
+    '--cut': clean_cut
 })
 
 # For command-line arguments with one argument.
@@ -119,12 +128,9 @@ def init_parser(version):
     parser.add_argument('--cut-before', action='store_true')
     parser.add_argument('-d', '--delimiter', action='store')
 
-    # Misc
-    parser.add_argument('--encode', action='store_true') # For now, treat this as a special "module"
-    parser.add_argument('--tab', action='store_true')
-    parser.add_argument('--hex', action='store_true')
-    parser.add_argument('--html', action='store_true')
-    parser.add_argument('-c', '--cut', action='store_true')
+    # Fixed pipeline flags
+    for fixed_flag in flags_fixed:
+        parser.add_argument(fixed_flag, action='store_true')
 
     # The modules in here are all executed in the order given on the command-line.
     for flag in lookup_flag:
@@ -149,7 +155,6 @@ def parse_order(argv):
             ordered_list.append([arg, argv[i + 1]])
         elif arg in flags_collections:
             for a in flags_collections[arg].split(' '):
-                # TODO: now leak does not add --encode
                 if a in lookup_flag:
                     ordered_list.append(a)
 
