@@ -264,7 +264,11 @@ def test_unhex():
         'demeuk', '-i', 'testdata/input15', '-o', 'testdata/output15', '-l', 'testdata/log15',
         '--hex', '--encode',
     ]
-    with patch.object(sys, 'argv', testargs):
+    testargs2 = [
+        'demeuk', '-i', 'testdata/input15', '-o', 'testdata/output15', '-l', 'testdata/log15',
+        '--hex', '--encode', '--input-encoding', 'ISO-8859-1'
+    ]
+    with patch.object(sys, 'argv', testargs2):
         main()
     with open('testdata/output15') as f:
         filecontent = f.read()
