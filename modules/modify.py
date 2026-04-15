@@ -6,7 +6,7 @@ from html import unescape
 from unicodedata import category
 
 from chardet import detect
-from ftfy.fixes import fix_encoding
+from ftfy import fix_encoding
 from ftfy.chardata import HTML_ENTITY_RE, HTML_ENTITIES
 
 from transliterate import translit

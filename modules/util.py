@@ -1,11 +1,18 @@
 from sys import stderr
 
-global config
+log_verbose = False
+
+def set_verbose():
+    global log_verbose
+    log_verbose = True
+
+def unset_verbose():
+    global log_verbose
+    log_verbose = False
 
 # Quick to default logging to stderr instead
 def stderr_print(*args, **kwargs):
-    #if config['verbose'] is True:
-    if True: # TODO pass verbose flag here
+    if log_verbose:
         kwargs.setdefault('file', stderr)
         print(*args, **kwargs)
 

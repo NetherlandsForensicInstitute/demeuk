@@ -11,6 +11,10 @@ from demeuk import main
 #   is to drop the line test@example.com:line5 ?
 #   Fixed by flipping check and remove
 
+# NB: test_unhex (15)
+#   It looks like chardet behaviour changed, it detects the QWERTY line as cp424 (hebrew)
+#   This test also fails on the current master branch of demeuk.
+
 
 def calculate_line_numbers(file_name):
     lines = 0

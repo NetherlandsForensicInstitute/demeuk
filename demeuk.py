@@ -163,7 +163,7 @@ from sys import stderr, stdin, stdout
 from tqdm import tqdm
 
 from modules.macro import *
-from modules.util import stderr_print
+from modules.util import *
 from modules.validate import *
 
 version = '4.6.2' # TODO increment
@@ -360,6 +360,11 @@ def main():
         a_threads = int(args.threads)
     else:
         a_threads = cpu_count()
+
+    if args.verbose:
+        set_verbose()
+    else:
+        unset_verbose()
 
     if args.progress:
         if args.verbose or args.debug:
@@ -564,7 +569,7 @@ def main():
         p_output_file.flush()
 
     def write_log(log):
-        if config['debug'] or config['verbose'] or log_file:
+        if args.debug or args.verbose or log_file:
             p_log_file.writelines(log)
             p_log_file.flush()
 
