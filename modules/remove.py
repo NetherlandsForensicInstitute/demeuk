@@ -66,7 +66,13 @@ global_store_cut_fields = '2-'
 
 def set_delim(delim):
     global global_store_delims
-    global_store_delims = delim
+    splitter = ','
+    # We can have comma as delimiter, if we put it first and separate with semicolon.
+    # TODO what if we want both , and ;?
+    if len(delim) >= 1:
+        if delim[0] == ',':
+            splitter = ';'
+    global_store_delims = delim.split(splitter)
 
 
 # TODO looks like we need getters/setters for global var?

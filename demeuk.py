@@ -389,7 +389,6 @@ def main():
     if args.delimiter:
         # TODO does not split on ','
         # Do we want to pass this check on to set_delim?
-        splitter = ','
         set_delim(args.delimiter)
     else:
         set_delim(':')
