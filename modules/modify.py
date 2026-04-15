@@ -287,6 +287,9 @@ def set_input_encoding(input_encoding):
     global global_store_input_encoding
     global_store_input_encoding = input_encoding.split(',')
 
+def get_input_encoding() :
+    return global_store_input_encoding
+
 
 def clean_encode(line):
     """Detects and tries encoding
@@ -302,7 +305,7 @@ def clean_encode(line):
     # Single byte encodings. Also it is beter to not include iso encoding by default.
     # https://en.wikipedia.org/wiki/Character_encoding#Common_character_encodings
     # Input_encoding is by default [utf8]
-    for encoding in global_store_input_encoding:
+    for encoding in get_input_encoding():
         line_decoded = try_encoding(line, encoding)
         if line_decoded is not False:
             break
