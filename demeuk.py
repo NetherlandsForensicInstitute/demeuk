@@ -206,7 +206,7 @@ def clean_up(lines, pipeline, order, args):
 
         # When stop is set all demeuking module will be skipped for this line.
         stop = False
-        if config['debug']:
+        if args.debug:
             log.append(f'----BEGIN---- {hexlify(line)}{linesep}')
 
 
@@ -470,72 +470,6 @@ def main():
         return
 
 
-    # Lets create the default config
-    global config
-    config = {
-        'input_encoding': ['UTF-8'],
-        'cut': False,
-        'delimiter': ':',
-        'cut-fields': '2-',
-        'verbose': False,
-        'debug': False,
-        'progress': False,
-        'limit': False,
-        'skip': False,
-
-        # Modify
-        'encode': False,
-        'mojibake': False,
-        'tab': False,
-        'trim': False,
-        'newline': False,
-        'hex': False,
-        'html': False,
-        'html-named': False,
-        'umlaut': False,
-        'non-ascii': False,
-        'title_case': False,
-        'transliterate': False,
-
-        # Check
-        'length': False,
-        'check-min-length': 0,
-        'check-max-length': 0,
-        'check-controlchar': False,
-        'check-case': False,
-        'check-email': False,
-        'check-hash': False,
-        'check-mac-address': False,
-        'check-non-ascii': False,
-        'check-replacement-character': False,
-        'check-starting-with': False,
-        'check-uuid': False,
-        'check-ending-with': False,
-        'check-contains': False,
-        'check-empty-line': False,
-        'check-regex': False,
-        'check-min-digits': 0,
-        'check-max-digits': float('inf'),
-        'check-min-uppercase': 0,
-        'check-max-uppercase': float('inf'),
-        'check-min-specials': 0,
-        'check-max-specials': float('inf'),
-
-        # Add
-        'add-lower': False,
-        'add-first-upper': False,
-        'add-title-case': False,
-        'add-latin-ligatures': False,
-        'add-split': False,
-        'add-umlaut': False,
-        'add-without-punctuation': False,
-
-        # Remove
-        'remove-strip-punctuation': False,
-        'remove-punctuation': False,
-        'remove-email': False,
-    }
-
     if output_file and not access(path.dirname(output_file), W_OK):
         stderr_print(f"Cannot write output file to {output_file}")
 
@@ -618,12 +552,12 @@ def main():
         if input_file:
             # Process files based on input glob
             for filename in tqdm(glob(input_file, recursive=True), desc='Files processed', mininterval=0.1,
-                                 unit=' files', disable=not config.get('progress'), position=0):
+                                 unit=' files', disable=not args.progress, position=0):
                 if not access(filename, R_OK):
                     continue
                 chunks_estimate = int(ceil(path.getsize(filename) / CHUNK_SIZE))
                 for chunk in tqdm(chunkify(filename, args, CHUNK_SIZE), desc='Chunks processed', mininterval=1,
-                                  unit=' chunks', disable=not config.get('progress'), total=chunks_estimate,
+                                  unit=' chunks', disable=not args.progress, total=chunks_estimate,
                                   position=1):
                     process_jobs(chunk_start)
             stderr_print('Main: done submitting all jobs, waiting for threads to finish')
@@ -635,7 +569,7 @@ def main():
             # Read chunk amount from stdin
             chunks = stdin.readlines(CHUNK_SIZE)
             while chunks:
-                chunk = [line.rstrip('\n').encode(config['input_encoding'][0]) for line in chunks]
+                chunk = [line.rstrip('\n').encode(get_input_encoding()[0]) for line in chunks]
                 process_jobs(chunk_start)
 
                 chunks = stdin.readlines(CHUNK_SIZE)
