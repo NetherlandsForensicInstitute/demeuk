@@ -6,6 +6,11 @@ from pytest import raises, mark
 
 from demeuk import main
 
+# Q: test_check_email (22)
+#   Expected behaviour (--check-email --remove-email)
+#   is to drop the line test@example.com:line5 ?
+#   Fixed by flipping check and remove
+
 
 def calculate_line_numbers(file_name):
     lines = 0
@@ -370,7 +375,11 @@ def test_check_email():
         'demeuk', '-i', 'testdata/input22', '-o', 'testdata/output22', '-l', 'testdata/log22',
         '--verbose', '--check-email', '--remove-email',
     ]
-    with patch.object(sys, 'argv', testargs):
+    testargs2 = [
+        'demeuk', '-i', 'testdata/input22', '-o', 'testdata/output22', '-l', 'testdata/log22',
+        '--verbose', '--remove-email', '--check-email'
+    ]
+    with patch.object(sys, 'argv', testargs2):
         main()
 
     with open('testdata/output22') as f:
