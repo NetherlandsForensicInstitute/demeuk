@@ -12,7 +12,7 @@ UUID_REGEX = '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a
 
 # Officiale bcrypt hashes hae a bit more fixed size, but saw some weird once:
 # $1a$10$demo as example
-HASH_BCRYPT_REGEX = '^\\$1[ayb]\\$[0-9]{1,}\\$[\\w\\.\\/]{4,}$'
+HASH_BCRYPT_REGEX = '^\\$2[ayb]\\$[0-9]{1,}\\$[\\w\\.\\/]{4,}$'
 # Crypt hashes can look a lot like passwords. We do two options here
 # $0[$optional salt, max 16]$string of a-zA-Z0-9./ length 7 min till end of line
 # $0$a-zA-Z0-9./ min length 12 to make sure we hit somthing like: a-zA-Z0-9./
