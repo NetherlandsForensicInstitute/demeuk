@@ -447,6 +447,11 @@ def main():
         args.check_replacement_character = True
         args.check_empty_line = True
 
+    # Merge -c and --cut options (TODO actually we don't want to do this manually)
+    if args.c or args.cut:
+        args.c = True
+        args.cut = True
+
     # Determine order of modules (NB: need to do this when the pipeline is finalized)
     # so after processing "grouping" modules like leak and leak-full
     order = parse_order(sys.argv)
