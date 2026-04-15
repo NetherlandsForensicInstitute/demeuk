@@ -13,49 +13,54 @@ from modules.modify import clean_transliterate, clean_umlaut, clean_trim, clean_
 from modules.remove import clean_cut, remove_strip_punctuation, remove_email, remove_punctuation
 
 
-# TODO think how to pack help strings in here,
-# currently we determine if an option is a flag or param by looking if it is a list.
-# Probably we need to do that in a better way.
 # lookup tables for flags (taking no argument)
 flags_check = dict({
     # Check flags
-    '--check-case': check_case,
-    '--check-controlchar': check_controlchar,
-    '--check-email': check_email,
-    '--check-hash': check_hash,
-    '--check-mac-address': check_mac_address,
-    '--check-uuid': check_uuid,
-    '--check-non-ascii': check_non_ascii,
-    '--check-replacement-character': check_replacement_character,
-    '--check-empty-line': check_empty_line,
+    '--check-case': [check_case, 'Drop lines where the uppercase line is not equal to the '
+                                 'lowercase line'],
+    '--check-controlchar': [check_controlchar, 'Drop lines containing control chars.'],
+    '--check-email': [check_email, 'Drop lines containing e-mail addresses.'],
+    '--check-hash': [check_hash, 'Drop lines which are hashes.'],
+    '--check-mac-address': [check_mac_address, 'Drop lines which are MAC-addresses.'],
+    '--check-uuid': [check_uuid, 'Drop lines which are UUID.'],
+    '--check-non-ascii': [check_non_ascii, 'If a line contain a non ascii char e.g. ü or ç (or '
+                                           'everything outside ascii range) the line is dropped.'],
+    '--check-replacement-character': [check_replacement_character, 'Drop lines containing '
+                                                                   'replacement characters \'�\'.'],
+    '--check-empty-line': [check_empty_line, 'Drop lines that are empty or only contain '
+                                             'whitespace characters'],
 })
 flags_modify = dict({
-    '--html-named': clean_html_named,
-    '--lowercase': clean_lowercase,
-    '--title-case': clean_title_case,
-    '--umlaut': clean_umlaut,
-    '--mojibake': clean_mojibake,
-    '--newline': clean_newline,
-    '--non-ascii': clean_non_ascii,
-    '--trim': clean_trim,
+    '--html-named': [clean_html_named, 'Replace lines like: &#alpha; Those structures are more '
+                                       'like passwords, so be careful to enable this option.'],
+    '--lowercase': [clean_lowercase, 'Replace line like \'This Test String\' to \'this test string\''],
+    '--title-case': [clean_title_case, 'Replace line like \'this test string\' to \'This Test String\''],
+    '--umlaut': [clean_umlaut, 'Replace lines like ko"ffie with an o with an umlaut.'],
+    '--mojibake': [clean_mojibake, 'Fixes mojibakes, which means lines like SmˆrgÂs will be fixed to Smörgås.'],
+    '--newline': [clean_newline, 'Enables removing newline characters (\r\n) from end and beginning of lines.'],
+    '--non-ascii': [clean_non_ascii, 'Replace non ascii char with their replacement letters. For example ü becomes u, ç becomes c.'],
+    '--trim': [clean_trim, 'Enables removing newlines representations from end and beginning. '
+                            r'Newline representations detected are \'\\n\', \'\\r\', \'\n\', \'\r\', \'<br>\', and \'<br />\'.'],
 })
+
+#TODO continue here
 flags_add = dict({
-    '--add-lower': add_lower,
-    '--add-first-upper': add_first_upper,
-    '--add-title-case': add_title_case,
-    '--add-latin-ligatures': add_latin_ligatures,
-    '--add-split': add_split,
-    '--add-umlaut': add_umlaut,
-    '--add-without-punctuation': add_without_punctuation,
+    '--add-lower': [add_lower],
+    '--add-first-upper': [add_first_upper],
+    '--add-title-case': [add_title_case],
+    '--add-latin-ligatures': [add_latin_ligatures],
+    '--add-split': [add_split],
+    '--add-umlaut': [add_umlaut],
+    '--add-without-punctuation': [add_without_punctuation],
 })
 
 flags_remove = dict({
-    '--remove-strip-punctuation': remove_strip_punctuation,
-    '--remove-punctuation': remove_punctuation,
-    '--remove-email': remove_email,
+    '--remove-strip-punctuation': [remove_strip_punctuation],
+    '--remove-punctuation': [remove_punctuation],
+    '--remove-email': [remove_email],
 
-    '-c': clean_cut,
-    '--cut': clean_cut,
+    '-c': [clean_cut],
+    '--cut': [clean_cut],
 })
 
 flags_collections = dict({
@@ -259,7 +264,8 @@ def init_parser(version):
     for flag in flags_check:
         group_check.add_argument(flag, action='store_true')
     for flag in flags_modify:
-        group_modify.add_argument(flag, action='store_true')
+        f, h = lookup_flag[flag]
+        group_modify.add_argument(flag, action='store_true', help=h)
     for flag in flags_add:
         group_add.add_argument(flag, action='store_true')
     for flag in flags_remove:
@@ -311,5 +317,6 @@ def get_pipeline(ordered_list):
             func, t, *_ = lookup_params[el[0]]  # [func, type, metavar, helpstr]
             func_list.append([func, t(el[1])])
         else:
-            func_list.append(lookup_flag[el])
+            func, *_ = lookup_flag[el]
+            func_list.append(func)
     return func_list
