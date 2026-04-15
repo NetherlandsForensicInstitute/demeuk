@@ -443,16 +443,14 @@ def main():
         args.check_empty_line = True
 
     # Determine order of modules (NB: need to do this when the pipeline is finalized)
+    # so after processing "grouping" modules like leak and leak-full
     order = parse_order(sys.argv)
-
-    print(f"parsed order = {order}")
 
     # Generate and validate function list
     func_list = get_pipeline(order)
     if not validate_input_signature(order, func_list):
         # (Custom) module not correct!
         return
-    print("All input args validated!")
     #NB: output check is not conclusive. do we want more rigid type checking?
     if not validate_output_check(order, func_list):
         # validate check module
@@ -460,7 +458,6 @@ def main():
     if not validate_output_signature(order, func_list):
         # validate other modules
         return
-    print("All output args validated!")
 
 
     # Lets create the default config

@@ -197,6 +197,7 @@ def check_hash(line):
     """
     if search(HASH_HEX_REGEX, line):
         if len(line) in [32, 40, 64]:
+            # TODO is it not cheaper to check length first before running regexes?
             return False, f'Check_hash; dropped line because found a hash'
     if len(line) > 0:
         if line[0] == '$':
