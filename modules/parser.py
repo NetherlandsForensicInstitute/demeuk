@@ -1,7 +1,4 @@
-import pathlib
 from argparse import ArgumentParser
-
-import transliterate
 
 from modules.add import *
 from modules.check import *
@@ -139,7 +136,6 @@ def init_parser(version):
     for arg_param in lookup_params:
         parser.add_argument(arg_param, action='store', nargs=1, type=lookup_params[arg_param][1])
         # TODO Bad syntax
-
 
     return parser
 

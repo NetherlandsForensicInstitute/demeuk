@@ -342,16 +342,12 @@ def chunkify(filename, args, size=CHUNK_SIZE):
 
 def main():
 
-    #
-    # Config parser
-    # arguments = docopt(cleandoc('\n'.join(__doc__.split('\n')[2:])))
-
     # Initialize and get arguments
     arg_parser = init_parser(version)
     args = arg_parser.parse_args()
 
 
-    # Config options
+    # Configure program based on args
     input_file = args.input
     output_file = args.output
     log_file = args.log
@@ -534,8 +530,6 @@ def main():
             # Find out which jobs are running
             running_jobs = sum([not job.ready() for job in jobs])
             if running_jobs < a_threads:
-                # pass debug/verbose flags to clean_up.
-                # Do we want a bigger config container?
                 job = pool.apply_async(clean_up, (chunk, func_list, order, args))
                 chunk_start += len(chunk)
                 jobs.append(job)

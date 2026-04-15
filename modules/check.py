@@ -7,8 +7,6 @@
 
 # TODO: change docstrings, return values are wrong.
 
-from os import linesep
-
 from unicodedata import category
 
 from modules.regexes import *
