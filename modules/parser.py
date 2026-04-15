@@ -55,7 +55,7 @@ flags_remove = dict({
 
 flags_collections = dict({
     '--leak': '--mojibake --encode --newline --check-controlchar',
-    '--leak-full': '--mojibake --encode --newline --check-controlchar, --hex, --html, --html-named, --check-hash, --check-mac-address ---check-uuid --check-email --check-replacement-character --check-empty-line',
+    '--leak-full': '--mojibake --encode --newline --check-controlchar --hex --html --html-named --check-hash --check-mac-address --check-uuid --check-email --check-replacement-character --check-empty-line',
     '-g': '--encoding',
     '--googlengram': '--encoding',
 })
