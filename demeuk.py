@@ -260,7 +260,7 @@ def clean_up(lines, pipeline, order, args):
 
         # Should we do the cut?
         if args.cut and not stop:
-            status, line_decoded = clean_cut(line_decoded, config['delimiter'], config['cut-fields'])
+            status, line_decoded = clean_cut(line_decoded, get_delim(), get_cut_fields())
             if status and args.debug:
                 log.append(f'Clean_cut; field cutted; {line_decoded}{linesep}')
 
@@ -385,12 +385,18 @@ def main():
 
     if args.punctuation:
         set_punctuation(args.punctuation)
+    else:
+        set_punctuation(string_punctuation + ' ')
+    #TODO it looks like we need to set defaults for patch testing...
+    # because of global?
 
-    if args.delimiter is not None:
+    if args.delimiter:
         # TODO does not split on ','
         # Do we want to pass this check on to set_delim?
         splitter = ','
         set_delim(args.delimiter)
+    else:
+        set_delim(':')
 
     if args.cut_before:
         args.cut_fields = '-1'
@@ -398,6 +404,8 @@ def main():
     # This overrides --cut-before
     if args.cut_fields:
         set_cut_fields(args.cut_fields)
+    else:
+        set_cut_fields('2-')
 
     # Some meta-modules, those overwrite settings
     if args.googlengram:

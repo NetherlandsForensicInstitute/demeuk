@@ -18,6 +18,9 @@ def set_punctuation(punc):
     global global_store_punctuation
     global_store_punctuation = punc
 
+def get_punctuation():
+    return global_store_punctuation
+
 
 def add_lower(line):
     """Returns if the upper case string is different from the lower case line
@@ -152,7 +155,7 @@ def add_without_punctuation(line):
         False if there are not any punctuation
         Corrected line
     """
-    cleaned_line = line.translate(str.maketrans('', '', global_store_punctuation))
+    cleaned_line = line.translate(str.maketrans('', '', get_punctuation()))
 
     if line != cleaned_line:
         return True, cleaned_line, f'Add_without_punctuation; new line'

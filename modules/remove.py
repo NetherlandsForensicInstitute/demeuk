@@ -5,7 +5,7 @@
 # result is False if nothing was changed.
 # out_line is the result of the operation
 # log is a debug string which can be None. Logged when result is True (something changed)
-from modules.add import global_store_punctuation
+from modules.add import global_store_punctuation, get_punctuation
 from modules.regexes import *
 
 def remove_strip_punctuation(line):
@@ -34,7 +34,7 @@ def remove_punctuation(line):
         line without start and end punctuation
     """
     # NB: here we use the global punctutation variable.
-    return_line = line.translate(str.maketrans('', '', global_store_punctuation))
+    return_line = line.translate(str.maketrans('', '', get_punctuation()))
     if return_line != line:
         return True, return_line, f'Remove_punctuation; stripped punctuation'
     else:
@@ -70,6 +70,9 @@ def get_delim():
 def set_cut_fields(cut_fields):
     global global_store_cut_fields
     global_store_cut_fields = cut_fields
+
+def get_cut_fields():
+    return global_store_cut_fields
 
 # In the docs, cut is a separating module
 # I think it cna also be viewed as a remove module.
