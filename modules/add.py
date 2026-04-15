@@ -34,7 +34,7 @@ def add_lower(line):
     """
     line_lower = line.lower()
     if line != line_lower:
-        return True, line_lower, f'Add_lower; new line'
+        return True, line_lower, 'Add_lower; new line'
     else:
         return False, line, None
 
@@ -85,7 +85,7 @@ def add_latin_ligatures(line):
     """
     cleaned_line = fix_latin_ligatures(line)
     if line != cleaned_line:
-        return True, cleaned_line, f'Add_latin_ligatures; new line'
+        return True, cleaned_line, 'Add_latin_ligatures; new line'
     else:
         return False, line, None
 
@@ -124,7 +124,7 @@ def clean_add_umlaut(line):
 def add_umlaut(line):
     status, result = clean_add_umlaut(line)
     if status:
-        return True, result, f'Add_umlaut; new line'
+        return True, result, 'Add_umlaut; new line'
     return False, line, None
 
 def add_split(line):
@@ -139,7 +139,7 @@ def add_split(line):
     punctuation = (' ', '-', r'\.')
     for p in punctuation:
         if p in line:
-            return True, [i for i in re_split('|'.join(punctuation), line) if len(i) > 1], f'Add_split; new line because of split'
+            return True, [i for i in re_split('|'.join(punctuation), line) if len(i) > 1], 'Add_split; new line because of split'
     return False, line, None
 
 
@@ -158,6 +158,6 @@ def add_without_punctuation(line):
     cleaned_line = line.translate(str.maketrans('', '', get_punctuation()))
 
     if line != cleaned_line:
-        return True, cleaned_line, f'Add_without_punctuation; new line'
+        return True, cleaned_line, 'Add_without_punctuation; new line'
     else:
         return False, line, None

@@ -68,7 +68,7 @@ def clean_hex(line):
     """
     match = HEX_REGEX.search(line)
     if match:
-        return True, unhexlify(match.group(1)), f'Clean_hex; replaced $HEX[], added to queue and quitting'
+        return True, unhexlify(match.group(1)), 'Clean_hex; replaced $HEX[], added to queue and quitting'
     else:
         return False, line, None
 
@@ -84,7 +84,7 @@ def clean_html(line):
     """
     return_line = HTML_ENTITY_RE.sub(_unescape_fixup, line)
     if return_line != line:
-        return True, return_line, f'Clean_html; replaced html, added to queue and quitting'
+        return True, return_line, 'Clean_html; replaced html, added to queue and quitting'
     else:
         return False, line, None
 
@@ -100,7 +100,7 @@ def clean_html_named(line):
     """
     return_line = HTML_ENTITY_RE.sub(_unescape_fixup_named, line)
     if return_line != line:
-        return True, return_line, f'Clean_html_named; found named html character'
+        return True, return_line, 'Clean_html_named; found named html character'
     else:
         return False, line, None
 
@@ -118,7 +118,7 @@ def clean_transliterate(line, language):
     """
     cleaned_line = translit(line, language, reversed=True)
     if line != cleaned_line:
-        return True, cleaned_line, f'Clean_transliterate; transliterated';
+        return True, cleaned_line, 'Clean_transliterate; transliterated';
     else:
         return False, line, None
 
@@ -134,7 +134,7 @@ def clean_non_ascii(line):
     """
     cleaned_line = unidecode(line)
     if line != cleaned_line:
-        return True, cleaned_line, f'Clean_non_ascii; non-ascii replaced'
+        return True, cleaned_line, 'Clean_non_ascii; non-ascii replaced'
     else:
         return False, line, None
 
@@ -151,7 +151,7 @@ def clean_lowercase(line):
         """
     cleaned_line = line.lower()
     if line != cleaned_line:
-        return True, cleaned_line, f'Clean_lowercase; all capitals replaced'
+        return True, cleaned_line, 'Clean_lowercase; all capitals replaced'
     else:
         return False, line, None
 
@@ -169,7 +169,7 @@ def clean_title_case(line):
     cleaned_line = line.title()
     if line != cleaned_line:
         # Verbose message was a typo in original
-        return True, cleaned_line, f'Clean_title_case; lowercase characters replaced'
+        return True, cleaned_line, 'Clean_title_case; lowercase characters replaced'
     else:
         return False, line, None
 
@@ -201,7 +201,7 @@ def clean_trim(line):
             break
 
     if line != cleaned_line:
-        return True, cleaned_line, f'Clean_trim; found trim sequence'
+        return True, cleaned_line, 'Clean_trim; found trim sequence'
     else:
         return False, line, None
 
@@ -233,7 +233,7 @@ def clean_newline(line):
     """
     return_line = line.strip('\r\n')
     if return_line != line:
-        return True, return_line, f'Clean_newline; deleted newline characters'
+        return True, return_line, 'Clean_newline; deleted newline characters'
     else:
         return False, line, None
 
@@ -251,7 +251,7 @@ def clean_mojibake(line):
     """
     return_line = fix_encoding(line)
     if return_line != line:
-        return True, return_line, f'Clean_mojibake; found a mojibake'
+        return True, return_line, 'Clean_mojibake; found a mojibake'
     else:
         return False, line, None
 
@@ -326,6 +326,6 @@ def clean_encode(line):
 def clean_umlaut(line):
     status, result = clean_add_umlaut(line)
     if status:
-        return True, result, f'Clean_umlaut; umlaut replaced'
+        return True, result, 'Clean_umlaut; umlaut replaced'
     else:
         return False, result, None

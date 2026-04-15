@@ -28,7 +28,7 @@ def check_regex(line, regexes):
         if search(regex, line):
             continue
         else:
-            return False, f'Check_regex; dropped line because it does not match the regex'
+            return False, 'Check_regex; dropped line because it does not match the regex'
     return True, None
 
 
@@ -198,12 +198,12 @@ def check_hash(line):
     if search(HASH_HEX_REGEX, line):
         if len(line) in [32, 40, 64]:
             # TODO is it not cheaper to check length first before running regexes?
-            return False, f'Check_hash; dropped line because found a hash'
+            return False, 'Check_hash; dropped line because found a hash'
     if len(line) > 0:
         if line[0] == '$':
             for hash_regex in HASH_REGEX_LIST:
                 if search(hash_regex, line):
-                    return False, f'Check_hash; dropped line because found a hash'
+                    return False, 'Check_hash; dropped line because found a hash'
     return True, None
 
 
@@ -217,7 +217,7 @@ def check_mac_address(line):
         true if line does not contain a MAC-address
     """
     if search(MAC_REGEX, line):
-        return False, f'Check_mac_address; dropped line because found a MAC address'
+        return False, 'Check_mac_address; dropped line because found a MAC address'
 
     return True, None
 
@@ -232,7 +232,7 @@ def check_email(line):
         true is line does not contain email
     """
     if search(EMAIL_REGEX, line):
-        return False, f'Check_email; dropped line because found email'
+        return False, 'Check_email; dropped line because found email'
     else:
         return True, None
 
@@ -250,7 +250,7 @@ def check_non_ascii(line):
         line.encode('ascii')
         return True, None
     except UnicodeEncodeError:
-        return False, f'Check_non_ascii; dropped line because non ascii char found'
+        return False, 'Check_non_ascii; dropped line because non ascii char found'
 
 
 def check_character(line, character):
@@ -272,7 +272,7 @@ def check_character(line, character):
 
 def check_replacement_character(line):
     if check_character(line, '�'):
-        return False, f'Check_replacement_character; dropped line because "�" found'
+        return False, 'Check_replacement_character; dropped line because "�" found'
     else:
         return True, None
 
@@ -303,7 +303,7 @@ def check_uuid(line):
         true if line does not contain a UUID
     """
     if search(UUID_REGEX, line):
-        return False, f'Check_uuid; dropped line because found a uuid'
+        return False, 'Check_uuid; dropped line because found a uuid'
 
     return True, None
 

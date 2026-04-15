@@ -19,7 +19,7 @@ def remove_strip_punctuation(line):
     """
     return_line = line.strip(global_store_punctuation)
     if return_line != line:
-        return True, return_line, f'Remove_strip_punctuation; stripped punctuation'
+        return True, return_line, 'Remove_strip_punctuation; stripped punctuation'
     else:
         return False, line, None
 
@@ -36,7 +36,7 @@ def remove_punctuation(line):
     # NB: here we use the global punctutation variable.
     return_line = line.translate(str.maketrans('', '', get_punctuation()))
     if return_line != line:
-        return True, return_line, f'Remove_punctuation; stripped punctuation'
+        return True, return_line, 'Remove_punctuation; stripped punctuation'
     else:
         return False, line, None
 
@@ -52,7 +52,7 @@ def remove_email(line):
     """
     if '@' in line:
         if search(f'{EMAIL_REGEX}(:|;)', line):
-            return True, sub(f'{EMAIL_REGEX}(:|;)', '', line), f'Remove_email; email found'
+            return True, sub(f'{EMAIL_REGEX}(:|;)', '', line), 'Remove_email; email found'
     return False, line, None
 
 global_store_delims = [':']
