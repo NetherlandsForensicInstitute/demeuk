@@ -43,6 +43,8 @@ flags_remove = dict({
     '--remove-punctuation': remove_punctuation,
     '--remove-email': remove_email,
 
+    '-c': clean_cut,
+    '--cut': clean_cut,
 })
 
 flags_collections = dict({
@@ -61,9 +63,6 @@ flags_fixed = dict({
     '--html': clean_html,
     '--encode': clean_encode,  # Q: Do we want this as a normal Modify module of give it special status?
     '--tab': clean_tab, # This is also an operation on bytes
-    # Remove
-    '-c': clean_cut,
-    '--cut': clean_cut
 })
 
 # For command-line arguments with one argument.

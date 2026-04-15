@@ -76,7 +76,7 @@ def get_cut_fields():
 
 # In the docs, cut is a separating module
 # I think it cna also be viewed as a remove module.
-def clean_cut(line, delimiters, fields):
+def clean_cut(line):
     """Finds the first delimiter and returns the remaining string either after
     or before the delimiter.
 
@@ -88,7 +88,8 @@ def clean_cut(line, delimiters, fields):
     Returns:
         line (unicode)
     """
-    for delimiter in delimiters:
+    fields = get_cut_fields()
+    for delimiter in get_delim():
         if delimiter in line:
             if '-' in fields:
                 start = fields.split('-')[0]
@@ -100,6 +101,6 @@ def clean_cut(line, delimiters, fields):
                 fields = slice(int(start) - 1, int(stop))
             else:
                 fields = slice(int(fields) - 1, int(fields))
-            return True, delimiter.join(line.split(delimiter)[fields])
+            return True, delimiter.join(line.split(delimiter)[fields]), 'Clean_cut; field cutted'
     else:
-        return False, line
+        return False, line, None

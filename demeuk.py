@@ -258,12 +258,6 @@ def clean_up(lines, pipeline, order, args):
                     log.append(f'{msg}; {line_decoded}{linesep}')
                 stop = True
 
-        # Should we do the cut?
-        if args.cut and not stop:
-            status, line_decoded = clean_cut(line_decoded, get_delim(), get_cut_fields())
-            if status and args.debug:
-                log.append(f'Clean_cut; field cutted; {line_decoded}{linesep}')
-
         if args.googlengram and not stop:
             status, line_decoded = clean_googlengram(line_decoded, string_punctuation)
             if status and args.debug:
