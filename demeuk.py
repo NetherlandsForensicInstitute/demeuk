@@ -13,20 +13,19 @@ from string import punctuation as string_punctuation
 from sys import stdin, stdout
 from time import sleep
 
-from modules.parser import init_parser, parse_order, get_pipeline
-from modules.remove import set_delim, set_cut_fields
-from multiprocess import cpu_count, Pool  # multiprocess has better serialization capabilities
-from tqdm import tqdm
-
 from modules.add import set_punctuation
 # Do we want do do imports like this? or add modules.***.func_name everywhere?
 from modules.macro import clean_googlengram
 from modules.modify import get_input_encoding, set_input_encoding
+from modules.parser import init_parser, parse_order, get_pipeline
+from modules.remove import set_delim, set_cut_fields
 from modules.util import set_verbose, unset_verbose, stderr
 from modules.validate import params_check, params_modify, validate_output_check, \
     validate_output_signature, validate_input_signature, clean_hex, flags_add, params_remove, \
     flags_modify, clean_encode, clean_tab, stderr_print, clean_html, params_add, flags_remove, \
     flags_check
+from multiprocess import cpu_count, Pool  # multiprocess has better serialization capabilities
+from tqdm import tqdm
 
 version = '4.7'
 
@@ -155,8 +154,8 @@ def clean_up(lines, pipeline, order, args):
                 elif opt in flags_add | params_add:
                     result, msg = rest
                     if status:
-                        # We have modified lines
                         if isinstance(result, list):
+                            # We have to add multiple lines
                             for new_line in result:
                                 if args.debug:
                                     log.append(f'{msg}; {new_line}{linesep}')
@@ -171,7 +170,7 @@ def clean_up(lines, pipeline, order, args):
 
         # If we got through the whole function pipeline:
         if not stop:
-            results.append(f'{line_decoded}{linesep}')
+            results.append(f'{line_decoded}{linesep}')  # include the line in the output.
 
     return {'results': results, 'log': log}
 
