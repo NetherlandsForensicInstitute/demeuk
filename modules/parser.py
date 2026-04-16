@@ -165,19 +165,18 @@ def int_or_all(arg):
 
 
 def init_parser(version):
-    # Q: Do we want to keep examples in -h?
     parser = ArgumentParser(
         prog='demeuk',
         description=dedent('''Demeuk - a simple tool to clean up corpora
 
 Example uses:
-    demeuk -i inputfile.tmp -o outputfile.dict -l logfile.txt
-    demeuk -i "inputfile*.txt" -o outputfile.dict -l logfile.txt
-    demeuk -i "inputdir/*" -o outputfile.dict -l logfile.txt
-    demeuk -i inputfile -o outputfile -j 24
-    demeuk -i inputfile -o outputfile -c -e
-    demeuk -i inputfile -o outputfile --threads all
-    cat inputfile | demeuk --leak -j all | sort -u > outputfile'''),
+    ./demeuk.py -i inputfile.tmp -o outputfile.dict -l logfile.txt
+    ./demeuk.py -i "inputfile*.txt" -o outputfile.dict -l logfile.txt
+    ./demeuk.py -i "inputdir/*" -o outputfile.dict -l logfile.txt
+    ./demeuk.py -i inputfile -o outputfile -j 24
+    ./demeuk.py -i inputfile -o outputfile -c -e
+    ./demeuk.py -i inputfile -o outputfile --threads all
+    cat inputfile | ./demeuk.py --leak -j all | sort -u > outputfile'''),
         usage='./%(prog)s.py [options]',
         suggest_on_error=True,
         add_help=False,  # We add our own help so that it is grouped correctly
