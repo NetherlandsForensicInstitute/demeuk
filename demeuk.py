@@ -121,7 +121,7 @@ def clean_up(lines, pipeline, order, args):
                 stop = True
 
         if args.googlengram and not stop:
-            status, line_decoded = clean_googlengram(line_decoded)
+            status, line_decoded, msg = clean_googlengram(line_decoded)
             if status and args.debug:
                 log.append(f'{msg}; {line_decoded}{linesep}')
 
