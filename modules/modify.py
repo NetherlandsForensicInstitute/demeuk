@@ -3,17 +3,16 @@
 # Module signature is the same as that of a remove module
 from binascii import unhexlify
 from html import unescape
+from re import sub
 from unicodedata import category
 
 from chardet import detect
 from ftfy import fix_encoding
 from ftfy.chardata import HTML_ENTITY_RE, HTML_ENTITIES
-from re import sub
-from transliterate import translit
-from unidecode import unidecode
-
 from modules.add import clean_add_umlaut
 from modules.regexes import HEX_REGEX, TRIM_BLOCKS
+from transliterate import translit
+from unidecode import unidecode
 
 # TODO
 # This should become a member of an instantiated Module later.
@@ -21,6 +20,7 @@ from modules.regexes import HEX_REGEX, TRIM_BLOCKS
 # Want to do it only once, not every loop.
 # So for now use a global variable.
 global_store_input_encoding = ['UTF-8']
+
 
 def set_input_encoding(input_encoding):
     global global_store_input_encoding

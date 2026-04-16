@@ -10,7 +10,6 @@ from re import search, sub
 from modules.add import global_store_punctuation, get_punctuation
 from modules.regexes import EMAIL_REGEX
 
-
 global_store_delims = [':']
 global_store_cut_fields = '2-'
 
@@ -86,7 +85,6 @@ def remove_email(line):
         if search(f'{EMAIL_REGEX}(:|;)', line):
             return True, sub(f'{EMAIL_REGEX}(:|;)', '', line), 'Remove_email; email found'
     return False, line, None
-
 
 
 # In the docs, cut is a separating module
