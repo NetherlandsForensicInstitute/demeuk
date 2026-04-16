@@ -123,7 +123,7 @@ def clean_up(lines, pipeline, order, args):
         if args.googlengram and not stop:
             status, line_decoded = clean_googlengram(line_decoded)
             if status and args.debug:
-                log.append(f'Clean_googlengram; tos found and removed; {line_decoded}{linesep}')
+                log.append(f'{msg}; {line_decoded}{linesep}')
 
         # Hard to understand what's going on here
         # Run modules

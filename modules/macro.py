@@ -30,6 +30,6 @@ def clean_googlengram(line):
                 clean.append(token)
     return_line = ' '.join(clean)
     if return_line != line:
-        return True, return_line
+        return True, return_line, 'Clean_googlengram; tos found and removed'
     else:
-        return False, line
+        return False, line, None
