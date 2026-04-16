@@ -64,7 +64,6 @@ def remove_punctuation(line):
     Returns:
         line without start and end punctuation
     """
-    # NB: here we use the global punctutation variable.
     return_line = line.translate(str.maketrans('', '', get_punctuation()))
     if return_line != line:
         return True, return_line, 'Remove_punctuation; stripped punctuation'

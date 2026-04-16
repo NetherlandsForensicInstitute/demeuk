@@ -56,8 +56,7 @@ def _unescape_fixup(match):
     if text.startswith('&#'):
         unescaped = unescape(text)
 
-        # If html.unescape only decoded part of the string, that's not what
-        # we want. The semicolon should be consumed.
+        # If html.unescape only decoded part of the string, that's not what we want. The semicolon should be consumed.
         if ';' in unescaped:
             return text
         else:
@@ -177,7 +176,6 @@ def clean_title_case(line):
     """
     cleaned_line = line.title()
     if line != cleaned_line:
-        # Verbose message was a typo in original
         return True, cleaned_line, 'Clean_title_case; lowercase characters replaced'
     else:
         return False, line, None
@@ -206,7 +204,7 @@ def clean_trim(line):
                 cleaned_line = cleaned_line[:-len(x)]
                 has_match = True
 
-        if has_match is False:
+        if not has_match:
             break
 
     if line != cleaned_line:
@@ -279,8 +277,8 @@ def try_encoding(line, encoding):
     try:
         # Try to decode the line
         line_decoded = line.decode(encoding)
-        # Some encoding will decoded almost any line, lets check if we have invalid chars.
-        # If we have invalid chars (except for tab like chars) we will fail
+        # Some encodings will decode almost any line, let's check if we have invalid chars.
+        # If we have invalid chars (except for tab-like chars) we will fail
         for c in line_decoded:
             if category(c) in ['Cc', 'Cf', 'Cn', 'Co', 'Cs']:
                 if c == '\t' or c == '\f':
@@ -302,8 +300,8 @@ def clean_encode(line):
         Decoded UTF-8 string
     """
     # Try either a user set of encodings or the default encoding set.
-    # When using multiple encoding is it beter to have multibyte encodings before
-    # Single byte encodings. Also it is beter to not include iso encoding by default.
+    # When using multiple encoding is it better to have multibyte encodings before
+    # single-byte encodings. Also it is better to not include iso encoding by default.
     # https://en.wikipedia.org/wiki/Character_encoding#Common_character_encodings
     # Input_encoding is by default [utf8]
     for encoding in get_input_encoding():

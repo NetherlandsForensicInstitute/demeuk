@@ -16,7 +16,6 @@ from multiprocess import cpu_count
 
 # lookup tables for flags (taking no argument)
 flags_check = dict({
-    # Check flags
     '--check-case': [check_case, 'Drop lines where the uppercase line is not equal to the lowercase line'],
     '--check-controlchar': [check_controlchar, 'Drop lines containing control chars.'],
     '--check-email': [check_email, 'Drop lines containing e-mail addresses.'],
@@ -92,8 +91,7 @@ flags_fixed = dict({
 })
 
 # For command-line arguments with one argument.
-# key = option,
-# value = [function object, type of param, metavar, help]
+# key = option, value = [function object, type of param, metavar, help]
 # Type is needed for validation, might be useful for defining custom modules
 # metavar and help are both used for ./demeuk.py -h
 params_check = dict({
@@ -106,13 +104,13 @@ params_check = dict({
                                           'strings. Specify multiple with a comma-separated list'],
     '--check-ending-with': [check_ending_with, str,
                             '<string>', 'Drop lines ending with string, can be multiple strings. '
-                                        'Specify multiple with a comma-seperated list.'],
+                                        'Specify multiple with a comma-separated list.'],
     '--check-contains': [check_contains, str,
                          '<string>', 'Drop lines containing string, can be multiple strings. '
                                      'Specify multiple with a comma-separated list'],
     '--check-regex': [check_regex, str,
                       '<string>', 'Drop lines that do not match the regex. Regex is a comma '
-                                  'seperated list of regexes. Example: [a-z]{1,8},[0-9]{1,8}'],
+                                  'separated list of regexes. Example: [a-z]{1,8},[0-9]{1,8}'],
     '--check-min-digits': [check_min_digits, int,
                            '<count>', 'Require that entries contain at least <count> digits ('
                                       'following the Python definition of a digit, see '
@@ -329,9 +327,9 @@ def get_pipeline(ordered_list):
     for el in ordered_list:
         if isinstance(el, list):
             # Function with arguments
-            # el = [param, arg]
-            func, t, *_ = lookup_params[el[0]]  # [func, type, metavar, helpstr]
-            func_list.append([func, t(el[1])])
+            param, arg = el  # Unpack element
+            func, t, *_ = lookup_params[param]  # [func, type, metavar, helpstr]
+            func_list.append([func, t(arg)])
         else:
             func, *_ = lookup_flag[el]
             func_list.append(func)

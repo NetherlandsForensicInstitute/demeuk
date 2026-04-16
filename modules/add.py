@@ -52,7 +52,7 @@ def add_first_upper(line):
     """
     line_first_upper = line.capitalize()
     if line != line_first_upper:
-        return True, line_first_upper, "Add_first_upper; new line"
+        return True, line_first_upper, 'Add_first_upper; new line'
     else:
         return False, line, None
 
@@ -69,7 +69,7 @@ def add_title_case(line):
     """
     line_title_case = line.title()
     if line != line_title_case:
-        return True, line_title_case, "Add_title_case; new line"
+        return True, line_title_case, 'Add_title_case; new line'
     else:
         return False, line, None
 
