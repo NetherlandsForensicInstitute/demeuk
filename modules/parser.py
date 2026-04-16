@@ -40,8 +40,8 @@ flags_modify = dict({
     '--non-ascii': [clean_non_ascii, 'Replace non ascii char with their replacement letters. For '
                                      'example ü becomes u, ç becomes c.'],
     '--trim': [clean_trim, 'Enables removing newlines representations from end and beginning. '
-                           r'Newline representations detected are \'\\n\', \'\\r\', \'\n\', '
-                           r'\'\r\', \'<br>\', and \'<br />\'.'],
+                           'Newline representations detected are \'\\\\n\', \'\\\\r\', \'\\n\', '
+                           '\'\\r\', \'<br>\', and \'<br />\'.'],
 })
 
 flags_add = dict({
