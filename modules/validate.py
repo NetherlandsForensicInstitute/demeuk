@@ -23,15 +23,15 @@ def validate_input_signature(order, funcs):
                 # The offending command-line option
                 stderr_print("=== INVALID INPUT SIGNATURE === wrong # of args ===\n\t" +
                              "expected 2 arguments " +
-                             "(str, " + lookup_params[opt][1].__name__ + ") for function " +
-                             func[0].__name__ + " (" + order[counter][0] + ")!")
+                             "(str, " + t.__name__ + ") for function " +
+                             func[0].__name__ + " (" + opt + ")!")
                 passed = False
             except ValueError:
                 passed = False
                 stderr_print("=== INVALID INPUT SIGNATURE === Incorrect arg type ===\n\t" +
                              "expected 2 arguments " +
-                             "(str, " + lookup_params[opt][1].__name__ + ") for function " +
-                             func[0].__name__ + " (" + order[counter][0] + ")!")
+                             "(str, " + t.__name__ + ") for function " +
+                             func[0].__name__ + " (" + opt + ")!")
         else:
             # Here, we pass nothing. So the function expects a string
             try:
