@@ -1,7 +1,7 @@
 # Validate modules
 from modules.parser import params_check, params_modify, lookup_params, clean_hex, flags_add, \
     params_remove, flags_modify, clean_encode, clean_tab, clean_html, params_add, flags_remove, \
-    flags_check
+    flags_check, flags_fixed
 from modules.util import stderr_print
 
 
@@ -132,8 +132,7 @@ def validate_output_signature(order, funcs):
                 continue
             # Flag, without argument
             try:
-                # TODO also here, hardcoded exception.
-                if func not in [clean_encode, clean_tab, clean_hex, clean_html]:
+                if order[counter] not in flags_fixed:
                     result, line, debug, *rest = func("test string")
                     if len(rest) > 0:
                         # module returns too much
