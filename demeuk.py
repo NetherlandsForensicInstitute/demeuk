@@ -288,13 +288,13 @@ def main():
         return
 
     if output_file and not access(path.dirname(output_file), W_OK):
-        stderr_print(f"Cannot write output file to {output_file}")
+        stderr_print(f'Cannot write output file to {output_file}')
 
     # check if logfile exists, or that the directory of the log file is at least writable.
     if log_file and not (access(log_file, F_OK) or access(path.dirname(log_file), W_OK)):
-        stderr_print(f"Cannot write log file to {log_file}")
+        stderr_print(f'Cannot write log file to {log_file}')
     if input_file and not access(input_file, R_OK):
-        stderr_print(f"Cannot read input file to {input_file}")
+        stderr_print(f'Cannot read input file to {input_file}')
 
     #  Main worker
     stderr_print(f'Main: running demeuk - {version}')
@@ -404,9 +404,9 @@ def main():
         p_log_file.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        stderr_print("ERROR: Process terminated by user! (CTRL+C)")
+        stderr_print('ERROR: Process terminated by user! (CTRL+C)')
         exit(3)
