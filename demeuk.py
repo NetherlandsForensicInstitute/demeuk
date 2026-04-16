@@ -146,13 +146,6 @@ def clean_up(lines, pipeline, order, args):
                     if status:
                         if args.debug:
                             log.append(f'{msg}; {line_decoded}{linesep}')
-                        # Do we also need have a "re-encode" module type?
-                        if opt == '--hex':  # Later we can determine this by looking at object type
-                            work_queue.append(line_decoded)
-                            stop = True
-                        elif opt == '--html':
-                            work_queue.append(line_decoded.encode())
-                            stop = True
 
                 elif opt in flags_add | params_add:
                     result, msg = rest
