@@ -10,7 +10,7 @@ from math import ceil
 from os import linesep, access, path, R_OK, F_OK, W_OK
 from signal import signal, SIGINT, SIG_IGN
 from string import punctuation as string_punctuation
-from sys import stdin, stdout
+from sys import  stdin, stdout
 from time import sleep
 
 from modules.parser import init_parser, parse_order, get_pipeline
@@ -71,7 +71,8 @@ def clean_up(lines, pipeline, order, args):
         if args.debug:
             log.append(f'----BEGIN---- {hexlify(line)}{linesep}')
 
-        # Do we want to have a special category of modules which get run BEFORE encoding?
+        # Can we specify the order of the fixed part of the pipeline apart from the implementation?
+        # Probably not, because processing the output depends on the output.
         # Replace tab chars as ':' greedy
         if args.tab and not stop:
             status, line, msg = clean_tab(line)
@@ -102,8 +103,7 @@ def clean_up(lines, pipeline, order, args):
         if args.hex and not stop:
             status, line_decoded, msg = clean_hex(line_decoded)
             if status:
-                # Lines contains hex, this function will return binary string, so add it back to
-                # our undecoded lines
+                # Lines contains hex, this function will return binary string, so add it back to our undecoded lines
                 work_queue.append(line_decoded)
                 if args.debug:
                     log.append(f'{msg}; {line}{linesep}')
@@ -126,14 +126,9 @@ def clean_up(lines, pipeline, order, args):
             if status and args.debug:
                 log.append(f'{msg}; {line_decoded}{linesep}')
 
-        # Hard to understand what's going on here
-        # Run modules
-        # Note that here we assume the input/output signature of the module functions is what we expect.
-        # This is checked by the validate_* functions.
+        # This is where the order-dependent modules (non-fixed pipeline) run
         counter = 0  # Should we track module type separately?
-        # stop = False
         for func in pipeline:
-
             # Run the module first, then process the output later.
             has_param = isinstance(func, list)
             # The name of the (text) option
@@ -239,12 +234,8 @@ def main():
         set_punctuation(args.punctuation)
     else:
         set_punctuation(string_punctuation + ' ')
-    # TODO it looks like we need to set defaults for patch testing...
-    # because of global?
 
     if args.delimiter:
-        # TODO does not split on ','
-        # Do we want to pass this check on to set_delim?
         set_delim(args.delimiter)
     else:
         set_delim(':')
@@ -258,7 +249,8 @@ def main():
     else:
         set_cut_fields('2-')
 
-    # Some meta-modules, those overwrite settings
+    # Some meta-modules
+    # For googlengram: These disable some modules, even if they are passed as cmd-line args.
     if args.googlengram:
         args.cut = False
         args.remove_email = False
@@ -307,7 +299,7 @@ def main():
     # Generate and validate function list
     func_list = get_pipeline(order)
     if not validate_input_signature(order, func_list):
-        # (Custom) module not correct!
+        # (Custom) module takes incorrect input parameters
         return
     # NB: output check is not conclusive. do we want more rigid type checking?
     if not validate_output_check(order, func_list):
