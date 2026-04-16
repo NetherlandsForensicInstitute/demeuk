@@ -36,7 +36,8 @@ flags_modify = dict({
     '--title-case': [clean_title_case, 'Replace line like \'this test string\' to \'This Test String\''],
     '--umlaut': [clean_umlaut, 'Replace lines like ko"ffie with an o with an umlaut.'],
     '--mojibake': [clean_mojibake, 'Fixes mojibakes, which means lines like SmˆrgÂs will be fixed to Smörgås.'],
-    '--newline': [clean_newline, 'Enables removing newline characters (\'\\r\' and \'\\n\') from end and beginning of lines.'],
+    '--newline': [clean_newline, 'Enables removing newline characters (\'\\r\' and \'\\n\') from end and beginning of '
+                                 'lines.'],
     '--non-ascii': [clean_non_ascii, 'Replace non ascii char with their replacement letters. For '
                                      'example ü becomes u, ç becomes c.'],
     '--trim': [clean_trim, 'Enables removing newlines representations from end and beginning. '

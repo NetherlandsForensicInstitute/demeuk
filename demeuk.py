@@ -10,7 +10,7 @@ from math import ceil
 from os import linesep, access, path, R_OK, F_OK, W_OK
 from signal import signal, SIGINT, SIG_IGN
 from string import punctuation as string_punctuation
-from sys import  stdin, stdout
+from sys import stdin, stdout
 from time import sleep
 
 from modules.parser import init_parser, parse_order, get_pipeline
