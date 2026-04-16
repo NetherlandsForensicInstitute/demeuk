@@ -132,9 +132,14 @@ def clean_up(lines, pipeline, order, args):
             # Run the module first, then process the output later.
             has_param = isinstance(func, list)
             # The name of the (text) option
-            opt = order[counter][0] if has_param else order[counter]
+            if has_param:
+                opt = order[counter][0]
+                # At this point, func = [<function obj>, param. So we unpack this.
+                func, param = func
+            else:
+                opt = order[counter]
             if not stop:
-                status, *rest = func[0](line_decoded, func[1]) if has_param else func(line_decoded)
+                status, *rest = func(line_decoded, param) if has_param else func(line_decoded)
                 if opt in flags_check | params_check:
                     msg = rest[0]
                     if not status:
@@ -194,11 +199,6 @@ def main():
     output_file = args.output
     log_file = args.log
 
-    if args.threads:
-        a_threads = int(args.threads)
-    else:
-        a_threads = cpu_count()
-
     if args.verbose:
         set_verbose()
     else:
@@ -215,32 +215,18 @@ def main():
             stderr_print('Progress can not be used when using stdin.')
             exit(2)
 
-    input_enc = args.input_encoding if args.input_encoding else 'UTF-8'  # default input-enc.
-    set_input_encoding(input_enc)
-
-    if args.output_encoding:
-        setlocale(LC_ALL, args.output_encoding)
-    else:
-        setlocale(LC_ALL, 'en_US.UTF-8')
-
-    if args.punctuation:
-        set_punctuation(args.punctuation)
-    else:
-        set_punctuation(string_punctuation + ' ')
-
-    if args.delimiter:
-        set_delim(args.delimiter)
-    else:
-        set_delim(':')
+    # Set config options with defaults
+    a_threads = int(args.threads) if args.threads else cpu_count()
+    set_input_encoding(args.input_encoding if args.input_encoding else 'UTF-8')
+    setlocale(LC_ALL, args.output_encoding if args.output_encoding else 'en_US.UTF-8')
+    set_punctuation(args.punctuation if args.punctuation else string_punctuation + ' ')
+    set_delim(args.delimiter if args.delimiter else ':')
 
     if args.cut_before:
         args.cut_fields = '-1'
 
     # This overrides --cut-before
-    if args.cut_fields:
-        set_cut_fields(args.cut_fields)
-    else:
-        set_cut_fields('2-')
+    set_cut_fields(args.cut_fields if args.cut_fields else '2-')
 
     # Some meta-modules
     # For googlengram: These disable some modules, even if they are passed as cmd-line args.
