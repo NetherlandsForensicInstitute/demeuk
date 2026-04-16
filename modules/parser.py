@@ -1,4 +1,5 @@
-from argparse import ArgumentParser
+from argparse import ArgumentParser, RawDescriptionHelpFormatter, ArgumentTypeError
+from textwrap import dedent
 
 from modules.add import add_first_upper, add_latin_ligatures, add_without_punctuation, add_split, \
     add_umlaut, add_lower, add_title_case
@@ -11,13 +12,12 @@ from modules.modify import clean_transliterate, clean_umlaut, clean_trim, clean_
     clean_tab, clean_newline, clean_mojibake, clean_html, clean_title_case, clean_non_ascii, \
     clean_lowercase, clean_html_named
 from modules.remove import clean_cut, remove_strip_punctuation, remove_email, remove_punctuation
-
+from multiprocess import cpu_count
 
 # lookup tables for flags (taking no argument)
 flags_check = dict({
     # Check flags
-    '--check-case': [check_case, 'Drop lines where the uppercase line is not equal to the '
-                                 'lowercase line'],
+    '--check-case': [check_case, 'Drop lines where the uppercase line is not equal to the lowercase line'],
     '--check-controlchar': [check_controlchar, 'Drop lines containing control chars.'],
     '--check-email': [check_email, 'Drop lines containing e-mail addresses.'],
     '--check-hash': [check_hash, 'Drop lines which are hashes.'],
@@ -27,8 +27,7 @@ flags_check = dict({
                                            'everything outside ascii range) the line is dropped.'],
     '--check-replacement-character': [check_replacement_character, 'Drop lines containing '
                                                                    'replacement characters \'�\'.'],
-    '--check-empty-line': [check_empty_line, 'Drop lines that are empty or only contain '
-                                             'whitespace characters'],
+    '--check-empty-line': [check_empty_line, 'Drop lines that are empty or only contain whitespace characters'],
 })
 flags_modify = dict({
     '--html-named': [clean_html_named, 'Replace lines like: &#alpha; Those structures are more '
@@ -38,29 +37,37 @@ flags_modify = dict({
     '--umlaut': [clean_umlaut, 'Replace lines like ko"ffie with an o with an umlaut.'],
     '--mojibake': [clean_mojibake, 'Fixes mojibakes, which means lines like SmˆrgÂs will be fixed to Smörgås.'],
     '--newline': [clean_newline, 'Enables removing newline characters (\r\n) from end and beginning of lines.'],
-    '--non-ascii': [clean_non_ascii, 'Replace non ascii char with their replacement letters. For example ü becomes u, ç becomes c.'],
+    '--non-ascii': [clean_non_ascii, 'Replace non ascii char with their replacement letters. For '
+                                     'example ü becomes u, ç becomes c.'],
     '--trim': [clean_trim, 'Enables removing newlines representations from end and beginning. '
-                            r'Newline representations detected are \'\\n\', \'\\r\', \'\n\', \'\r\', \'<br>\', and \'<br />\'.'],
+                           r'Newline representations detected are \'\\n\', \'\\r\', \'\n\', '
+                           r'\'\r\', \'<br>\', and \'<br />\'.'],
 })
 
-#TODO continue here
 flags_add = dict({
-    '--add-lower': [add_lower],
-    '--add-first-upper': [add_first_upper],
-    '--add-title-case': [add_title_case],
-    '--add-latin-ligatures': [add_latin_ligatures],
-    '--add-split': [add_split],
-    '--add-umlaut': [add_umlaut],
-    '--add-without-punctuation': [add_without_punctuation],
+    '--add-lower': [add_lower, 'If a line contains a capital letter this will add the lower case variant'],
+    '--add-first-upper': [add_first_upper, 'If a line does not contain a capital letter this will add the capital '
+                                           'variant'],
+    '--add-title-case': [add_title_case, 'Add a line like \'this test string\' also as a \'This Test String\''],
+    '--add-latin-ligatures': [add_latin_ligatures, 'If a line contains a single ligatures of a latin letter '
+                                                   '(such as ij), the line is correct but the original line contain '
+                                                   'the ligatures is also added to output.'],
+    '--add-split': [add_split, 'split on known chars like - and . and add those to the final dictionary.'],
+    '--add-umlaut': [add_umlaut, 'In some spelling dicts, umlaut are sometimes written as: o" or i" and not as one '
+                                 'char.'],
+    '--add-without-punctuation': [add_without_punctuation, 'If a line contains punctuations, '
+                                                           'a variant will be added without the punctuations'],
 })
 
 flags_remove = dict({
-    '--remove-strip-punctuation': [remove_strip_punctuation],
-    '--remove-punctuation': [remove_punctuation],
-    '--remove-email': [remove_email],
+    '--remove-strip-punctuation': [remove_strip_punctuation, 'Remove starting and trailing punctuation'],
+    '--remove-punctuation': [remove_punctuation, 'Remove all punctuation in a line'],
+    '--remove-email': [remove_email, 'Enable email filter, this will catch strings like '
+                                     '1238661:test@example.com:password'],
 
-    '-c': [clean_cut],
-    '--cut': [clean_cut],
+    '-c': [clean_cut, 'Specify if demeuk should split (default splits on \':\'). Returns '
+                      'everything after the delimiter.'],
+    '--cut': [clean_cut, 'Alias for -c.'],
 })
 
 flags_collections = dict({
@@ -73,15 +80,14 @@ flags_collections = dict({
 })
 
 # These modules are part of the _fixed part_ of the function pipeline,
-# meaning they are not order-dependent.
+# meaning they are not order-dependent. Tab acts on bytes, encode takes bytes and returns str.
 # You can implement modules with non-standard behaviour in the fixed pipeline.
 flags_fixed = dict({
     # Modify
-    '--hex': clean_hex,
-    '--html': clean_html,
-    '--encode': clean_encode,
-    # Q: Do we want this as a normal Modify module of give it special status?
-    '--tab': clean_tab,  # This is also an operation on bytes
+    '--hex': [clean_hex, 'Replace lines like: $HEX[41424344] with ABCD.'],
+    '--html': [clean_html, 'Replace lines like: &#351;ifreyok with şifreyok.'],
+    '--encode': [clean_encode, 'Enables guessing of encoding, based on chardet and custom implementation.'],
+    '--tab': [clean_tab, 'Enables replacing tab char with \':\', sometimes leaks contain both \':\' and \'\\t\'.'],
 })
 
 # For command-line arguments with one argument.
@@ -91,11 +97,9 @@ flags_fixed = dict({
 # metavar and help are both used for ./demeuk.py -h
 params_check = dict({
     '--check-min-length': [check_min_length, int,
-                           '<length>',
-                           'Requires that entries have a minimal requirement of <length> unicode chars'],
+                           '<length>', 'Requires that entries have a minimal requirement of <length> unicode chars'],
     '--check-max-length': [check_max_length, int,
-                           '<length>',
-                           'Requires that entries have a maximal requirement of <length> unicode chars'],
+                           '<length>', 'Requires that entries have a maximal requirement of <length> unicode chars'],
     '--check-starting-with': [check_starting_with, str,
                               '<string>', 'Drop lines starting with string, can be multiple '
                                           'strings. Specify multiple with a comma-separated list'],
@@ -110,8 +114,7 @@ params_check = dict({
                                   'seperated list of regexes. Example: [a-z]{1,8},[0-9]{1,8}'],
     '--check-min-digits': [check_min_digits, int,
                            '<count>', 'Require that entries contain at least <count> digits ('
-                                      'following the Python definition of a digit, '
-                                      'see '
+                                      'following the Python definition of a digit, see '
                                       'https://docs.python.org/3/library/stdtypes.html#str.isdigit)'],
     '--check-max-digits': [check_max_digits, int,
                            '<count>', 'Require that entries contain at most <count> digits ('
@@ -123,24 +126,19 @@ params_check = dict({
                                          'https://docs.python.org/3/library/stdtypes.html#str.isupper)'],
     '--check-max-uppercase': [check_max_uppercase, int,
                               '<count>', 'Require that entries contain at most <count> uppercase '
-                                         'letters (following the Python definition of uppercase, '
-                                         'see '
+                                         'letters (following the Python definition of uppercase, see '
                                          'https://docs.python.org/3/library/stdtypes.html#str.isupper)'],
     '--check-min-special': [check_min_specials, int,
                             '<count>', 'Require that entries contain at least <count> specials (a '
                                        'special is defined as a non whitespace character which is '
-                                       'not alphanumeric, following the Python definitions of '
-                                       'both, see '
-                                       'https://docs.python.org/3/library/stdtypes.html#str'
-                                       '.isspace and '
+                                       'not alphanumeric, following the Python definitions of both, see '
+                                       'https://docs.python.org/3/library/stdtypes.html#str.isspace and '
                                        'https://docs.python.org/3/library/stdtypes.html#str.isalnum)'],
     '--check-max-special': [check_max_specials, int,
                             '<count>', 'Require that entries contain at least <count> specials (a '
                                        'special is defined as a non whitespace character which is '
-                                       'not alphanumeric, following the Python definitions of '
-                                       'both, see '
-                                       'https://docs.python.org/3/library/stdtypes.html#str'
-                                       '.isspace and '
+                                       'not alphanumeric, following the Python definitions of both, see '
+                                       'https://docs.python.org/3/library/stdtypes.html#str.isspace and '
                                        'https://docs.python.org/3/library/stdtypes.html#str.isalnum)'],
 })
 params_modify = dict({
@@ -156,14 +154,35 @@ lookup_flag = flags_check | flags_modify | flags_add | flags_remove
 lookup_params = params_check | params_modify | params_add | params_remove
 
 
+# -j can take int or 'all' as argument.
+def int_or_all(arg):
+    try:
+        return int(arg)
+    except ValueError:
+        pass
+    if arg == 'all':
+        return cpu_count()
+    raise ArgumentTypeError(f'invalid value {arg} not int or \'all\'')
+
+
 def init_parser(version):
     # Q: Do we want to keep examples in -h?
     parser = ArgumentParser(
         prog='demeuk',
-        description='Demeuk - a simple tool to clean up corpora',
-        usage='%(prog)s [options]',
+        description=dedent('''Demeuk - a simple tool to clean up corpora
+
+Example uses:
+    demeuk -i inputfile.tmp -o outputfile.dict -l logfile.txt
+    demeuk -i "inputfile*.txt" -o outputfile.dict -l logfile.txt
+    demeuk -i "inputdir/*" -o outputfile.dict -l logfile.txt
+    demeuk -i inputfile -o outputfile -j 24
+    demeuk -i inputfile -o outputfile -c -e
+    demeuk -i inputfile -o outputfile --threads all
+    cat inputfile | demeuk --leak -j all | sort -u > outputfile'''),
+        usage='./%(prog)s.py [options]',
         suggest_on_error=True,
-        add_help=False  # We add our own help so that it is grouped correctly
+        add_help=False,  # We add our own help so that it is grouped correctly
+        formatter_class=RawDescriptionHelpFormatter,
     )
 
     # Standard options
@@ -177,13 +196,12 @@ def init_parser(version):
     group_std.add_argument('-l', '--log', action='store',
                            metavar='<path>',
                            help='Optional, specify where the log file needs to be writen to (default: stderr)')
-    group_std.add_argument('-j', '--threads', action='store', type=int,
+    group_std.add_argument('-j', '--threads', action='store', type=int_or_all,
                            metavar='<n>',
                            help='Optional, specify amount of threads to spawn. Specify the string '
                                 '\'all\' to make demeuk auto detect the amount of threads to '
                                 'start based on the CPU\'s (default: all threads). Note: '
-                                'threading will cost some setup time. Only speeds up for larger '
-                                'files.')  # TODO --threads all currently not possible
+                                'threading will cost some setup time. Only speeds up for larger files.')
     group_std.add_argument('--input-encoding', action='store',
                            metavar='<encoding>',
                            help='Forces demeuk to decode the input using this encoding (default: en_US.UTF-8).')
@@ -199,15 +217,12 @@ def init_parser(version):
     group_std.add_argument('--progress', action='store_true',
                            help='Prints out the progress of the demeuk process.')
     group_std.add_argument('-n', '--limit', action='store', type=int,
-                           metavar='<n>',
-                           help='Limit the number of lines per thread.')
+                           metavar='<n>', help='Limit the number of lines per thread.')
     group_std.add_argument('-s', '--skip', action='store', type=int,
-                           metavar='<n>',
-                           help='Skip <int> amount of lines per thread.')
+                           metavar='<n>', help='Skip <int> amount of lines per thread.')
     group_std.add_argument('--punctuation', action='store',
                            metavar='<punctuation>',
-                           help='Use to set the punctuation that is use by options. Defaults to: '
-                                'string.punctuation.')
+                           help='Use to set the punctuation that is use by options. Defaults to: string.punctuation.')
     group_std.add_argument('--version', action='version', version='%(prog)s ' + str(version),
                            help='Prints the version of demeuk.')
     group_std.add_argument('-h', '--help', action='help',
@@ -218,15 +233,13 @@ def init_parser(version):
     group_macro.add_argument('-g', '--googlengram', action='store_true',
                              help='When set, demeuk will strip universal pos tags: like _NOUN_ or _ADJ')
     group_macro.add_argument('--leak', action='store_true',
-                             help='When set, demeuk will run the following modules: mojibake, '
-                                  'encode, newline, check-controlchar. This is recommended when '
-                                  'working with leaks and was the default bevarior in demeuk '
-                                  'version 3.11.0 and below.')
+                             help='When set, demeuk will run the following modules: mojibake, encode, newline, '
+                                  'check-controlchar. This is recommended when working with leaks and was the default '
+                                  'bevarior in demeuk version 3.11.0 and below.')
     group_macro.add_argument('--leak-full', action='store_true',
-                             help='When set, demeuk will run the following modules: mojibake, '
-                                  'encode, newline, check-controlchar, hex, html, html-named, '
-                                  'check-hash, check-mac-address, check-uuid, check-email, '
-                                  'check-replacement-character, check-empty-line.')
+                             help='When set, demeuk will run the following modules: mojibake, encode, newline, '
+                                  'check-controlchar, hex, html, html-named, check-hash, check-mac-address, '
+                                  'check-uuid, check-email, check-replacement-character, check-empty-line.')
 
     # Configuring modules
     group_config = parser.add_argument_group('Configuration options')
@@ -234,12 +247,10 @@ def init_parser(version):
                               metavar='<field>',
                               help='Specifies the field to be returned, this is in the \'cut\' '
                                    'language thus: N N\'th field, N- from N-th field to end line, '
-                                   'N-M, from N-th field to M-th field. -M from start to M-th '
-                                   'field.')
+                                   'N-M, from N-th field to M-th field. -M from start to M-th field.')
     group_config.add_argument('--cut-before', action='store_true',
                               help='Specify if demeuk should return the string before the '
-                                   'delimiter. When cutting, demeuk by default returns the string '
-                                   'after the delimiter.')
+                                   'delimiter. When cutting, demeuk by default returns the string after the delimiter.')
     group_config.add_argument('-d', '--delimiter', action='store',
                               metavar='<delimiter>',
                               help='Specify which delimiter will be used for cutting. Multiple '
@@ -255,37 +266,41 @@ def init_parser(version):
     group_remove = parser.add_argument_group('Remove modules (remove specific parts of a line)')
 
     # Fixed pipeline flags
-    for fixed_flag in flags_fixed:
+    for flag in flags_fixed:
         # Currently these are all modify modules.
-        group_modify.add_argument(fixed_flag, action='store_true')
+        _, h = flags_fixed[flag]
+        group_modify.add_argument(flag, action='store_true', help=h)
 
     # The modules in here are all executed in the order given on the command-line.
     # TODO repeated code
     for flag in flags_check:
-        group_check.add_argument(flag, action='store_true')
+        _, h = lookup_flag[flag]
+        group_check.add_argument(flag, action='store_true', help=h)
     for flag in flags_modify:
-        f, h = lookup_flag[flag]
+        _, h = lookup_flag[flag]
         group_modify.add_argument(flag, action='store_true', help=h)
     for flag in flags_add:
-        group_add.add_argument(flag, action='store_true')
+        _, h = lookup_flag[flag]
+        group_add.add_argument(flag, action='store_true', help=h)
     for flag in flags_remove:
-        group_remove.add_argument(flag, action='store_true')
+        _, h = lookup_flag[flag]
+        group_remove.add_argument(flag, action='store_true', help=h)
 
     for param in params_check:
         # function, type, metavar, help
-        f, t, mv, h = lookup_params[param]
+        _, t, mv, h = lookup_params[param]
         group_check.add_argument(param, action='store', nargs=1, type=t, metavar=mv, help=h)
 
     for param in params_modify:
-        f, t, mv, h = lookup_params[param]
+        _, t, mv, h = lookup_params[param]
         group_modify.add_argument(param, action='store', nargs=1, type=t, metavar=mv, help=h)
 
     for param in params_add:
-        f, t, mv, h = lookup_params[param]
+        _, t, mv, h = lookup_params[param]
         group_add.add_argument(param, action='store', nargs=1, type=t, metavar=mv, help=h)
 
     for param in params_remove:
-        f, t, mv, h = lookup_params[param]
+        _, t, mv, h = lookup_params[param]
         group_remove.add_argument(param, action='store', nargs=1, type=t, metavar=mv, help=h)
 
     return parser
