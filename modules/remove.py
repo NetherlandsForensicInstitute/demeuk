@@ -11,6 +11,34 @@ from modules.add import global_store_punctuation, get_punctuation
 from modules.regexes import EMAIL_REGEX
 
 
+global_store_delims = [':']
+global_store_cut_fields = '2-'
+
+
+def set_delim(delim):
+    global global_store_delims
+    splitter = ','
+    # We can have comma as delimiter, if we put it first and separate with semicolon.
+    # TODO what if we want both , and ;?
+    if len(delim) >= 1:
+        if delim[0] == ',':
+            splitter = ';'
+    global_store_delims = delim.split(splitter)
+
+
+def get_delim():
+    return global_store_delims
+
+
+def set_cut_fields(cut_fields):
+    global global_store_cut_fields
+    global_store_cut_fields = cut_fields
+
+
+def get_cut_fields():
+    return global_store_cut_fields
+
+
 def remove_strip_punctuation(line):
     """Returns the line without start and end punctuation
 
@@ -59,34 +87,6 @@ def remove_email(line):
             return True, sub(f'{EMAIL_REGEX}(:|;)', '', line), 'Remove_email; email found'
     return False, line, None
 
-
-global_store_delims = [':']
-global_store_cut_fields = '2-'
-
-
-def set_delim(delim):
-    global global_store_delims
-    splitter = ','
-    # We can have comma as delimiter, if we put it first and separate with semicolon.
-    # TODO what if we want both , and ;?
-    if len(delim) >= 1:
-        if delim[0] == ',':
-            splitter = ';'
-    global_store_delims = delim.split(splitter)
-
-
-# TODO looks like we need getters/setters for global var?
-def get_delim():
-    return global_store_delims
-
-
-def set_cut_fields(cut_fields):
-    global global_store_cut_fields
-    global_store_cut_fields = cut_fields
-
-
-def get_cut_fields():
-    return global_store_cut_fields
 
 
 # In the docs, cut is a separating module

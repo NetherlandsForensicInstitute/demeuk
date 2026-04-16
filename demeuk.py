@@ -88,7 +88,8 @@ def clean_up(lines, pipeline, order, args):
                 log.append(f'Clean_encode; decoded line; {line_decoded}{linesep}')
         else:
             try:
-                line_decoded = line.decode(get_input_encoding()[0])  # TODO DO we want this?
+                # If no encoding specified, assume UTF-8
+                line_decoded = line.decode(get_input_encoding()[0])
                 if args.debug:
                     log.append(
                         f'Clean_up; decoded using input_encoding option; {line_decoded}{linesep}')

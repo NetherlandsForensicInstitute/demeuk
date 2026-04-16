@@ -22,6 +22,14 @@ from modules.regexes import HEX_REGEX, TRIM_BLOCKS
 # So for now use a global variable.
 global_store_input_encoding = ['UTF-8']
 
+def set_input_encoding(input_encoding):
+    global global_store_input_encoding
+    global_store_input_encoding = input_encoding.split(',')
+
+
+def get_input_encoding():
+    return global_store_input_encoding
+
 
 def _unescape_fixup_named(match):
     """
@@ -282,15 +290,6 @@ def try_encoding(line, encoding):
         return line_decoded
     except UnicodeDecodeError:
         return False
-
-
-def set_input_encoding(input_encoding):
-    global global_store_input_encoding
-    global_store_input_encoding = input_encoding.split(',')
-
-
-def get_input_encoding():
-    return global_store_input_encoding
 
 
 def clean_encode(line):
