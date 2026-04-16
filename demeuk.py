@@ -28,7 +28,7 @@ from modules.validate import params_check, params_modify, validate_output_check,
     flags_modify, clean_encode, clean_tab, stderr_print, clean_html, params_add, flags_remove, \
     flags_check
 
-version = '4.6.2'  # TODO increment
+version = '4.7'
 
 CHUNK_SIZE = 1024 * 1024
 
