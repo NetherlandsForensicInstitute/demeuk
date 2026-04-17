@@ -20,11 +20,9 @@ from modules.macro import clean_googlengram
 from modules.modify import get_input_encoding, set_input_encoding, clean_tab, clean_encode, clean_hex, clean_html
 from modules.parser import init_parser, parse_order, get_pipeline
 from modules.remove import set_delim, set_cut_fields
-from modules.util import set_verbose, unset_verbose, stderr
-from modules.validate import params_check, params_modify, \
-    validate_output_signature, validate_input_signature, flags_add, params_remove, \
-    flags_modify, stderr_print, params_add, flags_remove, \
-    flags_check
+from modules.util import set_verbose, unset_verbose, stderr, stderr_print
+from modules.validate import validate_output_signature, validate_input_signature, \
+    flags_check, flags_modify, flags_add, flags_remove, params_check, params_modify, params_add, params_remove
 from multiprocess import cpu_count, Pool  # multiprocess has better serialization capabilities
 from tqdm import tqdm
 

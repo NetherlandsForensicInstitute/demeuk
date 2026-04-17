@@ -1,7 +1,6 @@
 # Validate modules
-from modules.parser import params_check, params_modify, lookup_params, flags_add, \
-    params_remove, flags_modify, params_add, flags_remove, \
-    flags_check, flags_fixed
+from modules.parser import params_check, params_modify, lookup_params, flags_add, params_remove, flags_modify, \
+    params_add, flags_remove, flags_check, flags_fixed
 from modules.util import stderr_print
 
 
