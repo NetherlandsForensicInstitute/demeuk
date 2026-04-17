@@ -1,8 +1,9 @@
 # Validate modules
-from modules.parser import params_check, params_modify, lookup_params, clean_hex, flags_add, \
-    params_remove, flags_modify, clean_encode, clean_tab, clean_html, params_add, flags_remove, \
+from modules.parser import params_check, params_modify, lookup_params, flags_add, \
+    params_remove, flags_modify, params_add, flags_remove, \
     flags_check, flags_fixed
 from modules.util import stderr_print
+
 
 # Validate input/output of modules (naively).
 # TODO write a guide on how to implement new modules correctly
@@ -34,10 +35,9 @@ def validate_input_signature(order, funcs):
         else:
             # Here, we pass nothing. So the function expects a string
             try:
-                # allow clean_encode and clean_tab. as they operate on bytes instead of strings
-                # TODO Do we want to give these special status?
-                # TODO bad, hardcoded exception.
-                if func not in [clean_encode, clean_tab, clean_hex, clean_html]:
+                # Skip checking of fixed pipeline functions.
+                # We assume you know what you're doing if you implement one of these.
+                if order[counter] not in flags_fixed:
                     func("test string")
             except TypeError:
                 err_msg += 'wrong # of args'
@@ -50,50 +50,11 @@ def validate_input_signature(order, funcs):
     return passed
 
 
-# Check if check module return valid output (bool, str)
-def validate_output_check(order, funcs):
-    passed = True
-    counter = 0
-    for func in funcs:
-        err_msg = 'validate: invalid output signature: '
-        print_err = False
-
-
-        # We only care about the result of the function, so flags and options can be handled in the same way
-        try:
-            if isinstance(func, list):
-                if order[counter][0] not in params_check:
-                    counter += 1
-                    continue
-                opt = order[counter][0]
-                t = lookup_params[opt][1]
-                func_name = func[0].__name__
-                result, debug, *rest = func[0]("test string", t(func[1]))
-            else:
-                if order[counter] not in flags_check:
-                    counter += 1
-                    continue
-                opt = order[counter]
-                func_name = func.__name__
-                result, debug, *rest = func("test string")
-            # If we get here, no exception was thrown, so not too few return values.
-            if len(rest) > 0:
-                err_msg += 'too many return values'
-                print_err = True
-                passed = False
-        except ValueError, TypeError:
-            err_msg += 'too few return values'
-            print_err = True
-            passed = False
-        if print_err:
-            err_msg += f'\n\texpected (bool, str) for function {func_name} ({opt})'
-            stderr_print(err_msg)
-        counter += 1
-    return passed
-
-
-# Check if mod/add/rem module return valid output (bool, str, str) or (bool, list[str] str)
-# This is the same as validate_output_check, except for the two lines where the module is actually run.
+# Check if C/M/A/R module return valid number of return arguments
+# Check module expects two return args (bool, str)
+# M/A/R expect three return args (bool, str, str)
+# NB: Add modules may also return (bool, list[str], str).
+# At this time the return type is not checked, only the number of values returned.
 def validate_output_signature(order, funcs):
     passed = True
     counter = 0
@@ -101,24 +62,30 @@ def validate_output_signature(order, funcs):
         err_msg = 'validate: invalid output signature: '
         print_err = False
 
+        # We only care about the result of the function, so flags and options can be handled in the same way
         try:
             if isinstance(func, list):
-                if order[counter][0] not in params_modify | params_add | params_remove:
-                    counter += 1
-                    continue
                 opt = order[counter][0]
                 t = lookup_params[opt][1]
                 func_name = func[0].__name__
-                # This line
-                result, lines, debug, *rest = func[0]("test string", t(func[1]))
-            else:
-                if order[counter] not in flags_modify | flags_add | flags_remove:
+                if opt in params_modify | params_add | params_remove:
+                    result, lines, debug, *rest = func[0]("test string", t(func[1]))
+                elif opt in params_check:
+                    result, debug, *rest = func[0]("test string", t(func[1]))
+                else:
                     counter += 1
                     continue
+            else:
                 opt = order[counter]
                 func_name = func.__name__
-                # and this line
-                result, lines, debug, *rest = func("test string")
+                if opt in flags_modify | flags_add | flags_remove:
+                    result, lines, debug, *rest = func("test string")
+                elif opt in flags_check:
+                    result, debug, *rest = func("test string")
+                else:
+                    counter += 1
+                    continue
+            # If we get here, no exception was thrown, so not too few return values.
             if len(rest) > 0:
                 err_msg += 'too many return values'
                 print_err = True

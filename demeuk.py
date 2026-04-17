@@ -16,13 +16,14 @@ from time import sleep
 from modules.add import set_punctuation
 # Do we want do do imports like this? or add modules.***.func_name everywhere?
 from modules.macro import clean_googlengram
-from modules.modify import get_input_encoding, set_input_encoding
+# Fixed pipeline modules are all modify modules.
+from modules.modify import get_input_encoding, set_input_encoding, clean_tab, clean_encode, clean_hex, clean_html
 from modules.parser import init_parser, parse_order, get_pipeline
 from modules.remove import set_delim, set_cut_fields
 from modules.util import set_verbose, unset_verbose, stderr
-from modules.validate import params_check, params_modify, validate_output_check, \
-    validate_output_signature, validate_input_signature, clean_hex, flags_add, params_remove, \
-    flags_modify, clean_encode, clean_tab, stderr_print, clean_html, params_add, flags_remove, \
+from modules.validate import params_check, params_modify, \
+    validate_output_signature, validate_input_signature, flags_add, params_remove, \
+    flags_modify, stderr_print, params_add, flags_remove, \
     flags_check
 from multiprocess import cpu_count, Pool  # multiprocess has better serialization capabilities
 from tqdm import tqdm
@@ -280,11 +281,8 @@ def main():
         # (Custom) module takes incorrect input parameters
         return
     # NB: output check is not conclusive. do we want more rigid type checking?
-    if not validate_output_check(order, func_list):
-        # validate check module
-        return
     if not validate_output_signature(order, func_list):
-        # validate other modules
+        # validate (number of) return values of module
         return
 
     if output_file and not access(path.dirname(output_file), W_OK):
