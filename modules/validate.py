@@ -4,14 +4,16 @@ from modules.parser import params_check, params_modify, lookup_params, clean_hex
     flags_check, flags_fixed
 from modules.util import stderr_print
 
+# Validate input/output of modules (naively).
+# TODO write a guide on how to implement new modules correctly
 
-# Clean up, repeating structure over these three functions
-
-# Check if all the functions take the correct input
+# Check if all the functions take the correct input (str, optional(param))
 def validate_input_signature(order, funcs):
     passed = True
     counter = 0
     for func in funcs:
+        err_msg = 'validate: invalid input signature: '
+        print_err = False
         if isinstance(func, list):
             # in this case, func = [func, arg].
             # the line should always be the first param.
@@ -21,17 +23,14 @@ def validate_input_signature(order, funcs):
                 func[0]("test string", t(func[1]))
             except TypeError:
                 # The offending command-line option
-                stderr_print("=== INVALID INPUT SIGNATURE === wrong # of args ===\n\t" +
-                             "expected 2 arguments " +
-                             "(str, " + t.__name__ + ") for function " +
-                             func[0].__name__ + " (" + opt + ")!")
+                err_msg += 'wrong # of args'
+                print_err = True
                 passed = False
             except ValueError:
                 passed = False
-                stderr_print("=== INVALID INPUT SIGNATURE === Incorrect arg type ===\n\t" +
-                             "expected 2 arguments " +
-                             "(str, " + t.__name__ + ") for function " +
-                             func[0].__name__ + " (" + opt + ")!")
+                err_msg += 'incorrect arg type'
+                print_err = True
+            err_msg += f'\n\texpected 2 arguments (str, {t.__name__}) for function {func[0].__name__} ({opt})!'
         else:
             # Here, we pass nothing. So the function expects a string
             try:
@@ -41,115 +40,95 @@ def validate_input_signature(order, funcs):
                 if func not in [clean_encode, clean_tab, clean_hex, clean_html]:
                     func("test string")
             except TypeError:
-                # wrong amt of args
-                stderr_print("=== INVALID INPUT SIGNATURE === Incorrect arg type\n\t" +
-                             "expected 1 argument (str) " +
-                             "for function " + func.__name__ +
-                             " (" + order[counter] + ")!")
+                err_msg += 'wrong # of args'
+                print_err = True
                 passed = False
+            err_msg += f'\n\texpected 1 argument (str) for function {func.__name__} ({order[counter]})!'
+        if print_err:
+            stderr_print(err_msg)
         counter += 1
     return passed
 
 
+# Check if check module return valid output (bool, str)
 def validate_output_check(order, funcs):
     passed = True
     counter = 0
     for func in funcs:
-        if isinstance(func, list):
-            if order[counter][0] not in params_check:
-                counter += 1
-                continue
-            # func = [fun, arg]
-            # Param (with arg)
-            opt = order[counter][0]  # The option being checked
-            t = lookup_params[opt][1]  # type of parameter
+        err_msg = 'validate: invalid output signature: '
+        print_err = False
 
-            try:
+
+        # We only care about the result of the function, so flags and options can be handled in the same way
+        try:
+            if isinstance(func, list):
+                if order[counter][0] not in params_check:
+                    counter += 1
+                    continue
+                opt = order[counter][0]
+                t = lookup_params[opt][1]
+                func_name = func[0].__name__
                 result, debug, *rest = func[0]("test string", t(func[1]))
-                if len(rest) > 0:
-                    # module returns too much
-                    stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
-                                 "\n\texpected (bool,str) for function " +
-                                 func[0].__name__ + " (" + opt + ")!")
-                    passed = False
-            except ValueError, TypeError:
-                stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
-                             "\n\texpected (bool,str) for function " +
-                             func[0].__name__ + " (" + opt + ")!")
-                passed = False
-        else:
-            if order[counter] not in flags_check:
-                counter += 1
-                continue
-            # Flag, without argument
-            try:
+            else:
+                if order[counter] not in flags_check:
+                    counter += 1
+                    continue
+                opt = order[counter]
+                func_name = func.__name__
                 result, debug, *rest = func("test string")
-                if len(rest) > 0:
-                    # module returns too much
-                    stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
-                                 "\n\texpected (bool,str) for function " +
-                                 func.__name__ + " (" + order[counter] + ")!")
-                    passed = False
-            except ValueError, TypeError:
-                stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
-                             "\n\texpected (bool,str) for function " +
-                             func.__name__ + " (" + order[counter] + ")!")
+            # If we get here, no exception was thrown, so not too few return values.
+            if len(rest) > 0:
+                err_msg += 'too many return values'
+                print_err = True
                 passed = False
+        except ValueError, TypeError:
+            err_msg += 'too few return values'
+            print_err = True
+            passed = False
+        if print_err:
+            err_msg += f'\n\texpected (bool, str) for function {func_name} ({opt})'
+            stderr_print(err_msg)
         counter += 1
     return passed
 
 
-# Validate output for modify/add/remove modules
+# Check if mod/add/rem module return valid output (bool, str, str) or (bool, list[str] str)
+# This is the same as validate_output_check, except for the two lines where the module is actually run.
 def validate_output_signature(order, funcs):
     passed = True
     counter = 0
     for func in funcs:
-        if isinstance(func, list):
-            if order[counter][0] not in params_modify | params_add | params_remove:
-                counter += 1
-                continue
-            # func = [fun, arg]
-            # Param (with arg)
-            opt = order[counter][0]  # The option being checked
-            t = lookup_params[opt][1]  # type of parameter
+        err_msg = 'validate: invalid output signature: '
+        print_err = False
 
-            try:
-                result, line, debug, *rest = func[0]("test string", t(func[1]))
-                if len(rest) > 0:
-                    # module returns too much
-                    stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
-                                 "\n\texpected (bool,str,str) for function " +
-                                 func[0].__name__ + " (" + opt + ")!")
-                    passed = False
-            except ValueError, TypeError:
-                stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
-                             "\n\texpected (bool,str,str) for function " +
-                             func[0].__name__ + " (" + opt + ")!")
+        try:
+            if isinstance(func, list):
+                if order[counter][0] not in params_modify | params_add | params_remove:
+                    counter += 1
+                    continue
+                opt = order[counter][0]
+                t = lookup_params[opt][1]
+                func_name = func[0].__name__
+                # This line
+                result, lines, debug, *rest = func[0]("test string", t(func[1]))
+            else:
+                if order[counter] not in flags_modify | flags_add | flags_remove:
+                    counter += 1
+                    continue
+                opt = order[counter]
+                func_name = func.__name__
+                # and this line
+                result, lines, debug, *rest = func("test string")
+            if len(rest) > 0:
+                err_msg += 'too many return values'
+                print_err = True
                 passed = False
-        else:
-            if order[counter] not in flags_modify | flags_add | flags_remove:
-                counter += 1
-                continue
-            # Flag, without argument
-            try:
-                if order[counter] not in flags_fixed:
-                    result, line, debug, *rest = func("test string")
-                    if len(rest) > 0:
-                        # module returns too much
-                        stderr_print(
-                            "=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
-                            "\n\texpected (bool,str,str) for function " +
-                            func.__name__ + " (" + order[counter] + ")!")
-                        passed = False
-            except ValueError, TypeError:
-                stderr_print("=== INVALID OUTPUT SIGNATURE === wrong # of return values ===" +
-                             "\n\texpected (bool,str,str) for function " +
-                             func.__name__ + " (" + order[counter] + ")!")
-                passed = False
+        except ValueError, TypeError:
+            err_msg += 'too few return values'
+            print_err = True
+            passed = False
+        if print_err:
+            err_msg += f'\n\texpected (bool, str, str) for function {func_name} ({opt})'
+            stderr_print(err_msg)
         counter += 1
     return passed
-
-# Check module: (bool result, str debug)
-# Modify module: (bool status, str line, str debug)
-# Add module: (bool status, str line, str debug)
-# Rem module: (bool status, str line, str debug)
