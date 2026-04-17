@@ -50,6 +50,17 @@ def clean_up(lines, pipeline, order, args):
     processed_lines = set()
     work_queue = deque(lines)
 
+    # Create concatenated dicts for py3.8
+    # fp = flags & params
+    if sys.version_info < (3, 9):
+        fp_check = {**flags_check, **params_check}
+        fp_mod_rem = {**flags_modify, **params_modify, **flags_remove, **params_remove}
+        fp_add = {**flags_add, **params_add}
+    else:
+        fp_check = flags_check | params_check
+        fp_mod_rem = flags_modify | params_modify | flags_remove | params_remove
+        fp_add = flags_add | params_add
+
     while work_queue:
         line = work_queue.popleft()
 
@@ -138,19 +149,19 @@ def clean_up(lines, pipeline, order, args):
                 opt = order[counter]
             if not stop:
                 status, *rest = func(line_decoded, param) if has_param else func(line_decoded)
-                if opt in flags_check | params_check:
+                if opt in fp_check:
                     msg = rest[0]
                     if not status:
                         # Tripped check module
                         log.append(f'{msg}; {line_decoded}{linesep}')
                         stop = True
-                elif opt in flags_modify | params_modify | flags_remove | params_remove:
+                elif opt in fp_mod_rem:
                     line_decoded, msg = rest
                     if status:
                         if args.debug:
                             log.append(f'{msg}; {line_decoded}{linesep}')
 
-                elif opt in flags_add | params_add:
+                elif opt in fp_add:
                     result, msg = rest
                     if status:
                         if isinstance(result, list):

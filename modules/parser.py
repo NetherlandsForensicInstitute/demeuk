@@ -1,3 +1,4 @@
+import sys
 from argparse import ArgumentParser, RawDescriptionHelpFormatter, ArgumentTypeError
 from textwrap import dedent
 
@@ -147,8 +148,14 @@ params_modify = dict({
 params_add = dict({})
 params_remove = dict({})
 
-lookup_flag = flags_check | flags_modify | flags_add | flags_remove
-lookup_params = params_check | params_modify | params_add | params_remove
+# Dict concatenation with | can only be done from python 3.9+
+# Earlier versions use uglier syntax
+if sys.version_info < (3, 9):
+    lookup_flag = {**flags_check, **flags_modify, **flags_add, **flags_remove}
+    lookup_params = {**params_check, **params_modify, **params_add, **params_remove}
+else:
+    lookup_flag = flags_check | flags_modify | flags_add | flags_remove
+    lookup_params = params_check | params_modify | params_add | params_remove
 
 
 # -j can take int or 'all' as argument.
@@ -163,9 +170,7 @@ def int_or_all(arg):
 
 
 def init_parser(version):
-    parser = ArgumentParser(
-        prog='demeuk',
-        description=dedent('''Demeuk - a simple tool to clean up corpora
+    desc = dedent('''Demeuk - a simple tool to clean up corpora
 
 Example uses:
     ./demeuk.py -i inputfile.tmp -o outputfile.dict -l logfile.txt
@@ -174,12 +179,11 @@ Example uses:
     ./demeuk.py -i inputfile -o outputfile -j 24
     ./demeuk.py -i inputfile -o outputfile -c -e
     ./demeuk.py -i inputfile -o outputfile --threads all
-    cat inputfile | ./demeuk.py --leak -j all | sort -u > outputfile'''),
-        usage='./%(prog)s.py [options]',
-        suggest_on_error=True,
-        add_help=False,  # We add our own help so that it is grouped correctly
-        formatter_class=RawDescriptionHelpFormatter,
-    )
+    cat inputfile | ./demeuk.py --leak -j all | sort -u > outputfile''')
+
+    parser = ArgumentParser(prog='demeuk', description=desc, usage='./%(prog)s.py [options]',
+                            add_help=False,  # We add our own help so that it is grouped correctly
+                            formatter_class=RawDescriptionHelpFormatter)
 
     # Standard options
     group_std = parser.add_argument_group('Standard options')

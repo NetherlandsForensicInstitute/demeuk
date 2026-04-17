@@ -1,4 +1,6 @@
 # Validate modules
+import sys
+
 from modules.parser import params_check, params_modify, lookup_params, flags_add, params_remove, flags_modify, \
     params_add, flags_remove, flags_check, flags_fixed
 from modules.util import stderr_print
@@ -57,6 +59,15 @@ def validate_input_signature(order, funcs):
 def validate_output_signature(order, funcs):
     passed = True
     counter = 0
+
+    # New dict concatenation is py3.9+
+    if sys.version_info < (3, 9):
+        flags_mar = {**flags_modify, **flags_add, **flags_remove}
+        params_mar = {**params_modify, **params_add, **params_remove}
+    else:
+        flags_mar = flags_modify | flags_add | flags_remove
+        params_mar = params_modify | params_add | params_remove
+
     for func in funcs:
         err_msg = 'validate: invalid output signature: '
         print_err = False
@@ -67,7 +78,7 @@ def validate_output_signature(order, funcs):
                 opt = order[counter][0]
                 t = lookup_params[opt][1]
                 func_name = func[0].__name__
-                if opt in params_modify | params_add | params_remove:
+                if opt in params_mar:
                     result, lines, debug, *rest = func[0]("test string", t(func[1]))
                 elif opt in params_check:
                     result, debug, *rest = func[0]("test string", t(func[1]))
@@ -77,7 +88,7 @@ def validate_output_signature(order, funcs):
             else:
                 opt = order[counter]
                 func_name = func.__name__
-                if opt in flags_modify | flags_add | flags_remove:
+                if opt in flags_mar:
                     result, lines, debug, *rest = func("test string")
                 elif opt in flags_check:
                     result, debug, *rest = func("test string")
@@ -89,7 +100,7 @@ def validate_output_signature(order, funcs):
                 err_msg += 'too many return values'
                 print_err = True
                 passed = False
-        except ValueError, TypeError:
+        except (ValueError, TypeError):
             err_msg += 'too few return values'
             print_err = True
             passed = False
