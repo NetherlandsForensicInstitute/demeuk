@@ -2,9 +2,9 @@ import sys
 from subprocess import PIPE, run
 from unittest.mock import patch
 
+from demeuk.demeuk import main
 from pytest import raises, mark
 
-from demeuk import main
 
 # Q: test_check_email (22)
 #   Expected behaviour (--check-email --remove-email)
@@ -824,7 +824,7 @@ def test_check_multiple_regexes():
 
 
 def test_stdin_stdout():
-    comlist = ['./demeuk.py']
+    comlist = ['./demeuk/demeuk.py']
     script = b'input\nlines\n'
     res = run(comlist, input=script,
               stdout=PIPE, stderr=PIPE)

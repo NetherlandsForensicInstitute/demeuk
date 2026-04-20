@@ -2,15 +2,10 @@ import sys
 from argparse import ArgumentParser, RawDescriptionHelpFormatter, ArgumentTypeError
 from textwrap import dedent
 
-from modules.add import add_first_upper, add_latin_ligatures, add_without_punctuation, add_split, \
-    add_umlaut, add_lower, add_title_case
-from modules.check import check_starting_with, check_mac_address, check_min_length, check_uuid, check_empty_line, \
-    check_max_length, check_max_specials, check_hash, check_email, check_min_digits, check_case, check_min_specials, \
-    check_non_ascii, check_regex, check_min_uppercase, check_max_uppercase, check_replacement_character, \
-    check_max_digits, check_ending_with, check_contains, check_controlchar
-from modules.modify import clean_transliterate, clean_umlaut, clean_trim, clean_hex, clean_encode, clean_tab, \
-    clean_newline, clean_mojibake, clean_html, clean_title_case, clean_non_ascii, clean_lowercase, clean_html_named
-from modules.remove import clean_cut, remove_strip_punctuation, remove_email, remove_punctuation
+from add import *
+from check import *
+from modify import *
+from remove import *
 from multiprocess import cpu_count
 
 # lookup tables for flags (taking no argument)

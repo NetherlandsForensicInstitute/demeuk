@@ -13,18 +13,16 @@ from string import punctuation as string_punctuation
 from sys import stdin, stdout
 from time import sleep
 
-from modules.add import set_punctuation
-# Do we want do do imports like this? or add modules.***.func_name everywhere?
-from modules.macro import clean_googlengram
-# Fixed pipeline modules are all modify modules.
-from modules.modify import get_input_encoding, set_input_encoding, clean_tab, clean_encode, clean_hex, clean_html
-from modules.parser import init_parser, parse_order, get_pipeline
-from modules.remove import set_delim, set_cut_fields
-from modules.util import set_verbose, unset_verbose, stderr, stderr_print
-from modules.validate import validate_output_signature, validate_input_signature, \
-    flags_check, flags_modify, flags_add, flags_remove, params_check, params_modify, params_add, params_remove
 from multiprocess import cpu_count, Pool  # multiprocess has better serialization capabilities
 from tqdm import tqdm
+
+from add import set_punctuation
+from macro import clean_googlengram
+from modify import get_input_encoding, set_input_encoding, clean_tab, clean_encode, clean_hex, clean_html
+from parser import *
+from remove import set_delim, set_cut_fields
+from util import set_verbose, unset_verbose, stderr, stderr_print
+from validate import validate_output_signature, validate_input_signature
 
 version = '4.7'
 

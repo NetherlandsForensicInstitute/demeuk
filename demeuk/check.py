@@ -10,7 +10,7 @@
 from unicodedata import category
 from re import search
 
-import modules.regexes as regexes
+from regexes import *
 
 
 def check_regex(line, regex_list):
@@ -196,13 +196,13 @@ def check_hash(line):
     Returns:
         true if line does not contain hash
     """
-    if search(regexes.HASH_HEX_REGEX, line):
+    if search(HASH_HEX_REGEX, line):
         if len(line) in [32, 40, 64]:
             # TODO is it not cheaper to check length first before running regexes?
             return False, 'Check_hash; dropped line because found a hash'
     if len(line) > 0:
         if line[0] == '$':
-            for hash_regex in regexes.HASH_REGEX_LIST:
+            for hash_regex in HASH_REGEX_LIST:
                 if search(hash_regex, line):
                     return False, 'Check_hash; dropped line because found a hash'
     return True, None
@@ -217,7 +217,7 @@ def check_mac_address(line):
     Returns:
         true if line does not contain a MAC-address
     """
-    if search(regexes.MAC_REGEX, line):
+    if search(MAC_REGEX, line):
         return False, 'Check_mac_address; dropped line because found a MAC address'
 
     return True, None
@@ -232,7 +232,7 @@ def check_email(line):
     Returns:
         true is line does not contain email
     """
-    if search(regexes.EMAIL_REGEX, line):
+    if search(EMAIL_REGEX, line):
         return False, 'Check_email; dropped line because found email'
     else:
         return True, None
@@ -303,7 +303,7 @@ def check_uuid(line):
     Returns:
         true if line does not contain a UUID
     """
-    if search(regexes.UUID_REGEX, line):
+    if search(UUID_REGEX, line):
         return False, 'Check_uuid; dropped line because found a uuid'
 
     return True, None
