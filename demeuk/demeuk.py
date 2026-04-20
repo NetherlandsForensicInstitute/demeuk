@@ -136,32 +136,28 @@ def clean_up(lines, pipeline, order, args):
         # This is where the order-dependent modules (non-fixed pipeline) run
         counter = 0  # Should we track module type separately?
         for func in pipeline:
-            # Run the module first, then process the output later.
-            has_param = isinstance(func, list)
-            # The name of the (text) option
-            if has_param:
-                opt = order[counter][0]
-                # At this point, func = [<function obj>, param. So we unpack this.
-                func, param = func
-            else:
-                opt = order[counter]
+            # First: check if we need to do anything
             if not stop:
-                status, *rest = func(line_decoded, param) if has_param else func(line_decoded)
-                if opt in fp_check:
-                    msg = rest[0]
-                    if not status:
+                match func:  # Avoid isinstance
+                    case (fun, param):
+                        opt = order[counter][0]
+                        status, *rest = fun(line_decoded, param)
+                    case _:
+                        opt = order[counter]
+                        status, *rest = func(line_decoded)
+                if not status:
+                    if opt in fp_check:  # Reverse this? need to invert status of check_mopdule
                         # Tripped check module
+                        msg = rest[0]
                         log.append(f'{msg}; {line_decoded}{linesep}')
                         stop = True
-                elif opt in fp_mod_rem:
-                    line_decoded, msg = rest
-                    if status:
+                else:
+                    if opt in fp_mod_rem:
+                        line_decoded, msg = rest
                         if args.debug:
                             log.append(f'{msg}; {line_decoded}{linesep}')
-
-                elif opt in fp_add:
-                    result, msg = rest
-                    if status:
+                    if opt in fp_add:
+                        result, msg = rest
                         if isinstance(result, list):
                             # We have to add multiple lines
                             for new_line in result:
