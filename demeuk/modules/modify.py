@@ -6,7 +6,7 @@ from html import unescape
 from re import sub
 from unicodedata import category
 
-from add import clean_add_umlaut
+from modules.add import clean_add_umlaut
 from chardet import detect
 from ftfy import fix_encoding
 from ftfy.chardata import HTML_ENTITY_RE, HTML_ENTITIES

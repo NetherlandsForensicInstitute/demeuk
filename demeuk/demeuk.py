@@ -16,11 +16,11 @@ from time import sleep
 from multiprocess import cpu_count, Pool  # multiprocess has better serialization capabilities
 from tqdm import tqdm
 
-from add import set_punctuation
-from macro import clean_googlengram
-from modify import get_input_encoding, set_input_encoding, clean_tab, clean_encode, clean_hex, clean_html
+from modules.add import set_punctuation
+from modules.macro import clean_googlengram
+from modules.modify import get_input_encoding, set_input_encoding, clean_tab, clean_encode, clean_hex, clean_html
+from modules.remove import set_delim, set_cut_fields
 from parser import *
-from remove import set_delim, set_cut_fields
 from util import set_verbose, unset_verbose, stderr, stderr_print
 from validate import validate_output_signature, validate_input_signature
 

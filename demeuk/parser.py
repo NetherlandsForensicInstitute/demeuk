@@ -2,10 +2,10 @@ import sys
 from argparse import ArgumentParser, RawDescriptionHelpFormatter, ArgumentTypeError
 from textwrap import dedent
 
-from add import *
-from check import *
-from modify import *
-from remove import *
+from modules.add import *
+from modules.check import *
+from modules.modify import *
+from modules.remove import *
 from multiprocess import cpu_count
 
 # lookup tables for flags (taking no argument)

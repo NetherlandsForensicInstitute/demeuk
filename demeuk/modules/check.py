@@ -18,10 +18,10 @@ def check_regex(line, regex_list):
 
     Params:
         line (unicode)
-        regexes (str)
+        (str)
 
     Returns:
-        true if all regexes match
+        true if all match
         false if line does not match regex
     """
     for regex in regex_list.split(','):
@@ -198,7 +198,7 @@ def check_hash(line):
     """
     if search(HASH_HEX_REGEX, line):
         if len(line) in [32, 40, 64]:
-            # TODO is it not cheaper to check length first before running regexes?
+            # TODO is it not cheaper to check length first before running
             return False, 'Check_hash; dropped line because found a hash'
     if len(line) > 0:
         if line[0] == '$':
