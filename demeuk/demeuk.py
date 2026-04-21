@@ -138,24 +138,25 @@ def clean_up(lines, pipeline, type_info, args):
         for func in pipeline:
             # First: check if we need to do anything
             if not stop:
-                if type_info[counter][0] == OptionType.FLAG:
+                option_type, module_type = type_info[counter]
+                if option_type == OptionType.FLAG:
                     status, *rest = func(line_decoded)
-                elif type_info[counter][0] == OptionType.PARAM:
+                else:
+                    # option_type = OptionType.PARAM
                     func, param = func
                     status, *rest = func(line_decoded, param)
 
-                if not status:
-                    if type_info[counter][1] == ModuleType.CHECK:  # Reverse this? need to invert status of check_mopdule
-                        # Tripped check module
+                # Status is true if something happened, false if nothing changed
+                if status:
+                    if module_type == ModuleType.CHECK:
                         msg = rest[0]
                         log.append(f'{msg}; {line_decoded}{linesep}')
                         stop = True
-                else:
-                    if type_info[counter][1] in [ModuleType.MODIFY, ModuleType.REMOVE]:
+                    elif module_type in [ModuleType.MODIFY, ModuleType.REMOVE]:
                         line_decoded, msg = rest
                         if args.debug:
                             log.append(f'{msg}; {line_decoded}{linesep}')
-                    if type_info[counter][1] == ModuleType.ADD:
+                    elif module_type == ModuleType.ADD:
                         result, msg = rest
                         if isinstance(result, list):
                             # We have to add multiple lines

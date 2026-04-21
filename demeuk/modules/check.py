@@ -2,8 +2,8 @@
 # Check modules check some property of a line.
 # These should take a line as input, possibly with one argument.
 # The module should return a bool result and a str log
-# result is False if it needs to be dropped, so True if it is included in the list.
-# log is a string which can be None. It is logged when result if False (line dropped)
+# result is True if it needs to be dropped, so False if it is included in the list.
+# log is a string which can be None. It is logged when result if True (line dropped)
 
 # TODO: change docstrings, return values are wrong.
 
@@ -28,8 +28,8 @@ def check_regex(line, regex_list):
         if search(regex, line):
             continue
         else:
-            return False, 'Check_regex; dropped line because it does not match the regex'
-    return True, None
+            return True, 'Check_regex; dropped line because it does not match the regex'
+    return False, None
 
 
 def contains_at_least(line, bound, char_property):
@@ -58,20 +58,20 @@ def contains_at_least(line, bound, char_property):
 
 def check_min_digits(line, n):
     if contains_at_least(line, n, str.isdigit):
-        return True, None
-    return False, f'Check_min_digits; dropped line because it contains less than {n} digits'
+        return False, None
+    return True, f'Check_min_digits; dropped line because it contains less than {n} digits'
 
 
 def check_min_uppercase(line, n):
     if contains_at_least(line, n, str.isupper):
-        return True, None
-    return False, f'Check_min_uppercase; dropped line because it contains less than {n} uppercase characters'
+        return False, None
+    return True, f'Check_min_uppercase; dropped line because it contains less than {n} uppercase characters'
 
 
 def check_min_specials(line, n):
     if contains_at_least(line, n, lambda c: not c.isalnum() and not c.isspace()):
-        return True, None
-    return False, f'Check_min_specials; dropped line because it contains less than {n} special characters'
+        return False, None
+    return True, f'Check_min_specials; dropped line because it contains less than {n} special characters'
 
 
 def contains_at_most(line, bound, char_property):
@@ -97,24 +97,24 @@ def contains_at_most(line, bound, char_property):
 
 def check_max_digits(line, n):
     if contains_at_most(line, n, str.isdigit):
-        return True, None
-    return False, f'Check_max_digits; dropped line because it contains more than {n} digits'
+        return False, None
+    return True, f'Check_max_digits; dropped line because it contains more than {n} digits'
 
 
 def check_max_uppercase(line, n):
     if contains_at_most(line, n, str.isupper):
-        return True, None
-    return False, f'Check_max_uppercase; dropped line because it contains more than {n} uppercase characters'
+        return False, None
+    return True, f'Check_max_uppercase; dropped line because it contains more than {n} uppercase characters'
 
 
 def check_max_specials(line, n):
     if contains_at_most(line, n, lambda c: not c.isalnum() and not c.isspace()):
-        return True, None
-    return False, f'Check_max_specials; dropped line because it contains more than {n} special characters'
+        return False, None
+    return True, f'Check_max_specials; dropped line because it contains more than {n} special characters'
 
 
 def check_controlchar(line):
-    """Detects control chars, returns True when detected
+    """Detects control chars, returns False when detected
 
     Params:
         line (Unicode)
@@ -132,8 +132,8 @@ def check_controlchar(line):
         # Co -> Private use
         # Cs -> Surrogate
         if category(c) in ['Cc', 'Cf', 'Cn', 'Co', 'Cs']:
-            return False, f'Check_controlchar; found controlchar {c!r}'
-    return True, None
+            return True, f'Check_controlchar; found controlchar {c!r}'
+    return False, None
 
 
 def check_case(line, ignored_chars=(' ', "'", '-')):
@@ -152,8 +152,8 @@ def check_case(line, ignored_chars=(' ', "'", '-')):
             if c in ignored_chars:
                 continue
             else:
-                return False, f'Check_case; dropped line because of {c}'
-    return True, None
+                return True, f'Check_case; dropped line because of {c}'
+    return False, None
 
 
 def check_length(line, min=0, max=0):
@@ -177,14 +177,14 @@ def check_length(line, min=0, max=0):
 
 def check_min_length(line, n):
     if check_length(line, min=n):
-        return True, None
-    return False, f'Check_min_length; dropped line because length is less than {n}'
+        return False, None
+    return True, f'Check_min_length; dropped line because length is less than {n}'
 
 
 def check_max_length(line, n):
     if check_length(line, max=n):
-        return True, None
-    return False, f'Check_max_length; dropped line because length is more than {n}'
+        return False, None
+    return True, f'Check_max_length; dropped line because length is more than {n}'
 
 
 def check_hash(line):
@@ -199,13 +199,13 @@ def check_hash(line):
     if search(HASH_HEX_REGEX, line):
         if len(line) in [32, 40, 64]:
             # TODO is it not cheaper to check length first before running
-            return False, 'Check_hash; dropped line because found a hash'
+            return True, 'Check_hash; dropped line because found a hash'
     if len(line) > 0:
         if line[0] == '$':
             for hash_regex in HASH_REGEX_LIST:
                 if search(hash_regex, line):
-                    return False, 'Check_hash; dropped line because found a hash'
-    return True, None
+                    return True, 'Check_hash; dropped line because found a hash'
+    return False, None
 
 
 def check_mac_address(line):
@@ -218,9 +218,9 @@ def check_mac_address(line):
         true if line does not contain a MAC-address
     """
     if search(MAC_REGEX, line):
-        return False, 'Check_mac_address; dropped line because found a MAC address'
+        return True, 'Check_mac_address; dropped line because found a MAC address'
 
-    return True, None
+    return False, None
 
 
 def check_email(line):
@@ -233,9 +233,9 @@ def check_email(line):
         true is line does not contain email
     """
     if search(EMAIL_REGEX, line):
-        return False, 'Check_email; dropped line because found email'
+        return True, 'Check_email; dropped line because found email'
     else:
-        return True, None
+        return False, None
 
 
 def check_non_ascii(line):
@@ -249,9 +249,9 @@ def check_non_ascii(line):
     """
     try:
         line.encode('ascii')
-        return True, None
+        return False, None
     except UnicodeEncodeError:
-        return False, 'Check_non_ascii; dropped line because non ascii char found'
+        return True, 'Check_non_ascii; dropped line because non ascii char found'
 
 
 def check_character(line, character):
@@ -272,9 +272,9 @@ def check_character(line, character):
 
 def check_replacement_character(line):
     if check_character(line, '�'):
-        return False, 'Check_replacement_character; dropped line because "�" found'
+        return True, 'Check_replacement_character; dropped line because "�" found'
     else:
-        return True, None
+        return False, None
 
 
 def check_starting_with(line, strings):
@@ -290,8 +290,8 @@ def check_starting_with(line, strings):
     """
     for string in strings.split(','):
         if line.startswith(string):
-            return False, f'Check_starting_with; dropped line because {string} found'
-    return True, None
+            return True, f'Check_starting_with; dropped line because {string} found'
+    return False, None
 
 
 def check_uuid(line):
@@ -304,9 +304,9 @@ def check_uuid(line):
         true if line does not contain a UUID
     """
     if search(UUID_REGEX, line):
-        return False, 'Check_uuid; dropped line because found a uuid'
+        return True, 'Check_uuid; dropped line because found a uuid'
 
-    return True, None
+    return False, None
 
 
 def check_ending_with(line, strings):
@@ -322,8 +322,8 @@ def check_ending_with(line, strings):
     """
     for string in strings.split(','):
         if line.endswith(string):
-            return False, f'Check_ending_with; dropped line because {string} found'
-    return True, None
+            return True, f'Check_ending_with; dropped line because {string} found'
+    return False, None
 
 
 def check_contains(line, strings):
@@ -339,8 +339,8 @@ def check_contains(line, strings):
     """
     for string in strings.split(','):
         if string in line:
-            return False, f'Check-contains; dropped line because {string} found'
-    return True, None
+            return True, f'Check-contains; dropped line because {string} found'
+    return False, None
 
 
 def check_empty_line(line):
@@ -353,5 +353,5 @@ def check_empty_line(line):
         true of line is empty or only contains whitespace chars
     """
     if line == '' or line.isspace():
-        return False, 'Check_empty_line; dropped line because is empty or only contains whitespace'
-    return True, None
+        return True, 'Check_empty_line; dropped line because is empty or only contains whitespace'
+    return False, None
