@@ -166,7 +166,7 @@ def int_or_all(arg):
         pass
     if arg == 'all':
         return cpu_count()
-    raise ArgumentTypeError(f'invalid value {arg} not int or \'all\'')
+    raise ArgumentTypeError(f"invalid value {arg} not int or 'all'")
 
 
 def init_parser(version):

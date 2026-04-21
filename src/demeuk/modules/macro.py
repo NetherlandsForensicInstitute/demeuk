@@ -1,6 +1,6 @@
-from nltk import WhitespaceTokenizer, str2tuple
-
 from string import punctuation as string_punctuation
+
+from nltk import WhitespaceTokenizer, str2tuple
 
 
 def clean_googlengram(line):
@@ -12,7 +12,7 @@ def clean_googlengram(line):
     Returns:
         line (unicode)
     """
-    return_line = line.split("\t")[0]  # Get the ngram, remove year, counter, etc
+    return_line = line.split('\t')[0]  # Get the ngram, remove year, counter, etc
     clean = []
     words = WhitespaceTokenizer().tokenize(return_line)
     for word in words:

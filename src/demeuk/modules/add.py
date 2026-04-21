@@ -11,6 +11,7 @@ from string import punctuation as string_punctuation
 
 from ftfy.fixes import fix_latin_ligatures
 
+
 global_store_punctuation = string_punctuation + ' '
 
 

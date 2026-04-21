@@ -2,8 +2,9 @@ import sys
 from subprocess import PIPE, run
 from unittest.mock import patch
 
+from pytest import mark, raises
+
 from demeuk.demeuk import main
-from pytest import raises, mark
 
 
 # Q: test_check_email (22)

@@ -6,14 +6,15 @@ from html import unescape
 from re import sub
 from unicodedata import category
 
-from .add import clean_add_umlaut
-from ..regexes import HEX_REGEX, TRIM_BLOCKS
-
 from chardet import detect
 from ftfy import fix_encoding
-from ftfy.chardata import HTML_ENTITY_RE, HTML_ENTITIES
+from ftfy.chardata import HTML_ENTITIES, HTML_ENTITY_RE
 from transliterate import translit
 from unidecode import unidecode
+
+from ..regexes import HEX_REGEX, TRIM_BLOCKS
+from .add import clean_add_umlaut
+
 
 # TODO
 # This should become a member of an instantiated Module later.
@@ -317,7 +318,7 @@ def clean_encode(line):
                 line_decoded = line.decode(encode['encoding'])
                 return True, line_decoded
             except (UnicodeDecodeError, LookupError) as e:  # noqa F841
-                return False, encode["encoding"]
+                return False, encode['encoding']
         else:
             return False, 'Unknown'
     # If we managed to get here, return decode line

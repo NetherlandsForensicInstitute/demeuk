@@ -7,8 +7,8 @@
 
 # TODO: change docstrings, return values are wrong.
 
-from unicodedata import category
 from re import search
+from unicodedata import category
 
 from ..regexes import *
 

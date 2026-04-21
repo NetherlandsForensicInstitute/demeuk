@@ -7,22 +7,23 @@ from collections import deque
 from glob import glob
 from locale import LC_ALL, setlocale
 from math import ceil
-from os import linesep, access, path, R_OK, F_OK, W_OK
-from signal import signal, SIGINT, SIG_IGN
+from os import F_OK, R_OK, W_OK, access, linesep, path
+from signal import SIG_IGN, SIGINT, signal
 from string import punctuation as string_punctuation
 from sys import stdin, stdout
 from time import sleep
 
-from multiprocess import cpu_count, Pool  # multiprocess has better serialization capabilities
+from multiprocess import Pool, cpu_count  # multiprocess has better serialization capabilities
 from tqdm import tqdm
 
 from .modules.add import set_punctuation
 from .modules.macro import clean_googlengram
-from .modules.modify import get_input_encoding, set_input_encoding, clean_tab, clean_encode, clean_hex, clean_html
-from .modules.remove import set_delim, set_cut_fields
+from .modules.modify import clean_encode, clean_hex, clean_html, clean_tab, get_input_encoding, set_input_encoding
+from .modules.remove import set_cut_fields, set_delim
 from .parser import *
-from .util import set_verbose, unset_verbose, stderr, stderr_print
-from .validate import validate_output_signature, validate_input_signature
+from .util import set_verbose, stderr, stderr_print, unset_verbose
+from .validate import validate_input_signature, validate_output_signature
+
 
 version = '4.7.0'
 
@@ -412,6 +413,7 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         stderr_print('ERROR: Process terminated by user! (CTRL+C)')
         exit(3)
+
 
 def get_version():
     return version

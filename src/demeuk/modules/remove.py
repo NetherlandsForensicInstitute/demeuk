@@ -7,8 +7,9 @@
 # log is a debug string which can be None. Logged when result is True (something changed)
 from re import search, sub
 
-from .add import global_store_punctuation, get_punctuation
 from ..regexes import EMAIL_REGEX
+from .add import get_punctuation, global_store_punctuation
+
 
 global_store_delims = [':']
 global_store_cut_fields = '2-'
