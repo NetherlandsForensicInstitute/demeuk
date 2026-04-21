@@ -1,9 +1,0 @@
-docopt
-chardet
-nltk
-ftfy
-unidecode
-tqdm
-transliterate
-
-multiprocess
