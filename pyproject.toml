@@ -58,12 +58,22 @@ test = {composite = [
 ]}
 
 [tool.ruff]
-format.quote-style = "single"
 line-length = 120
+
+[tool.ruff.format]
+quote-style = "single"
+exclude = ["tests/*.py"]
 
 [tool.ruff.lint]
 select = [
-    "E", "F", "I", "Q", "RUF100", "RUF101", "UP"
+    "E", # Errors
+    "F", # Pyflakes rules
+    "I", # Imports
+    "Q", # Quotes
+    "RUF100", # Unused noqa
+    "RUF101", # redirected noqa
+    "TD", # Check for todo comments
+    "UP" # pyupgrade
 ]
 ignore = [
     "F403", "F405"
