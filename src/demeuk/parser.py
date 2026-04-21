@@ -3,11 +3,11 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter, ArgumentTypeEr
 from enum import Enum
 from textwrap import dedent
 
+from multiprocess import cpu_count
 from .modules.add import *
 from .modules.check import *
 from .modules.modify import *
 from .modules.remove import *
-from multiprocess import cpu_count
 
 # Enums for option types
 OptionType = Enum('OptionType', [('FLAG', 0), ('PARAM', 1)])
@@ -258,11 +258,9 @@ Example uses:
                                    '\' is required for cutting, escape it with a backslash. Only '
                                    'one delimiter can be used per line.')
 
-    group_check = parser.add_argument_group(
-        'Check modules (check if a line matches a specific condition)')
+    group_check = parser.add_argument_group('Check modules (check if a line matches a specific condition)')
     group_modify = parser.add_argument_group('Modify modules (modify a line in place)')
-    group_add = parser.add_argument_group(
-        'Add modules (Modify a line, but keep the original as well)')
+    group_add = parser.add_argument_group('Add modules (Modify a line, but keep the original as well)')
     group_remove = parser.add_argument_group('Remove modules (remove specific parts of a line)')
 
     # Fixed pipeline flags
@@ -343,7 +341,7 @@ def get_type_info(ordered_list):
     for el in ordered_list:
         # [0]: 'f'lag, 'p'aram
         # [1]: 'c'heck, 'm'odify, 'a'dd, 'r'emove
-        current_type = [] # TODO use enum?
+        current_type = []  # TODO use enum?
         if isinstance(el, list):
             opt, _ = el
             current_type.append(OptionType.PARAM)

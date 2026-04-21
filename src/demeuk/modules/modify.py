@@ -78,8 +78,7 @@ def clean_hex(line):
     """
     match = HEX_REGEX.search(line)
     if match:
-        return True, unhexlify(
-            match.group(1)), 'Clean_hex; replaced $HEX[], added to queue and quitting'
+        return True, unhexlify(match.group(1)), 'Clean_hex; replaced $HEX[], added to queue and quitting'
     else:
         return False, line, None
 

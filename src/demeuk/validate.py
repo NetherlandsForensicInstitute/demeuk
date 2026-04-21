@@ -8,6 +8,7 @@ from .util import stderr_print
 # Validate input/output of modules (naively).
 # TODO write a guide on how to implement new modules correctly
 
+
 # Check if all the functions take the correct input (str, optional(param))
 def validate_input_signature(order, funcs):
     passed = True
@@ -21,7 +22,7 @@ def validate_input_signature(order, funcs):
             opt = order[counter][0]  # The option being checked
             t = lookup_params[opt][1]  # type of parameter
             try:
-                func[0]("test string", t(func[1]))
+                func[0]('test string', t(func[1]))
             except TypeError:
                 # The offending command-line option
                 err_msg += 'wrong # of args'
@@ -38,7 +39,7 @@ def validate_input_signature(order, funcs):
                 # Skip checking of fixed pipeline functions.
                 # We assume you know what you're doing if you implement one of these.
                 if order[counter] not in flags_fixed:
-                    func("test string")
+                    func('test string')
             except TypeError:
                 err_msg += 'wrong # of args'
                 print_err = True
@@ -78,9 +79,9 @@ def validate_output_signature(order, funcs):
                 t = lookup_params[opt][1]
                 func_name = func[0].__name__
                 if opt in params_mar:
-                    result, lines, debug, *rest = func[0]("test string", t(func[1]))
+                    result, lines, debug, *rest = func[0]('test string', t(func[1]))
                 elif opt in params_check:
-                    result, debug, *rest = func[0]("test string", t(func[1]))
+                    result, debug, *rest = func[0]('test string', t(func[1]))
                 else:
                     counter += 1
                     continue
@@ -88,9 +89,9 @@ def validate_output_signature(order, funcs):
                 opt = order[counter]
                 func_name = func.__name__
                 if opt in flags_mar:
-                    result, lines, debug, *rest = func("test string")
+                    result, lines, debug, *rest = func('test string')
                 elif opt in flags_check:
-                    result, debug, *rest = func("test string")
+                    result, debug, *rest = func('test string')
                 else:
                     counter += 1
                     continue
