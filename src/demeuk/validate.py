@@ -1,9 +1,8 @@
 # Validate modules
 import sys
 
-from parser import params_check, params_modify, lookup_params, flags_add, params_remove, flags_modify, \
-    params_add, flags_remove, flags_check, flags_fixed
-from util import stderr_print
+from .parser import *
+from .util import stderr_print
 
 
 # Validate input/output of modules (naively).

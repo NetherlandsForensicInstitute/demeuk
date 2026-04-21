@@ -6,11 +6,12 @@ from html import unescape
 from re import sub
 from unicodedata import category
 
-from modules.add import clean_add_umlaut
+from .add import clean_add_umlaut
+from ..regexes import HEX_REGEX, TRIM_BLOCKS
+
 from chardet import detect
 from ftfy import fix_encoding
 from ftfy.chardata import HTML_ENTITY_RE, HTML_ENTITIES
-from regexes import HEX_REGEX, TRIM_BLOCKS
 from transliterate import translit
 from unidecode import unidecode
 

@@ -10,7 +10,7 @@
 from unicodedata import category
 from re import search
 
-from regexes import *
+from ..regexes import *
 
 
 def check_regex(line, regex_list):

@@ -1,0 +1,46 @@
+[project]
+name = "demeuk"
+version = "4.7.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "Netherlands Forensic Institute"},
+]
+dependencies = [
+    "multiprocess>=0.70.19",
+    "tqdm>=4.67.3",
+    "ftfy>=6.3.1",
+    "nltk>=3.9.4",
+    "chardet>=7.4.3",
+    "transliterate>=1.10.2",
+    "unidecode>=1.4.0",
+]
+requires-python = ">=3.10"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+
+[project.scripts]
+demeuk = "demeuk.demeuk:main"
+
+[project.optional-dependencies]
+test = [
+    "coverage>=7.13.5",
+    "pytest>=9.0.3",
+]
+[tool.pdm]
+distribution = true
+
+[tool.pdm.build]
+package-dir = "src"
+
+[tool.pdm.scripts]
+test = {composite = [
+    "coverage run --branch --module pytest --junit-xml pytest.xml tests/",
+    "coverage xml",
+]}
+
+[tool.pytest.ini_options]
+#pythonpath = ["src/demeuk"]
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"

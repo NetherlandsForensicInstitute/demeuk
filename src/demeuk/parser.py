@@ -3,10 +3,10 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter, ArgumentTypeEr
 from enum import Enum
 from textwrap import dedent
 
-from modules.add import *
-from modules.check import *
-from modules.modify import *
-from modules.remove import *
+from .modules.add import *
+from .modules.check import *
+from .modules.modify import *
+from .modules.remove import *
 from multiprocess import cpu_count
 
 # Enums for option types

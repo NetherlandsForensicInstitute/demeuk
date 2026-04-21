@@ -824,7 +824,7 @@ def test_check_multiple_regexes():
 
 
 def test_stdin_stdout():
-    comlist = ['./demeuk/demeuk.py']
+    comlist = ['pdm', 'run', 'demeuk']
     script = b'input\nlines\n'
     res = run(comlist, input=script,
               stdout=PIPE, stderr=PIPE)
