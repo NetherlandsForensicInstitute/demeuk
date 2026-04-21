@@ -1,7 +1,7 @@
 [project]
 name = "demeuk"
 version = "4.7.0"
-description = "Default template for PDM package"
+description = "A command-line tool to clean up corpora."
 authors = [
     {name = "Netherlands Forensic Institute"},
 ]
@@ -26,6 +26,10 @@ test = [
     "coverage>=7.13.5",
     "pytest>=9.0.3",
 ]
+check = [
+    "ruff>=0.15.11",
+    "mdformat>=1.0.0",
+]
 [tool.pdm]
 distribution = true
 
@@ -33,13 +37,43 @@ distribution = true
 package-dir = "src"
 
 [tool.pdm.scripts]
+all = {composite = [
+    "check",
+    "test"
+]}
+check = {composite = [
+    "pdm lock --check",
+    "ruff format --diff src/demeuk/ tests/",
+    "ruff check src/demeuk/ tests/",
+    "mdformat --check README.md",
+]}
+fix = {composite = [
+    "ruff format src/demeuk/ tests/",
+    "ruff check --fix src/demeuk/ tests/",
+    "mdformat README.md",
+]}
 test = {composite = [
     "coverage run --branch --module pytest --junit-xml pytest.xml tests/",
     "coverage xml",
 ]}
 
-[tool.pytest.ini_options]
-#pythonpath = ["src/demeuk"]
+[tool.ruff]
+format.quote-style = "single"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "I", "Q", "RUF100", "RUF101", "UP"
+]
+ignore = [
+    "F403", "F405"
+]
+flake8-quotes.inline-quotes = "single"
+isort.lines-after-imports = 2
+
+[tool.mdformat]
+end_of_line = "lf"
+wrap = 120
 
 [build-system]
 requires = ["pdm-backend"]
