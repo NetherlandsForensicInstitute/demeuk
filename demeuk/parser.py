@@ -1,5 +1,6 @@
 import sys
 from argparse import ArgumentParser, RawDescriptionHelpFormatter, ArgumentTypeError
+from enum import Enum
 from textwrap import dedent
 
 from modules.add import *
@@ -7,6 +8,10 @@ from modules.check import *
 from modules.modify import *
 from modules.remove import *
 from multiprocess import cpu_count
+
+# Enums for option types
+OptionType = Enum('OptionType', [('FLAG', 0), ('PARAM', 1)])
+ModuleType = Enum('ModuleType', [('CHECK', 0), ('MODIFY', 1), ('ADD', 2), ('REMOVE', 3)])
 
 # lookup tables for flags (taking no argument)
 flags_check = dict({
@@ -330,3 +335,29 @@ def get_pipeline(ordered_list):
             func, *_ = lookup_flag[el]
             func_list.append(func)
     return func_list
+
+
+# Determine type info (flag/param, module type) once so that we don;t have to check this every loop.
+def get_type_info(ordered_list):
+    type_info = []
+    for el in ordered_list:
+        # [0]: 'f'lag, 'p'aram
+        # [1]: 'c'heck, 'm'odify, 'a'dd, 'r'emove
+        current_type = [] # TODO use enum?
+        if isinstance(el, list):
+            opt, _ = el
+            current_type.append(OptionType.PARAM)
+        else:
+            opt = el
+            current_type.append(OptionType.FLAG)
+
+        if opt in flags_check | params_check:
+            current_type.append(ModuleType.CHECK)
+        elif opt in flags_modify | params_modify:
+            current_type.append(ModuleType.MODIFY)
+        elif opt in flags_add | params_add:
+            current_type.append(ModuleType.ADD)
+        elif opt in flags_remove | params_remove:
+            current_type.append(ModuleType.REMOVE)
+        type_info.append(current_type)
+    return type_info

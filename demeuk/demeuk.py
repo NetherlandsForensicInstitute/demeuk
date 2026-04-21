@@ -32,9 +32,9 @@ CHUNK_SIZE = 1024 * 1024
 # lines = a single line
 # pipeline = the function pipeline to run
 # Pass the args construction, TODO reconsider if this is still needed later
-# We pass both the function pipeline and the string representation (order)
-#   to figure out the type of module we run.
-def clean_up(lines, pipeline, order, args):
+# We pass both the function pipeline and type info
+#   so that we don't have to figure out the type of module we run every loop.
+def clean_up(lines, pipeline, type_info, args):
     """Main clean loop, this calls all the other clean functions.
 
     Args:
@@ -138,25 +138,24 @@ def clean_up(lines, pipeline, order, args):
         for func in pipeline:
             # First: check if we need to do anything
             if not stop:
-                match func:  # Avoid isinstance
-                    case (fun, param):
-                        opt = order[counter][0]
-                        status, *rest = fun(line_decoded, param)
-                    case _:
-                        opt = order[counter]
-                        status, *rest = func(line_decoded)
+                if type_info[counter][0] == OptionType.FLAG:
+                    status, *rest = func(line_decoded)
+                elif type_info[counter][0] == OptionType.PARAM:
+                    func, param = func
+                    status, *rest = func(line_decoded, param)
+
                 if not status:
-                    if opt in fp_check:  # Reverse this? need to invert status of check_mopdule
+                    if type_info[counter][1] == ModuleType.CHECK:  # Reverse this? need to invert status of check_mopdule
                         # Tripped check module
                         msg = rest[0]
                         log.append(f'{msg}; {line_decoded}{linesep}')
                         stop = True
                 else:
-                    if opt in fp_mod_rem:
+                    if type_info[counter][1] in [ModuleType.MODIFY, ModuleType.REMOVE]:
                         line_decoded, msg = rest
                         if args.debug:
                             log.append(f'{msg}; {line_decoded}{linesep}')
-                    if opt in fp_add:
+                    if type_info[counter][1] == ModuleType.ADD:
                         result, msg = rest
                         if isinstance(result, list):
                             # We have to add multiple lines
@@ -277,6 +276,7 @@ def main():
     # Determine order of modules (NB: need to do this when the pipeline is finalized)
     # so after processing "grouping" modules like leak and leak-full
     order = parse_order(sys.argv)
+    type_info = get_type_info(order)
 
     # Generate and validate function list
     func_list = get_pipeline(order)
@@ -352,7 +352,7 @@ def main():
             # Find out which jobs are running
             running_jobs = sum([not job.ready() for job in jobs])
             if running_jobs < a_threads:
-                job = pool.apply_async(clean_up, (chunk, func_list, order, args))
+                job = pool.apply_async(clean_up, (chunk, func_list, type_info, args))
                 chunk_start += len(chunk)
                 jobs.append(job)
                 break
