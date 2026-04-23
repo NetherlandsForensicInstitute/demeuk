@@ -1,4 +1,3 @@
-import sys
 from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
 from enum import Enum
 from textwrap import dedent
@@ -150,14 +149,9 @@ params_modify = dict({
 params_add = dict({})
 params_remove = dict({})
 
-# Dict concatenation with | can only be done from python 3.9+
-# Earlier versions use uglier syntax
-if sys.version_info < (3, 9):
-    lookup_flag = {**flags_check, **flags_modify, **flags_add, **flags_remove}
-    lookup_params = {**params_check, **params_modify, **params_add, **params_remove}
-else:
-    lookup_flag = flags_check | flags_modify | flags_add | flags_remove
-    lookup_params = params_check | params_modify | params_add | params_remove
+# Lookup tables combining these dicts
+lookup_flag = flags_check | flags_modify | flags_add | flags_remove
+lookup_params = params_check | params_modify | params_add | params_remove
 
 
 # -j can take int or 'all' as argument.

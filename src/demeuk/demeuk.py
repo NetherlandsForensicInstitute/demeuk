@@ -18,11 +18,11 @@ from tqdm import tqdm
 
 from .modules.add import set_punctuation
 from .modules.macro import clean_googlengram
-from .modules.modify import clean_encode, clean_hex, clean_html, clean_tab, get_input_encoding, set_input_encoding
-from .modules.remove import set_cut_fields, set_delim
+from .modules.modify import *
+from .modules.remove import *
 from .parser import *
-from .util import set_verbose, stderr, stderr_print, unset_verbose
-from .validate import validate_input_signature, validate_output_signature
+from .util import *
+from .validate import *
 
 
 version = '4.7.0'
@@ -48,17 +48,6 @@ def clean_up(lines, pipeline, type_info, args):
     log = []
     processed_lines = set()
     work_queue = deque(lines)
-
-    # Create concatenated dicts for py3.8
-    # fp = flags & params
-    if sys.version_info < (3, 9):
-        fp_check = {**flags_check, **params_check}
-        fp_mod_rem = {**flags_modify, **params_modify, **flags_remove, **params_remove}
-        fp_add = {**flags_add, **params_add}
-    else:
-        fp_check = flags_check | params_check
-        fp_mod_rem = flags_modify | params_modify | flags_remove | params_remove
-        fp_add = flags_add | params_add
 
     while work_queue:
         line = work_queue.popleft()

@@ -1,6 +1,4 @@
 # Validate modules
-import sys
-
 from .parser import *
 from .util import stderr_print
 
@@ -60,14 +58,6 @@ def validate_output_signature(order, funcs):
     passed = True
     counter = 0
 
-    # New dict concatenation is py3.9+
-    if sys.version_info < (3, 9):
-        flags_mar = {**flags_modify, **flags_add, **flags_remove}
-        params_mar = {**params_modify, **params_add, **params_remove}
-    else:
-        flags_mar = flags_modify | flags_add | flags_remove
-        params_mar = params_modify | params_add | params_remove
-
     for func in funcs:
         err_msg = 'validate: invalid output signature: '
         print_err = False
@@ -78,7 +68,7 @@ def validate_output_signature(order, funcs):
                 opt = order[counter][0]
                 t = lookup_params[opt][1]
                 func_name = func[0].__name__
-                if opt in params_mar:
+                if opt in params_modify | params_add | params_remove:
                     result, lines, debug, *rest = func[0]('test string', t(func[1]))
                 elif opt in params_check:
                     result, debug, *rest = func[0]('test string', t(func[1]))
@@ -88,7 +78,7 @@ def validate_output_signature(order, funcs):
             else:
                 opt = order[counter]
                 func_name = func.__name__
-                if opt in flags_mar:
+                if opt in flags_modify | flags_add | flags_remove:
                     result, lines, debug, *rest = func('test string')
                 elif opt in flags_check:
                     result, debug, *rest = func('test string')
