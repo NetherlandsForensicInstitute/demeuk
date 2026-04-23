@@ -25,6 +25,7 @@ demeuk = "demeuk.demeuk:main"
 test = [
     "coverage>=7.13.5",
     "pytest>=9.0.3",
+    "tox>=4.53.0",
 ]
 check = [
     "ruff>=0.15.11",
@@ -51,6 +52,7 @@ fix = {composite = [
     "mdformat README.md",
 ]}
 test = {composite = [
+    "tox",
     "coverage run --branch --module pytest --junit-xml pytest.xml tests/",
     "coverage xml",
 ]}
