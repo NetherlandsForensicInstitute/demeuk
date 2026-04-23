@@ -24,28 +24,43 @@ grant agreement No. 82201
 Please read the docs for more information.
 
 ## Quick start
-The recommended way to install demeuk is to install it in a virtual
-environment.
+Demeuk support Python versions 3.10 and up.
+The recommended way to install demeuk is to use [PDM](https://pdm-project.org/en/latest/).
 
 ```
-# Create virtual environment
-virtualenv <virtual environment name>
-# Activate the virtual environment
-source <virtual environment name>/bin/activate
-pip3 install -r requirements.txt
+# Initialize an empty project
+pdm -n --no-git --python 3.14
+# Install demeuk
+pdm add demeuk
 ```
 
-Now you can run bin/demeuk.py:
+Now you can invoke demeuk using `pdm run demeuk`
 
 Examples:
 ```
-    demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt
-    demeuk -i inputfile -o outputfile -j 24 -l logfile.log
-    demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt --leak
-    demeuk -i inputfile -o outputfile -j 24 -l logfile.log --leak-full
-    demeuk -i inputdir/*.txt -o outputfile.dict -l logfile.log
-    demeuk -o outputfile.dict -l logfile.log
+    # From inside the installed directory
+    pdm run demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt
+    pdm run demeuk -i inputfile -o outputfile -j 24 -l logfile.log
+    pdm run demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt --leak
+    # From outside the install directory
+    pdm run -p /path/to/demeuk demeuk -i inputfile -o outputfile -j 24 -l logfile.log --leak-full
+    pdm run -p /path/to/demeuk demeuk -i inputdir/*.txt -o outputfile.dict -l logfile.log
+    pdm run -p /path/to/demeuk demeuk -o outputfile.dict -l logfile.log
 ```
+
+## Running from source
+To make changes to demeuk, you need to run it from the source Python files.
+```
+git clone https://github.com/NetherlandsForensicInstitute/demeuk.git
+cd demeuk
+# Choose a Python interpreter (optional)
+pdm use
+# Install dependencies
+pdm install
+# Run the included test suite
+pdm test
+```
+Now you can run demeuk as in the examples.
 
 ## Docs
 The docs are available at: <http://demeuk.rtfd.io/>
