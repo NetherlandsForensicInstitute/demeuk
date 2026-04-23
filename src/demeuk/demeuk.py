@@ -8,18 +8,13 @@ from locale import LC_ALL, setlocale
 from math import ceil
 from os import F_OK, R_OK, W_OK, access, linesep, path
 from signal import SIG_IGN, SIGINT, signal
-from string import punctuation as string_punctuation
 from sys import stdin, stdout
 from time import sleep
 
-from multiprocess import Pool, cpu_count  # multiprocess has better serialization capabilities
+from multiprocess import Pool, cpu_count  # multiprocess can serialize the inner functions in clean_up
 from tqdm import tqdm
 
-from .modules.add import set_punctuation
 from .modules.macro import clean_googlengram
-from .modules.modify import *
-from .modules.remove import *
-from .parser import *
 from .util import *
 from .validate import *
 
@@ -164,6 +159,8 @@ def clean_up(lines, pipeline, type_info, args):
         # If we got through the whole function pipeline:
         if not stop:
             results.append(f'{line_decoded}{linesep}')  # include the line in the output.
+            if args.debug:
+                log.append(f'----END---- {line_decoded}{linesep}{linesep}')
 
     return {'results': results, 'log': log}
 
@@ -269,12 +266,12 @@ def main():
     type_info = get_type_info(order)
 
     # Generate and validate function list
-    func_list = get_pipeline(order)
-    if not validate_input_signature(order, func_list):
+    pipeline = get_pipeline(order)
+    if not validate_input_signature(order, pipeline):
         # (Custom) module takes incorrect input parameters
         return
     # NB: output check is not conclusive. do we want more rigid type checking?
-    if not validate_output_signature(order, func_list):
+    if not validate_output_signature(order, pipeline):
         # validate (number of) return values of module
         return
 
@@ -342,7 +339,7 @@ def main():
             # Find out which jobs are running
             running_jobs = sum([not job.ready() for job in jobs])
             if running_jobs < a_threads:
-                job = pool.apply_async(clean_up, (chunk, func_list, type_info, args))
+                job = pool.apply_async(clean_up, (chunk, pipeline, type_info, args))
                 chunk_start += len(chunk)
                 jobs.append(job)
                 break
