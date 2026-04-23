@@ -266,7 +266,6 @@ Example uses:
         group_modify.add_argument(flag, action='store_true', help=h)
 
     # The modules in here are all executed in the order given on the command-line.
-    # TODO repeated code
     for flag in flags_check:
         _, h = lookup_flag[flag]
         group_check.add_argument(flag, action='store_true', help=h)
@@ -335,9 +334,7 @@ def get_pipeline(ordered_list):
 def get_type_info(ordered_list):
     type_info = []
     for el in ordered_list:
-        # [0]: 'f'lag, 'p'aram
-        # [1]: 'c'heck, 'm'odify, 'a'dd, 'r'emove
-        current_type = []  # TODO use enum?
+        current_type = []
         if isinstance(el, list):
             opt, _ = el
             current_type.append(OptionType.PARAM)

@@ -16,7 +16,7 @@ from ..regexes import HEX_REGEX, TRIM_BLOCKS
 from .add import clean_add_umlaut
 
 
-# TODO
+# Note on global variables:
 # This should become a member of an instantiated Module later.
 # For now we need a way to "configure" a module
 # Want to do it only once, not every loop.

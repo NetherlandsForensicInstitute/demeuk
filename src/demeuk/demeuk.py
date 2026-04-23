@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# TODO: Might not be important but it looks like there is always a thread running clean_up with no words...?
 
 import sys
 from binascii import hexlify
