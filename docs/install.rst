@@ -14,65 +14,46 @@ environment.
 Requirements
 ------------
 
-- Python 3.6 is required
+- Python 3.10 is required, Python 3.14 is recommended.
 - Ubuntu is the only OS on which demeuk has been tested.
 
 Installing
 ----------
 
-Virtual environment
-~~~~~~~~~~~~~~~~~~~
+PDM
+~~~
+The recommended way is to install demeuk using `PDM`_. ::
 
-.. code-block:: none
+    # Initialize an empty project
+    pdm -n --no-git --python 3.14
+    # Install demeuk
+    pdm add demeuk
+.. _a link: https://pdm-project.org/latest/
 
-    $ sudo apt install python3-pip
-    $ sudo pip3 install virtualenv
-    $ cd <some place where the virtual environment will be created>
-    $ virtualenv venv-demeuk
-    $ source venv-demeuk/bin/activate
+Running
+-------
+You can run demeuk using::
 
-Installing from PyPi
-~~~~~~~~~~~~~~~~~~~~
+    pdm run demeuk [options]
+when inside of the project directory. You can also run from somewhere else:::
 
-.. code-block:: none
-
-    $ pip3 install demeuk
-
-Installing from source
-~~~~~~~~~~~~~~~~~~~~~~
-If for some reason the PyPi is not available, you can build the wheelfile
-yourself. First create a Virtual environment as described above.
-:ref:`Virtual environment`
-
-.. code-block:: none
-
-    $ git clone <link to repository>
-    $ cd demeuk
-    $ python3 setup.py bdist_wheel
-    $ pip3 install dist/*.whl
+    pdm run -p /path/to/demeuk demeuk [options]
 
 Run from source
 ~~~~~~~~~~~~~~~
-If for some reason you want to run demeuk from source you only have to install
-the requirements.
+If you want to run demeuk from source you can also easily do this with PDM.::
 
-.. code-block:: none
-
-    $ git clone <link to repository>
-    $ cd demeuk
-    $ pip3 install -r requirements.txt
-    $ python3 bin/demeuk.py --help
-
+    # Clone the repo
+    git clone <link to repository>
+    cd demeuk
+    # Choose a Python interpreter to use (optional)
+    pdm use
+    # Install dependencies
+    pdm install
 Upgrading
 ---------
 
-Upgrading demeuk is quite simple. In case you have installed demeuk through pip
-and using a virtualenv:
+Upgrading demeuk is quite simple. In case you have installed demeuk through PDM, run::
 
-.. code-block:: none
-
-    $ source venv-demeuk/bin/activate
-    $ pip3 install demeuk --upgrade
-
-In case that you installed demeuk using the source, just rebuild the software
-and install the wheel file. Pip3 will upgrade the package automatically. 
+    pdm update
+and you're done!

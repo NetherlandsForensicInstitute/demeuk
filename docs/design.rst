@@ -33,11 +33,11 @@ un ordered and thus if you want to have a sorted list you need to sort it yourse
 
 Encoding detection
 ------------------
-Next, when '--tab' is enabled all tabs will be converted to ':' greedy. This is to have
+Next, when ``--tab`` is enabled all tabs will be converted to ':' greedy. This is to have
 a single cut/splitting char. This is done on binary level.
 
 Next, we arrive at one of the most important things of this application. The encoding detecting
-enable this with '--encode'. Some dataset are a combination of different sources. This means
+enable this with ``--encode``. Some dataset are a combination of different sources. This means
 EVERY line can have a different encoding. People or applications tend to make a lot
 of errors in encoding, as does this application. Demeuk tries its best to detect
 and correct as much as possible, but there will for sure be some weird case where it fails
@@ -58,16 +58,16 @@ please run the tests to verify that you have not broken something.
 If it managed detect any encoding, it will try to decode this line. If no unicode
 error happens we assume that we got some result.
 
-Next we try to fix mojibakes, for this enable the --mojibake option
-basically, we might have decoded the string incorrectly
-and now correct some of the common errors. For this we use the FTFY library.
+You can enable the ``--mojibake`` option to let demeuk try to fix mojibakes, which are
+artifacts of wrong decoding. For this we use the FTFY library.
 
+.. _modules:
 Modules
 -------
 After a line has been decoded correctly demeuk will start to run all the modules.
 Demeuk consist of 4 different type of modules.
 
-- Clean modules. Those modules modify something in a line. For example replace tab
+- Modify or Clean modules. Those modules modify something in a line. For example replace tab
   character with ':'. The commandline parameters will have the name of the module 
   without a prefix.
 - Add modules. Those modules will modify something in a line, but keep the original
@@ -80,17 +80,9 @@ Demeuk consist of 4 different type of modules.
   in place. For example punctuation needs to be removed, those modules will be used.
   The commandline parameters will start with the 'remove-' prefix.
 
-The name that a module has on the commandline will mean that the function inside the
-source code must also has the exact same name. Only clean module will start with the
-'clean\_' prefix to prevent name clashes with default functions.
-
 Note that when any add option is used, any other modules (like clean, check, remove
 AND even add) will be ran on the modified line again. This might result in creating
 an loop if it keeps creating new lines. So be careful with using those options.
-
-For now there is no specific order in which the module type will run. Apart from
-the add modules, which will always run last. If someone find a specific use case
-for which the order needs to be configured; please submit a bug.
 
 Another note on the add modules and threading. Lines are dedicated to different
 threads based on a configured chunk size. When additional lines are added, all
@@ -99,3 +91,12 @@ will also run those modules again. Meaning that if one thread creates a lot of
 different new lines that thread might be busier then other threads. But because
 the chunksize is quite small, this will probably not be an issue. If this is an
 issue for someone please submit a bug.
+
+Module ordering
+---------------
+After successfully decoding the string, there are many different modules which can be run,
+and these may be run in any order. Apart from the ``--tab``, ``--encode``, ``--hex``, ``--html`` and
+``-g``/``--googlengram`` options, all modules will be run in the order in which they are supplied to
+the program. This enables greate flexibility, but it also means you need to think about this order.
+If you don't know where to start, put modify modules first, then check modules, remove modules and
+finally add modules.

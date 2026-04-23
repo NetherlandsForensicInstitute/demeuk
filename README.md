@@ -38,7 +38,7 @@ Now you can invoke demeuk using `pdm run demeuk`
 
 Examples:
 ```
-    # From inside the installed directory
+    # From inside the install directory
     pdm run demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt
     pdm run demeuk -i inputfile -o outputfile -j 24 -l logfile.log
     pdm run demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt --leak
