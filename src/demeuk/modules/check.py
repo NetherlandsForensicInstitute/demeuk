@@ -196,9 +196,8 @@ def check_hash(line):
     Returns:
         true if line does not contain hash
     """
-    if search(HASH_HEX_REGEX, line):
-        if len(line) in [32, 40, 64]:
-            # TODO is it not cheaper to check length first before running
+    if len(line) in [32, 40, 64]:
+        if search(HASH_HEX_REGEX, line):
             return True, 'Check_hash; dropped line because found a hash'
     if len(line) > 0:
         if line[0] == '$':
