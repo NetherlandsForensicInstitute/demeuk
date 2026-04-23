@@ -14,7 +14,7 @@ def unset_verbose():
     log_verbose = False
 
 
-# Quick to default logging to stderr instead
+# Log to stderr
 def stderr_print(*args, **kwargs):
     if log_verbose:
         kwargs.setdefault('file', stderr)

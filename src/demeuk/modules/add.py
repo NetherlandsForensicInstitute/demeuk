@@ -5,7 +5,6 @@
 # Output is either bool result, str out_line, str log OR:
 # bool result, list[str] out_lines, str log.
 # result should be true if it out_line or out_lines need to be added to the queue
-# NB: Add modules are not the opposite of remove modules!
 from re import split as re_split
 from string import punctuation as string_punctuation
 

@@ -19,7 +19,6 @@ def set_delim(delim):
     global global_store_delims
     splitter = ','
     # We can have comma as delimiter, if we put it first and separate with semicolon.
-    # TODO what if we want both , and ;?
     if len(delim) >= 1:
         if delim[0] == ',':
             splitter = ';'

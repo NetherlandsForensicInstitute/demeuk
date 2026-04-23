@@ -62,8 +62,8 @@ def clean_up(lines, pipeline, type_info, args):
         if args.debug:
             log.append(f'----BEGIN---- {hexlify(line)}{linesep}')
 
-        # Can we specify the order of the fixed part of the pipeline apart from the implementation?
-        # Probably not, because processing the output depends on the output.
+        # First, execute the fixed part of the pipeline.
+
         # Replace tab chars as ':' greedy
         if args.tab and not stop:
             status, line, msg = clean_tab(line)
@@ -118,7 +118,7 @@ def clean_up(lines, pipeline, type_info, args):
                 log.append(f'{msg}; {line_decoded}{linesep}')
 
         # This is where the order-dependent modules (non-fixed pipeline) run
-        counter = 0  # Should we track module type separately?
+        counter = 0
         for func in pipeline:
             # First: check if we need to do anything
             if not stop:
@@ -270,7 +270,6 @@ def main():
     if not validate_input_signature(order, pipeline):
         # (Custom) module takes incorrect input parameters
         return
-    # NB: output check is not conclusive. do we want more rigid type checking?
     if not validate_output_signature(order, pipeline):
         # validate (number of) return values of module
         return

@@ -9,7 +9,7 @@ HASH_HEX_REGEX = '^[a-fA-F0-9]+$'
 MAC_REGEX = '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$'
 UUID_REGEX = '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
 
-# Officiale bcrypt hashes hae a bit more fixed size, but saw some weird once:
+# Official bcrypt hashes have a bit more fixed size, but saw some weird once:
 # $1a$10$demo as example
 HASH_BCRYPT_REGEX = '^\\$2[ayb]\\$[0-9]{1,}\\$[\\w\\.\\/]{4,}$'
 # Crypt hashes can look a lot like passwords. We do two options here

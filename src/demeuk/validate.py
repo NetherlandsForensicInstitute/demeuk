@@ -4,6 +4,8 @@ from .util import stderr_print
 
 
 # Validate input/output of modules (naively).
+# NB: output checking only checks the number of return values, not the return types.
+# Output checking also only checks for a placeholder string input, so this checking is not conclusive in any way.
 # TODO write a guide on how to implement new modules correctly
 
 
@@ -16,13 +18,11 @@ def validate_input_signature(order, funcs):
         print_err = False
         if isinstance(func, list):
             # in this case, func = [func, arg].
-            # the line should always be the first param.
             opt = order[counter][0]  # The option being checked
             t = lookup_params[opt][1]  # type of parameter
             try:
                 func[0]('test string', t(func[1]))
             except TypeError:
-                # The offending command-line option
                 err_msg += 'wrong # of args'
                 print_err = True
                 passed = False

@@ -169,15 +169,15 @@ def init_parser(version):
     desc = dedent("""Demeuk - a simple tool to clean up corpora
 
 Example uses:
-    ./demeuk.py -i inputfile.tmp -o outputfile.dict -l logfile.txt
-    ./demeuk.py -i "inputfile*.txt" -o outputfile.dict -l logfile.txt
-    ./demeuk.py -i "inputdir/*" -o outputfile.dict -l logfile.txt
-    ./demeuk.py -i inputfile -o outputfile -j 24
-    ./demeuk.py -i inputfile -o outputfile -c -e
-    ./demeuk.py -i inputfile -o outputfile --threads all
-    cat inputfile | ./demeuk.py --leak -j all | sort -u > outputfile""")
+    pdm run demeuk -i inputfile.tmp -o outputfile.dict -l logfile.txt
+    pdm run demeuk -i "inputfile*.txt" -o outputfile.dict -l logfile.txt
+    pdm run demeuk -i "inputdir/*" -o outputfile.dict -l logfile.txt
+    pdm run demeuk -i inputfile -o outputfile -j 24
+    pdm run demeuk -i inputfile -o outputfile -c -e
+    pdm run demeuk -i inputfile -o outputfile --threads all
+    cat inputfile | pdm run demeuk --leak -j all | sort -u > outputfile""")
 
-    parser = ArgumentParser(prog='demeuk', description=desc, usage='./%(prog)s.py [options]',
+    parser = ArgumentParser(prog='demeuk', description=desc, usage='pdm run %(prog)s [options]',
                             add_help=False,  # We add our own help so that it is grouped correctly
                             formatter_class=RawDescriptionHelpFormatter)
 
@@ -231,7 +231,7 @@ Example uses:
     group_macro.add_argument('--leak', action='store_true',
                              help='When set, demeuk will run the following modules: mojibake, encode, newline, '
                                   'check-controlchar. This is recommended when working with leaks and was the default '
-                                  'bevarior in demeuk version 3.11.0 and below.')
+                                  'behavior in demeuk version 3.11.0 and below.')
     group_macro.add_argument('--leak-full', action='store_true',
                              help='When set, demeuk will run the following modules: mojibake, encode, newline, '
                                   'check-controlchar, hex, html, html-named, check-hash, check-mac-address, '
@@ -330,7 +330,7 @@ def get_pipeline(ordered_list):
     return func_list
 
 
-# Determine type info (flag/param, module type) once so that we don;t have to check this every loop.
+# Determine type info (flag/param, module type) once so that we don't have to check this every loop.
 def get_type_info(ordered_list):
     type_info = []
     for el in ordered_list:
