@@ -1,13 +1,15 @@
 import sys
-from argparse import ArgumentParser, RawDescriptionHelpFormatter, ArgumentTypeError
+from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
 from enum import Enum
 from textwrap import dedent
 
 from multiprocess import cpu_count
+
 from .modules.add import *
 from .modules.check import *
 from .modules.modify import *
 from .modules.remove import *
+
 
 # Enums for option types
 OptionType = Enum('OptionType', [('FLAG', 0), ('PARAM', 1)])
@@ -24,30 +26,30 @@ flags_check = dict({
     '--check-non-ascii': [check_non_ascii, 'If a line contain a non ascii char e.g. ü or ç (or '
                                            'everything outside ascii range) the line is dropped.'],
     '--check-replacement-character': [check_replacement_character, 'Drop lines containing '
-                                                                   'replacement characters \'�\'.'],
+                                                                   "replacement characters '�'."],
     '--check-empty-line': [check_empty_line, 'Drop lines that are empty or only contain whitespace characters'],
 })
 flags_modify = dict({
     '--html-named': [clean_html_named, 'Replace lines like: &#alpha; Those structures are more '
                                        'like passwords, so be careful to enable this option.'],
-    '--lowercase': [clean_lowercase, 'Replace line like \'This Test String\' to \'this test string\''],
-    '--title-case': [clean_title_case, 'Replace line like \'this test string\' to \'This Test String\''],
+    '--lowercase': [clean_lowercase, "Replace line like 'This Test String' to 'this test string'"],
+    '--title-case': [clean_title_case, "Replace line like 'this test string' to 'This Test String'"],
     '--umlaut': [clean_umlaut, 'Replace lines like ko"ffie with an o with an umlaut.'],
     '--mojibake': [clean_mojibake, 'Fixes mojibakes, which means lines like SmˆrgÂs will be fixed to Smörgås.'],
-    '--newline': [clean_newline, 'Enables removing newline characters (\'\\r\' and \'\\n\') from end and beginning of '
+    '--newline': [clean_newline, "Enables removing newline characters ('\\r' and '\\n') from end and beginning of "
                                  'lines.'],
     '--non-ascii': [clean_non_ascii, 'Replace non ascii char with their replacement letters. For '
                                      'example ü becomes u, ç becomes c.'],
     '--trim': [clean_trim, 'Enables removing newlines representations from end and beginning. '
-                           'Newline representations detected are \'\\\\n\', \'\\\\r\', \'\\n\', '
-                           '\'\\r\', \'<br>\', and \'<br />\'.'],
+                           "Newline representations detected are '\\\\n', '\\\\r', '\\n', "
+                           "'\\r', '<br>', and '<br />'."],
 })
 
 flags_add = dict({
     '--add-lower': [add_lower, 'If a line contains a capital letter this will add the lower case variant'],
     '--add-first-upper': [add_first_upper, 'If a line does not contain a capital letter this will add the capital '
                                            'variant'],
-    '--add-title-case': [add_title_case, 'Add a line like \'this test string\' also as a \'This Test String\''],
+    '--add-title-case': [add_title_case, "Add a line like 'this test string' also as a 'This Test String'"],
     '--add-latin-ligatures': [add_latin_ligatures, 'If a line contains a single ligatures of a latin letter '
                                                    '(such as ij), the line is correct but the original line contain '
                                                    'the ligatures is also added to output.'],
@@ -64,7 +66,7 @@ flags_remove = dict({
     '--remove-email': [remove_email, 'Enable email filter, this will catch strings like '
                                      '1238661:test@example.com:password'],
 
-    '-c': [clean_cut, 'Specify if demeuk should split (default splits on \':\'). Returns '
+    '-c': [clean_cut, "Specify if demeuk should split (default splits on ':'). Returns "
                       'everything after the delimiter.'],
     '--cut': [clean_cut, 'Alias for -c.'],
 })
@@ -86,7 +88,7 @@ flags_fixed = dict({
     '--hex': [clean_hex, 'Replace lines like: $HEX[41424344] with ABCD.'],
     '--html': [clean_html, 'Replace lines like: &#351;ifreyok with şifreyok.'],
     '--encode': [clean_encode, 'Enables guessing of encoding, based on chardet and custom implementation.'],
-    '--tab': [clean_tab, 'Enables replacing tab char with \':\', sometimes leaks contain both \':\' and \'\\t\'.'],
+    '--tab': [clean_tab, "Enables replacing tab char with ':', sometimes leaks contain both ':' and '\\t'."],
 })
 
 # For command-line arguments with one argument.
@@ -170,7 +172,7 @@ def int_or_all(arg):
 
 
 def init_parser(version):
-    desc = dedent('''Demeuk - a simple tool to clean up corpora
+    desc = dedent("""Demeuk - a simple tool to clean up corpora
 
 Example uses:
     ./demeuk.py -i inputfile.tmp -o outputfile.dict -l logfile.txt
@@ -179,7 +181,7 @@ Example uses:
     ./demeuk.py -i inputfile -o outputfile -j 24
     ./demeuk.py -i inputfile -o outputfile -c -e
     ./demeuk.py -i inputfile -o outputfile --threads all
-    cat inputfile | ./demeuk.py --leak -j all | sort -u > outputfile''')
+    cat inputfile | ./demeuk.py --leak -j all | sort -u > outputfile""")
 
     parser = ArgumentParser(prog='demeuk', description=desc, usage='./%(prog)s.py [options]',
                             add_help=False,  # We add our own help so that it is grouped correctly
@@ -199,8 +201,8 @@ Example uses:
     group_std.add_argument('-j', '--threads', action='store', type=int_or_all,
                            metavar='<n>',
                            help='Optional, specify amount of threads to spawn. Specify the string '
-                                '\'all\' to make demeuk auto detect the amount of threads to '
-                                'start based on the CPU\'s (default: all threads). Note: '
+                                "'all' to make demeuk auto detect the amount of threads to "
+                                "start based on the CPU's (default: all threads). Note: "
                                 'threading will cost some setup time. Only speeds up for larger files.')
     group_std.add_argument('--input-encoding', action='store',
                            metavar='<encoding>',
@@ -245,8 +247,8 @@ Example uses:
     group_config = parser.add_argument_group('Configuration options')
     group_config.add_argument('-f', '--cut-fields', action='store',
                               metavar='<field>',
-                              help='Specifies the field to be returned, this is in the \'cut\' '
-                                   'language thus: N N\'th field, N- from N-th field to end line, '
+                              help="Specifies the field to be returned, this is in the 'cut' "
+                                   "language thus: N N'th field, N- from N-th field to end line, "
                                    'N-M, from N-th field to M-th field. -M from start to M-th field.')
     group_config.add_argument('--cut-before', action='store_true',
                               help='Specify if demeuk should return the string before the '
@@ -254,8 +256,8 @@ Example uses:
     group_config.add_argument('-d', '--delimiter', action='store',
                               metavar='<delimiter>',
                               help='Specify which delimiter will be used for cutting. Multiple '
-                                   'delimiters can be specified using \',\'. If the \','
-                                   '\' is required for cutting, escape it with a backslash. Only '
+                                   "delimiters can be specified using ','. If the ',"
+                                   "' is required for cutting, escape it with a backslash. Only "
                                    'one delimiter can be used per line.')
 
     group_check = parser.add_argument_group('Check modules (check if a line matches a specific condition)')

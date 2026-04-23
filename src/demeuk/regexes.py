@@ -1,5 +1,6 @@
 from re import compile as re_compile
 
+
 # Search from start to finish for the string $HEX[], with block of a-f0-9 with even number
 # of hex chars. The first match group is repeated.
 HEX_REGEX = re_compile(r'^\$(?:HEX|hex)\[((?:[0-9a-fA-F]{2})+)\]$')

@@ -43,12 +43,10 @@ all = {composite = [
 ]}
 check = {composite = [
     "pdm lock --check",
-    "ruff format --diff src/demeuk/ tests/",
     "ruff check src/demeuk/ tests/",
     "mdformat --check README.md",
 ]}
 fix = {composite = [
-    "ruff format src/demeuk/ tests/",
     "ruff check --fix src/demeuk/ tests/",
     "mdformat README.md",
 ]}
@@ -76,7 +74,9 @@ select = [
     "UP" # pyupgrade
 ]
 ignore = [
-    "F403", "F405"
+    "F403", "F405", # from module import *
+    "UP012", # explicitly encode tests as utf-8
+    "UP022", # use pipe in test to simulate unix pipe
 ]
 flake8-quotes.inline-quotes = "single"
 isort.lines-after-imports = 2

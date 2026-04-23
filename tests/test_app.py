@@ -117,10 +117,10 @@ def test_googlengram():
     assert line_num_output == 4
     with open('testdata/output6') as f:
         filecontent = f.read()
-        assert 'I\'ain\n' in filecontent
-        assert 'I\'Afrique occidental\n' in filecontent
-        assert 'I\'Allemagne\n' in filecontent
-        assert 'I\'ain a\n' in filecontent
+        assert "I'ain\n" in filecontent
+        assert "I'Afrique occidental\n" in filecontent
+        assert "I'Allemagne\n" in filecontent
+        assert "I'ain a\n" in filecontent
 
 
 def test_coupe():
