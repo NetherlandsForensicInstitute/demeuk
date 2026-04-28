@@ -20,6 +20,7 @@ license = {text = "Apache-2.0"}
 
 [project.scripts]
 demeuk = "demeuk.demeuk:main"
+demeuk2 = "demeuk.demeuk2:main"
 
 [project.optional-dependencies]
 test = [
