@@ -1,5 +1,5 @@
 # Handle debug logging, but also writing the output to file.
-from os import access, path, W_OK
+from os import access, path, W_OK, F_OK
 from sys import stdout, stderr
 
 
@@ -11,6 +11,7 @@ class Logger:
         # verbosity
         self.verbose = args.verbose
         self.debug = args.debug
+
 
         # Check if we can write to output and log files
         if args.output:
@@ -26,7 +27,7 @@ class Logger:
 
         if args.log:
             # Check if logfile exists, or that the directory is at least writable.
-            if not access(path.dirname(args.log), W_OK) or access(args.log, W_OK):
+            if not (access(path.dirname(args.log), W_OK) or access(args.log, F_OK)):
                 self.stderr_print_always(f'Logger: Cannot write log file to {args.log}!')
                 exit(2)
             self.log_file = open(args.log, 'a') # Append to log file
@@ -36,10 +37,23 @@ class Logger:
             self.stderr_print(f'Logger: writing log to stderr')
 
 
+
     def stderr_print(self, *args, **kwargs):
         if self.verbose:
-            Logger.stderr_print(*args, **kwargs)
+            Logger.stderr_print_always(*args, **kwargs)
 
+    def write_out(self, lines):
+        self.output_file.writelines(lines)
+        self.output_file.flush()
+
+    def write_log(self, lines):
+        if self.debug or self.verbose or (self.log_file is not stderr):
+            self.log_file.writelines(lines)
+            self.log_file.flush()
+
+    def write_results(self, async_result):
+        self.write_out(async_result['results'])
+        self.write_log(async_result['log'])
 
     # Print to stderr always, use for errors or incorrect input
     @staticmethod

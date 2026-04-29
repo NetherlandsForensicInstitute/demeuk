@@ -10,7 +10,6 @@ from .pipeline import Pipeline
 def main():
     all_modules = [EmailCheckModule, EndingWithCheckModule]
 
-    # Create parser class (create wrapper around argparse.ArgumentParser)
     parser = Parser("5.0.0")
 
 
@@ -25,9 +24,13 @@ def main():
     # Global config can be done here (in/out file, log etc.)
 
     pipeline = Pipeline(parser, sys.argv)
-    print(parser.lookup_table)
-    for module in pipeline.modules:
-        if isinstance(module, ParamModule):
-            print(str(module) + ' with param ' + module.param)
-        else:
-            print(module)
+
+
+    # Read whole file (debug)
+    lines = []
+    with open(cfg.input_file, 'rb') as file_handle:
+        lines = [line.rstrip(b'\n') for line in file_handle.readlines()]
+
+    results = pipeline.run(lines, cfg.logger)
+
+    cfg.logger.write_results(results)
