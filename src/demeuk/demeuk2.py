@@ -9,7 +9,8 @@ from .pipeline import Pipeline
 
 def main():
     # TODO: autodiscover modules.
-    all_modules = [EmailCheckModule, EndingWithCheckModule, FirstUpperAddModule, CleanTrimModifyModule, TransliterateModifyModule]
+    all_modules = [EmailCheckModule, EndingWithCheckModule, FirstUpperAddModule, CleanTrimModifyModule,
+                   TransliterateModifyModule, HexModule]
 
     version = '5.0.0'
 
@@ -26,7 +27,7 @@ def main():
 
     # Global config can be done here (in/out file, log etc.)
 
-    pipeline = Pipeline(parser, sys.argv)
+    pipeline = Pipeline(parser, sys.argv, cfg)
 
     cfg.logger.stderr_print(f'Main: running demeuk - {version}')
 
@@ -35,6 +36,6 @@ def main():
     with open(cfg.input_file, 'rb') as file_handle:
         lines = [line.rstrip(b'\n') for line in file_handle.readlines()]
 
-    results = pipeline.run(lines, cfg.logger)
+    results = pipeline.run(lines, cfg)
 
     cfg.logger.write_results(results)

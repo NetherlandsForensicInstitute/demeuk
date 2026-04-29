@@ -2,29 +2,49 @@ from binascii import hexlify
 from collections import deque
 from os import linesep
 
-from demeuk.modules.base import ParamModule, Actions
+from demeuk.modules.base import *
 
 
 class Pipeline:
-    def __init__(self, parser, argv):
+    def __init__(self, parser, argv, config):
+
+        # Keep track where our encoding module (should) be
+        has_encoding = False
+        encoding_slot = 0
+
         self.modules = []
 
+
+        # Build pipeline
         for i in range(1, len(argv)):
             current_arg = argv[i]
             if current_arg in parser.lookup_table:
                 module = parser.lookup_table[current_arg]
-                if issubclass(module, ParamModule):
-                    # Instantiate with param
-                    self.modules.append(module(argv[i + 1]))
-                else:
-                    # Instantiate a module without parameters
-                    self.modules.append(module())
+                match module.get_pipeline_position():
+                    case PipelinePosition.BEFORE_ENCODE:
+                        pass
+                    case PipelinePosition.ENCODE:
+                        pass
+                    case PipelinePosition.AFTER_ENCODE:
+                        if issubclass(module, ParamModule):
+                            # Instantiate with param
+                            instance = module(argv[i + 1])
+                        else:
+                            # Instantiate a module without parameters
+                            instance = module()
+
+                        if issubclass(module, ConfigModule):
+                            instance.set_config(configs)
+
+                        self.modules.append(instance)
+
 
     # This is one worker job, process a list of lines.
-    def run(self, lines, logger):
+    def run(self, lines, config):
         results = []
         log_id = 0
-        logger.create(log_id) # TODO auto-increment per thread
+        logger = config.logger
+        logger.create(log_id) # TODO auto-increment per call of run()
         processed_lines = set()
         work_queue = deque(lines)
 
@@ -63,7 +83,10 @@ class Pipeline:
                         if actions.add is not None:
                             # Add (a list of) word(s) to the queue
                             for word in actions.add:
-                                work_queue.append(word.encode())
+                                if actions.do_not_re_encode:
+                                    work_queue.append(word) # for --hex
+                                else:
+                                    work_queue.append(word.encode())
                                 if actions.debug_add_str is not None:
                                     logger.log_debug(log_id, f'{actions.debug_add_str}; {word}{linesep}')
 
@@ -77,6 +100,11 @@ class Pipeline:
                             # Log a message (with --debug)
                             logger.log_debug(log_id, f'{actions.debug_str}; {line_decoded}{linesep}')
 
+                    else:
+                        # TODO if this does not impact performance, keep it.
+                        if module.get_pipeline_position() == PipelinePosition.ENCODE:
+                            if actions.debug_str is not None:
+                                logger.log_debug(log_id, f'{actions.debug_str}; {line_decoded}{linesep}')
 
             # If we got through all the modules:
             if not stop:

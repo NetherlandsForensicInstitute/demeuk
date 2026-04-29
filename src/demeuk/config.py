@@ -3,7 +3,9 @@ from os import cpu_count, R_OK, access
 from demeuk.logger import Logger
 
 
-# This class carries global configuration, so configurations which do not impact the functionality of the modules directly.
+# This class carries global configuration, so configurations which either:
+#       do not impact the functionality of the modules directly.
+# or:   do impact modules, but cannot be passed as a parameter
 class Config:
 
     # Initialize config with argparse output
@@ -36,6 +38,8 @@ class Config:
                 Logger.stderr_print_always('Config: --progress cannot be used when using stdin!')
                 exit(2)
 
-        # Other configuration
+        # Other configurations here, with defaults
         self.threads = int(args.threads) if args.threads else cpu_count()
+
+        self.input_encodings = args.input_encoding.split(',') if args.input_encoding else 'UTF-8'
 
