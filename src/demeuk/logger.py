@@ -36,11 +36,31 @@ class Logger:
             self.log_file = stderr
             self.stderr_print(f'Logger: writing log to stderr')
 
+        # A dict of logs.
+        self.logs = {}
 
+
+    def create(self, log):
+        self.logs[log] = []
 
     def stderr_print(self, *args, **kwargs):
         if self.verbose:
             Logger.stderr_print_always(*args, **kwargs)
+
+    def log(self, log, msg):
+        self.logs[log].append(msg)
+
+    def log_debug(self, log, msg):
+        if self.debug:
+            self.logs[log].append(msg)
+
+    def log_verbose(self, log, msg):
+        if self.verbose:
+            self.logs[log].append(msg)
+
+    def get(self, log):
+        return self.logs[log]
+
 
     def write_out(self, lines):
         self.output_file.writelines(lines)

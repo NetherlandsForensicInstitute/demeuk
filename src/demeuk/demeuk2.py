@@ -2,15 +2,18 @@ import sys
 from argparse import ArgumentParser
 
 from .config import Config
-from .modules.base import EmailCheckModule, EndingWithCheckModule, ParamModule
+from .modules.base import *
 from .parser2 import Parser
 from .pipeline import Pipeline
 
 
 def main():
-    all_modules = [EmailCheckModule, EndingWithCheckModule]
+    # TODO: autodiscover modules.
+    all_modules = [EmailCheckModule, EndingWithCheckModule, FirstUpperAddModule, CleanTrimModifyModule, TransliterateModifyModule]
 
-    parser = Parser("5.0.0")
+    version = '5.0.0'
+
+    parser = Parser(version)
 
 
     for module in all_modules:
@@ -25,6 +28,7 @@ def main():
 
     pipeline = Pipeline(parser, sys.argv)
 
+    cfg.logger.stderr_print(f'Main: running demeuk - {version}')
 
     # Read whole file (debug)
     lines = []
