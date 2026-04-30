@@ -25,7 +25,7 @@ class EncodeModule(ConfigModule):
     # Only here, this is the success message...
     @property
     def debug_str(self) -> str:
-        return f'Clean encode; decoded line'
+        return f'Clean:\tEncode:\t\tdecoded line'
 
     @staticmethod
     def _try_encoding(line, encoding):
@@ -70,9 +70,9 @@ class EncodeModule(ConfigModule):
                     # successful decoding!
                     return Result(status=True, update=decoded_line, msg=self.debug_str)
                 except (UnicodeDecodeError, LookupError) as e:
-                    return Result(status=True, msg=f'Clean encode; decoding error with {encode['encoding']}')
+                    return Result(status=True, msg=f'Clean:\tEncode:\t\tdecoding error with {encode['encoding']}')
             else:
-                return Result(status=True, msg='Clean encode; decoding error with unknown encoding')
+                return Result(status=True, msg='Clean:\tEncode:\t\tdecoding error with unknown encoding')
 
     def handle(self, result):
         if result.update is None:
@@ -92,14 +92,14 @@ class DefaultEncodeModule(ConfigModule):
 
     @property
     def debug_str(self) -> str:
-        return 'Clean_up; decoding error'
+        return 'Clean:\tDefault encode:\tdecoding error'
 
     def run(self, line):
         try:
             decoded_line = line.decode(self.get_config('encoding'))
-            return Result(status=True, update=decoded_line, debug_str=f'Clean_up; decoded using input encoding {self.get_config('encoding')}')
+            return Result(status=True, update=decoded_line, msg=f'Clean:\tDefault encode:\tdecoded using input encoding {self.get_config('encoding')}')
         except UnicodeDecodeError as e:
-            return Result(status=True, debug_str=self.debug_str)
+            return Result(status=True, msg=self.debug_str)
 
 
     # Same as EncodeModule...

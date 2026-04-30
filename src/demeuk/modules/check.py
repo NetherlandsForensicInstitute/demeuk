@@ -55,6 +55,37 @@ class EmailCheckModule(CheckModule):
         return Result(status=False, msg=None)
 
 
+class ControlCharModule(CheckModule):
+
+    def __init__(self):
+        self.cc_found = None
+
+    @staticmethod
+    def get_help_info():
+        return HelpInfo(
+            option='check-controlchar',
+            help_str='Drop lines containing control characters.')
+
+    @property
+    def debug_str(self) -> str:
+        return f'Check:\tControl char:\tfound controlchar {self.cc_found!r}'
+
+    def run(self, line) -> Result:
+        for c in line:
+            # https://en.wikipedia.org/wiki/Unicode_character_property#General_Category
+            # Characters (they have meaning):
+            # Cc -> Control Char (End of stream)
+            # Cf -> Control flow (right to left)
+            # Non chars:
+            # Cn -> Not assigned
+            # Co -> Private use
+            # Cs -> Surrogate
+            if category(c) in ['Cc', 'Cf', 'Cn', 'Co', 'Cs']:
+                self.cc_found = c
+                return Result(status=True, msg=self.debug_str)
+        return Result(status=False, msg=None)
+
+
 class EndingWithCheckModule(CheckModule, ParamModule):
 
     @staticmethod

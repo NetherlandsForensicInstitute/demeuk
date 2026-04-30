@@ -44,7 +44,7 @@ class FirstUpperAddModule(AddModule):
 
     @property
     def debug_str(self):
-        return 'Add first upper: new line'
+        return 'Add:\tFirst upper:\tnew line'
 
     def run(self, line):
         line_first_upper = line.capitalize()

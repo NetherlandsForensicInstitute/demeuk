@@ -19,8 +19,8 @@ from .pipeline import Pipeline
 
 def main():
     # TODO: autodiscover modules.
-    all_modules = [EmailCheckModule, EndingWithCheckModule, FirstUpperAddModule, CleanTrimModifyModule,
-                   TransliterateModifyModule, HexModule, EncodeModule, TabModule, LeakModule]
+    all_modules = [EmailCheckModule, EndingWithCheckModule, FirstUpperAddModule, TrimModule,
+                   TransliterateModule, HexModule, EncodeModule, TabModule, LeakModule]
 
     version = '5.0.0'
 

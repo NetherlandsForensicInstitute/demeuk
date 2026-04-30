@@ -20,7 +20,6 @@ class Config:
         self.verbose = args.verbose
         self.debug = args.debug
 
-        print(args)
         self.logger = Logger(args)
 
         # Check if we can read input file (output files are checked by logger ctor)

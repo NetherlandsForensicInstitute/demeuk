@@ -37,7 +37,7 @@ class ModifyModule(Module):
             return Result(status=True, msg=self.debug_str, update=cleaned_line)
         return Result(status=False, msg=None)
 
-class CleanTrimModifyModule(ModifyModule):
+class TrimModule(ModifyModule):
     TRIM_BLOCKS = ('\\\\n', '\\\\r', '\\n', '\\r', '<br>', '<br />')
 
     @staticmethod
@@ -49,7 +49,7 @@ class CleanTrimModifyModule(ModifyModule):
 
     @property
     def debug_str(self):
-        return 'Clean Trim; found trim sequence'
+        return 'Modify:\tTrim:\t\tfound trim sequence'
 
     def run(self, line):
         cleaned_line = line
@@ -72,7 +72,7 @@ class CleanTrimModifyModule(ModifyModule):
 
 
 # TODO add argparse thing where option can only take certain arguments
-class TransliterateModifyModule(ModifyModule, ParamModule):
+class TransliterateModule(ModifyModule, ParamModule):
     @staticmethod
     def get_help_info():
         return HelpInfoParam(
@@ -83,7 +83,7 @@ class TransliterateModifyModule(ModifyModule, ParamModule):
 
     @property
     def debug_str(self):
-        return 'Clean transliterate; transliterated'
+        return 'Clean:\tTransliterate:\ttransliterated'
 
     def run(self, line):
         # TODO ipsum is not transliterated to ... because it is reversed. Other way around?
@@ -100,7 +100,7 @@ class HexModule(Module):
 
 
     @staticmethod
-    def get_help_info() -> HelpInfo | HelpInfoParam:
+    def get_help_info():
         return HelpInfo(
             option='hex',
             help_str='Replace lines like: $HEX[41424344] with ABCD.'
@@ -108,7 +108,7 @@ class HexModule(Module):
 
     @property
     def debug_str(self) -> str:
-        return 'Clean hex; replaced $HEX[], added to queue and quitting'
+        return 'Clean:\tHex:\t\treplaced $HEX[], added to queue and quitting'
 
     def run(self, line):
         match = self.HEX_REGEX.search(line)
@@ -146,13 +146,46 @@ class TabModule(ModifyModule):
 
     @property
     def debug_str(self) -> str:
-        return 'Clean_tab; replaced tab characters'
+        return 'Clean:\tTab\t\treplaced tab characters'
 
     def run(self, line):
         if b'\x09' in line:
             line = sub(b'\x09+', b'\x3a', line)
             return Result(status=True, msg=self.debug_str, update=line)
         return Result(status=False, msg=None)
+
+class MojibakeModule(ModifyModule):
+    @staticmethod
+    def get_help_info():
+        return HelpInfo(
+            option='mojibake',
+            help_str='Fixes mojibakes, which means lines like SmˆrgÂs will be fixed to Smörgås.')
+
+    @property
+    def debug_str(self):
+        return 'Clean:\tMojibake:\tfound a mojibake'
+
+    def run(self, line):
+        cleaned_line = fix_encoding(line)
+        return self.get_result(line, cleaned_line)
+
+
+class NewlineModule(ModifyModule):
+    @staticmethod
+    def get_help_info():
+        return HelpInfo(
+            option='newline',
+            help_str="Enables removing newline characters ('\\r' and '\\n') from end and beginning of lines.")
+
+    def debug_str(self):
+        return 'Clean:\tNewline:\tfound a mojibake'
+
+    def run(self, line):
+        cleaned_line = line.strip('\r\n')
+        return self.get_result(line, cleaned_line)
+
+
+
 # Note on global variables:
 # This should become a member of an instantiated Module later.
 # For now we need a way to "configure" a module

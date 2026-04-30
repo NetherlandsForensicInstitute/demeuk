@@ -1,8 +1,9 @@
 from string import punctuation as string_punctuation
 
 from demeuk.modules.base import *
+from demeuk.modules.check import ControlCharModule
 from demeuk.modules.encode import *
-from demeuk.modules.modify import CleanTrimModifyModule, HexModule, TabModule
+from demeuk.modules.modify import TrimModule, HexModule, TabModule, MojibakeModule, NewlineModule
 
 from nltk import WhitespaceTokenizer, str2tuple
 
@@ -48,17 +49,18 @@ class LeakModule(MacroModule, ConfigModule):
     def get_help_info():
         return HelpInfo(
             option='leak',
-            help_str='When wet, demeuk will run the following modules: mojibake, encode, newline, check-controlchar. This is recommended when working with leaks.'
+            help_str='When set, demeuk will run the following modules: mojibake, encode, newline, check-controlchar. This is recommended when working with leaks.'
         )
 
     def get_submodules(self):
+        # We need to instantiate this explicitly because we want to pass config.
         encode_module = EncodeModule()
         encode_module.set_configs(self.get_config('config'))
         return [
-            CleanTrimModifyModule(),
-            HexModule(),
+            MojibakeModule(),
             encode_module,
-            TabModule(),
+            NewlineModule(),
+            ControlCharModule(),
         ]
 
 
