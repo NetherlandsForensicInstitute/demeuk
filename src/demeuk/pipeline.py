@@ -2,8 +2,9 @@ from binascii import hexlify
 from collections import deque
 from os import linesep
 
-from demeuk.modules.base import *
-from demeuk.modules.encode import DefaultEncodeModule
+from .modules.base import *
+from .modules.macro import MacroModule
+from .modules.encode import DefaultEncodeModule
 
 
 class Pipeline:

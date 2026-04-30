@@ -8,8 +8,50 @@
 from re import split as re_split
 from string import punctuation as string_punctuation
 
+from .base import *
+
 from ftfy.fixes import fix_latin_ligatures
 
+class AddModule(Module):
+    @staticmethod
+    def get_parser_group():
+        return 'add'
+
+    @staticmethod
+    def get_pipeline_position():
+        return PipelinePosition.AFTER_ENCODE
+
+    def handle(self, result):
+        # Add either a string or list of strings to the queue
+        if isinstance(result.add, list):
+            add_list = result.add
+        else:
+            add_list = [result.add]
+        return Actions(
+            add=add_list,
+            debug_add_str=result.msg
+        )
+
+
+class FirstUpperAddModule(AddModule):
+
+    @staticmethod
+    def get_help_info() -> HelpInfo:
+        return HelpInfo(
+            option='add-first-upper',
+            help_str='If a line does not contain a capital letter this will add the capital variant.'
+        )
+
+    @property
+    def debug_str(self):
+        return 'Add first upper: new line'
+
+    def run(self, line):
+        line_first_upper = line.capitalize()
+
+        if line != line_first_upper:
+            return Result(status=True, msg=self.debug_str, add=line_first_upper)
+        return Result(status=False, msg=None)
 
 global_store_punctuation = string_punctuation + ' '
 

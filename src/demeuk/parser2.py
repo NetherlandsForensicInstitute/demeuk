@@ -2,7 +2,7 @@ from argparse import ArgumentTypeError, ArgumentParser, RawDescriptionHelpFormat
 from os import cpu_count
 from textwrap import dedent
 
-from demeuk.modules.base import CheckModule, ParamModule
+from demeuk.modules.base import ParamModule
 
 
 # -j can take int or 'all' as argument.

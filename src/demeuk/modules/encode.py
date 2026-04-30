@@ -59,7 +59,7 @@ class EncodeModule(ConfigModule):
         for encoding in self.get_config('encodings'):
             result = self._try_encoding(line, encoding)
             if result is not False:
-                return Result(status=True, update=result, debug_str=self.debug_str)
+                return Result(status=True, update=result, msg=self.debug_str)
         else:
             # Did not break, so tried all encodings and did not find a valid one.
             # Try chardet
@@ -68,19 +68,19 @@ class EncodeModule(ConfigModule):
                 try:
                     decoded_line = line.decode(encode['encoding'])
                     # successful decoding!
-                    return Result(status=True, update=decoded_line, debug_str=self.debug_str)
+                    return Result(status=True, update=decoded_line, msg=self.debug_str)
                 except (UnicodeDecodeError, LookupError) as e:
-                    return Result(status=True, debug_str=f'Clean encode; decoding error with {encode['encoding']}')
+                    return Result(status=True, msg=f'Clean encode; decoding error with {encode['encoding']}')
             else:
-                return Result(status=True, debug_str='Clean encode; decoding error with unknown encoding')
+                return Result(status=True, msg='Clean encode; decoding error with unknown encoding')
 
     def handle(self, result):
         if result.update is None:
             # Encoding failed, so stop.
             # Log failure always.
-            return Actions(stop=True, log_str=result.debug_str)
+            return Actions(stop=True, log_str=result.msg)
         # Encoding is successful
-        return Actions(update=result.update, debug_str=result.debug_str)
+        return Actions(update=result.update, debug_str=result.msg)
 
 
 # Dropped in place if --encode is not used
@@ -105,8 +105,8 @@ class DefaultEncodeModule(ConfigModule):
     # Same as EncodeModule...
     def handle(self, result):
         if result.update is None:
-            return Actions(stop=True, log_str=result.debug_str)
-        return Actions(update=result.update, debug_str=result.debug_str)
+            return Actions(stop=True, log_str=result.msg)
+        return Actions(update=result.update, debug_str=result.msg)
 
     # Need to implement these to instantiate, but they are not used
 

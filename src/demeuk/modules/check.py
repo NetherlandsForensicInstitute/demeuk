@@ -10,9 +10,70 @@
 from re import search
 from unicodedata import category
 
+from .base import *
 from ..regexes import *
 
+class CheckModule(Module):
 
+    @staticmethod
+    def get_parser_group():
+        return 'check'
+
+    @staticmethod
+    def get_pipeline_position():
+        return PipelinePosition.AFTER_ENCODE
+
+    @abstractmethod
+    def run(self, line) -> Result:
+        raise NotImplementedError
+
+    def handle(self, result):
+        return Actions(
+            # If a check module is tripped, don't need to run any more modules.
+            stop=True,
+            log_str=result.msg  # Always log checks
+        )
+
+class EmailCheckModule(CheckModule):
+
+    EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]{1,63}\\.){1,3}[a-zA-Z]{2,6}'
+
+    @staticmethod
+    def get_help_info():
+        return HelpInfo(
+            option='check-email',
+            help_str='Drop lines containing e-mail addresses.',
+        )
+
+    @property
+    def debug_str(self):
+        return 'Check email: Dropped line because found email'
+
+    def run(self, line) -> Result:
+        if search(self.EMAIL_REGEX, line):
+            return Result(status=True, msg=self.debug_str)
+        return Result(status=False, msg=None)
+
+
+class EndingWithCheckModule(CheckModule, ParamModule):
+
+    @staticmethod
+    def get_help_info():
+        return HelpInfoParam(
+            option='check-ending-with',
+            help_str='Drop lines ending with string, can be multiple strings. Specify multiple with a comma-separated list.',
+            metavar='<string>',
+            param_type=str)
+
+    @property
+    def debug_str(self):
+        return f'Check ending with; Dropped line because {self._param} found'
+
+    def run(self, line) -> Result:
+        for string in self._param.split(','):
+            if line.endswith(string):
+                return Result(status=True, msg=self.debug_str)
+        return Result(status=False, msg=None)
 def check_regex(line, regex_list):
     """Checks if a line matches a comma-separated list of regexes
 

@@ -12,10 +12,147 @@ from ftfy.chardata import HTML_ENTITIES, HTML_ENTITY_RE
 from transliterate import translit
 from unidecode import unidecode
 
+from .base import *
 from ..regexes import HEX_REGEX, TRIM_BLOCKS
 from .add import clean_add_umlaut
 
+class ModifyModule(Module):
 
+    @staticmethod
+    def get_parser_group():
+        return 'modify'
+
+    @staticmethod
+    def get_pipeline_position():
+        return PipelinePosition.AFTER_ENCODE
+
+    def handle(self, result):
+        return Actions(
+            update=result.update,
+            debug_str=result.msg,
+        )
+
+    def get_result(self, line, cleaned_line):
+        if line != cleaned_line:
+            return Result(status=True, msg=self.debug_str, update=cleaned_line)
+        return Result(status=False, msg=None)
+
+class CleanTrimModifyModule(ModifyModule):
+    TRIM_BLOCKS = ('\\\\n', '\\\\r', '\\n', '\\r', '<br>', '<br />')
+
+    @staticmethod
+    def get_help_info():
+        return HelpInfo(
+            option='trim',
+            help_str="Remove whitespace from beginning and end of line. Whitespace detected is '\\\\n', '\\\\r', '\\n', '\\r', '<br>' and '<br />'."
+        )
+
+    @property
+    def debug_str(self):
+        return 'Clean Trim; found trim sequence'
+
+    def run(self, line):
+        cleaned_line = line
+        # Ensure removal of duplicated blocks
+        while True:
+            has_match = False
+            for x in self.TRIM_BLOCKS:
+                if cleaned_line.startswith(x):
+                    cleaned_line = cleaned_line[len(x):]
+                    has_match = True
+
+                if cleaned_line.endswith(x):
+                    cleaned_line = cleaned_line[:-len(x)]
+                    has_match = True
+
+            if not has_match:
+                break
+
+        return self.get_result(line, cleaned_line)
+
+
+# TODO add argparse thing where option can only take certain arguments
+class TransliterateModifyModule(ModifyModule, ParamModule):
+    @staticmethod
+    def get_help_info():
+        return HelpInfoParam(
+            option='transliterate',
+            help_str="Transliterate a string, for example 'ipsum' becomes 'իպսում'. The following languages are supported: ka, sr, l1, ru, mn, uk, mk, el, hy and bg.",
+            metavar='<language>',
+            param_type=str)
+
+    @property
+    def debug_str(self):
+        return 'Clean transliterate; transliterated'
+
+    def run(self, line):
+        # TODO ipsum is not transliterated to ... because it is reversed. Other way around?
+        cleaned_line = translit(line, self._param, reversed=True)
+
+        return self.get_result(line, cleaned_line)
+
+
+
+
+class HexModule(Module):
+
+    HEX_REGEX = re_compile(r'^\$(?:HEX|hex)\[((?:[0-9a-fA-F]{2})+)\]$')
+
+
+    @staticmethod
+    def get_help_info() -> HelpInfo | HelpInfoParam:
+        return HelpInfo(
+            option='hex',
+            help_str='Replace lines like: $HEX[41424344] with ABCD.'
+        )
+
+    @property
+    def debug_str(self) -> str:
+        return 'Clean hex; replaced $HEX[], added to queue and quitting'
+
+    def run(self, line):
+        match = self.HEX_REGEX.search(line)
+        if match:
+            return Result(status=True, msg=self.debug_str, add=unhexlify(match.group(1)))
+        return Result(status=False, msg=None)
+
+    def handle(self, result):
+        return Actions(
+            add=[result.add], # expects a list.
+            debug_str=result.msg,
+            stop=True,
+            do_not_re_encode=True)
+
+    @staticmethod
+    def get_pipeline_position():
+        return PipelinePosition.AFTER_ENCODE
+
+    @staticmethod
+    def get_parser_group():
+        return 'modify'
+
+class TabModule(ModifyModule):
+    @staticmethod
+    def get_help_info():
+        return HelpInfo(
+            option='tab',
+            help_str="Enables replacing tab char with ':', sometimes leaks contain both ':' and '\\t'."
+        )
+
+    # This module runs on bytes
+    @staticmethod
+    def get_pipeline_position():
+        return PipelinePosition.BEFORE_ENCODE
+
+    @property
+    def debug_str(self) -> str:
+        return 'Clean_tab; replaced tab characters'
+
+    def run(self, line):
+        if b'\x09' in line:
+            line = sub(b'\x09+', b'\x3a', line)
+            return Result(status=True, msg=self.debug_str, update=line)
+        return Result(status=False, msg=None)
 # Note on global variables:
 # This should become a member of an instantiated Module later.
 # For now we need a way to "configure" a module

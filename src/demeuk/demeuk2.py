@@ -3,9 +3,16 @@ from argparse import ArgumentParser
 from os import cpu_count
 
 from .config import Config
+
 from .modules.base import *
 from .modules.encode import *
 from .modules.macro import *
+
+from .modules.check import *
+from .modules.modify import *
+from .modules.add import *
+from .modules.remove import *
+
 from .parser2 import Parser
 from .pipeline import Pipeline
 
