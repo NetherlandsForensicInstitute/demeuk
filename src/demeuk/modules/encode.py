@@ -70,7 +70,7 @@ class EncodeModule(ConfigModule):
                     # successful decoding!
                     return Result(status=True, update=decoded_line, msg=self.debug_str)
                 except (UnicodeDecodeError, LookupError) as e:
-                    return Result(status=True, msg=f'Clean:\tEncode:\t\tdecoding error with {encode['encoding']}')
+                    return Result(status=True, msg=f"Clean:\tEncode:\t\tdecoding error with {encode['encoding']}")
             else:
                 return Result(status=True, msg='Clean:\tEncode:\t\tdecoding error with unknown encoding')
 
@@ -97,7 +97,7 @@ class DefaultEncodeModule(ConfigModule):
     def run(self, line):
         try:
             decoded_line = line.decode(self.get_config('encoding'))
-            return Result(status=True, update=decoded_line, msg=f'Clean:\tDefault encode:\tdecoded using input encoding {self.get_config('encoding')}')
+            return Result(status=True, update=decoded_line, msg=f"Clean:\tDefault encode:\tdecoded using input encoding {self.get_config('encoding')}")
         except UnicodeDecodeError as e:
             return Result(status=True, msg=self.debug_str)
 
