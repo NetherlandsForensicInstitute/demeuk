@@ -1,6 +1,6 @@
 import sys
 from argparse import ArgumentParser
-from os import cpu_count
+from os import cpu_count, linesep
 
 from .config import Config
 
@@ -53,6 +53,9 @@ def main():
         lines = [line.rstrip(b'\n') for line in file_handle.readlines()]
 
     cfg.logger.stderr_print('Running pipeline...')
+
+    cfg.logger.write_log(f'Running demeuk - {version}{linesep}')
+
     results = pipeline.run(lines, cfg)
 
     cfg.logger.stderr_print('Writing results to file')
