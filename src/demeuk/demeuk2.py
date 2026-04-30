@@ -16,11 +16,12 @@ from .modules.remove import *
 from .parser2 import Parser
 from .pipeline import Pipeline
 
+from .discover import discover_modules
+
+
 
 def main():
-    # TODO: autodiscover modules.
-    all_modules = [EmailCheckModule, EndingWithCheckModule, FirstUpperAddModule, TrimModule,
-                   TransliterateModule, HexModule, EncodeModule, TabModule, LeakModule]
+    all_modules = discover_modules()
 
     version = '5.0.0'
 

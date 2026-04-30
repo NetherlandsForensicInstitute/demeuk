@@ -118,7 +118,7 @@ class DefaultEncodeModule(ConfigModule):
     # Same as above
     @staticmethod
     def get_parser_group():
-        pass
+        return 'exclude'
 
     # Pipeline ctor knows where to put this module.
     @staticmethod
