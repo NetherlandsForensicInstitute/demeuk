@@ -1,6 +1,6 @@
 [project]
 name = "demeuk"
-version = "4.7.0"
+dynamic = ["version"]
 description = "A command-line tool to clean up corpora."
 authors = [
     {name = "Netherlands Forensic Institute"},
@@ -34,6 +34,11 @@ check = [
 ]
 [tool.pdm]
 distribution = true
+
+[tool.pdm.version]
+source = "file"
+path = "src/demeuk/demeuk2.py"
+pattern = "version = '([^']+)'"
 
 [tool.pdm.build]
 package-dir = "src"
