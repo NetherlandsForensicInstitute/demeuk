@@ -90,6 +90,5 @@ def main():
             job = jobs.pop(0)
             job.wait()
             cfg.logger.write_results(job.get())
-            print("finished!")
 
     cfg.logger.stderr_print('Done')
