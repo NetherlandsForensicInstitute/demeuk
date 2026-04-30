@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 
 from .config import Config
 from .modules.base import *
+from .modules.encode import *
 from .parser2 import Parser
 from .pipeline import Pipeline
 
@@ -10,7 +11,7 @@ from .pipeline import Pipeline
 def main():
     # TODO: autodiscover modules.
     all_modules = [EmailCheckModule, EndingWithCheckModule, FirstUpperAddModule, CleanTrimModifyModule,
-                   TransliterateModifyModule, HexModule]
+                   TransliterateModifyModule, HexModule, EncodeModule]
 
     version = '5.0.0'
 
@@ -28,6 +29,8 @@ def main():
     # Global config can be done here (in/out file, log etc.)
 
     pipeline = Pipeline(parser, sys.argv, cfg)
+
+    print(pipeline.modules)
 
     cfg.logger.stderr_print(f'Main: running demeuk - {version}')
 

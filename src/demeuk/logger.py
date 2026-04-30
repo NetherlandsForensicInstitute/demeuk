@@ -31,7 +31,7 @@ class Logger:
                 self.stderr_print_always(f'Logger: Cannot write log file to {args.log}!')
                 exit(2)
             self.log_file = open(args.log, 'a') # Append to log file
-            self.stderr_print(f'Logger: writing log to {args.log}!')
+            self.stderr_print(f'Logger: writing log to {args.log}')
         else:
             self.log_file = stderr
             self.stderr_print(f'Logger: writing log to stderr')

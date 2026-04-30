@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import NamedTuple, List
-
+from binascii import unhexlify
+from enum import Enum
 from re import search
+from re import compile as re_compile
+from typing import NamedTuple
 
 from transliterate import translit
 
@@ -11,7 +13,7 @@ class Result(NamedTuple):
     status: bool
     debug_str: str | None
     add: str | list | None = None
-    update : str | None = None
+    update: str | None = None
 
 
 # NB: If you implement a standard module, you should not need to worry about this!
@@ -23,6 +25,8 @@ class Actions(NamedTuple):
     add: list | None = None
     # Update line
     update: str | None = None
+    # Add bytes back instead of re-encoding? (only used for --html)
+    do_not_re_encode: bool = False
     # Log this string if not None
     log_str: str | None = None
     # Log this string if not None and --debug
@@ -35,11 +39,18 @@ class HelpInfo(NamedTuple):
     option: str | list[str]
     help_str: str
 
+
 class HelpInfoParam(NamedTuple):
     option: str | list[str]
     help_str: str
     param_type: type
     metavar: str
+
+
+PipelinePosition = Enum('PipelinePosition', [
+    ('BEFORE_ENCODE', 0),   # Modules which act on bytes
+    ('ENCODE', 1),          # Modules which turn bytes into strings
+    ('AFTER_ENCODE', 2)])        # Modules which act on strings
 
 
 
@@ -67,6 +78,12 @@ class Module(ABC):
     def handle(self, result):
         raise NotImplementedError
 
+    @staticmethod
+    @abstractmethod
+    def get_pipeline_position() -> PipelinePosition:
+        raise NotImplementedError
+
+
 # Has a parameter
 class ParamModule(Module):
     def __init__(self, parameter):
@@ -85,6 +102,20 @@ class ParamModule(Module):
     def param(self, value):
         self._param = value
 
+# A module with some configuration.
+class ConfigModule(Module):
+    def __init__(self):
+        self._config = {}
+
+    @abstractmethod
+    def set_configs(self, config):
+        raise NotImplementedError
+
+    def add_config(self, key, value):
+        self._config[key] = value
+
+    def get_config(self, key):
+        return self._config[key]
 
 
 
@@ -96,6 +127,10 @@ class CheckModule(Module):
     def get_parser_group():
         return 'check'
 
+    @staticmethod
+    def get_pipeline_position():
+        return PipelinePosition.AFTER_ENCODE
+
     @abstractmethod
     def run(self, line) -> Result:
         raise NotImplementedError
@@ -104,16 +139,18 @@ class CheckModule(Module):
         return Actions(
             # If a check module is tripped, don't need to check anymore.
             stop=True,
-            log_str=result.debug_str # Always log
+            log_str=result.debug_str  # Always log
         )
-
-
 
 
 class AddModule(Module):
     @staticmethod
     def get_parser_group():
         return 'add'
+
+    @staticmethod
+    def get_pipeline_position():
+        return PipelinePosition.AFTER_ENCODE
 
     def handle(self, result):
         # Add either a string or list of strings to the queue
@@ -126,10 +163,16 @@ class AddModule(Module):
             debug_add_str=result.debug_str
         )
 
+
 class ModifyModule(Module):
+
     @staticmethod
     def get_parser_group():
         return 'modify'
+
+    @staticmethod
+    def get_pipeline_position():
+        return PipelinePosition.AFTER_ENCODE
 
     def handle(self, result):
         return Actions(
@@ -139,12 +182,15 @@ class ModifyModule(Module):
 
     def get_result(self, line, cleaned_line):
         if line != cleaned_line:
-            return Result(status=True, debug_str=self.debug_str(), update=cleaned_line)
+            return Result(status=True, debug_str=self.debug_str, update=cleaned_line)
         return Result(status=False, debug_str=None)
 
-EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]{1,63}\\.){1,3}[a-zA-Z]{2,6}'
+
+
 
 class EmailCheckModule(CheckModule):
+
+    EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]{1,63}\\.){1,3}[a-zA-Z]{2,6}'
 
     @staticmethod
     def get_help_info():
@@ -153,14 +199,15 @@ class EmailCheckModule(CheckModule):
             help_str='Drop lines containing e-mail addresses.',
         )
 
-
+    @property
     def debug_str(self):
         return 'Check email: Dropped line because found email'
 
     def run(self, line) -> Result:
-        if search(EMAIL_REGEX, line):
-            return Result(status=True, debug_str=self.debug_str())
+        if search(self.EMAIL_REGEX, line):
+            return Result(status=True, debug_str=self.debug_str)
         return Result(status=False, debug_str=None)
+
 
 class EndingWithCheckModule(CheckModule, ParamModule):
 
@@ -172,14 +219,16 @@ class EndingWithCheckModule(CheckModule, ParamModule):
             metavar='<string>',
             param_type=str)
 
+    @property
     def debug_str(self):
         return f'Check ending with; Dropped line because {self._param} found'
 
     def run(self, line) -> Result:
         for string in self._param.split(','):
             if line.endswith(string):
-                return Result(status=True, debug_str=self.debug_str())
+                return Result(status=True, debug_str=self.debug_str)
         return Result(status=False, debug_str=None)
+
 
 class FirstUpperAddModule(AddModule):
 
@@ -190,6 +239,7 @@ class FirstUpperAddModule(AddModule):
             help_str='If a line does not contain a capital letter this will add the capital variant.'
         )
 
+    @property
     def debug_str(self):
         return 'Add first upper: new line'
 
@@ -197,20 +247,21 @@ class FirstUpperAddModule(AddModule):
         line_first_upper = line.capitalize()
 
         if line != line_first_upper:
-            return Result(status=True, debug_str=self.debug_str(), add=line_first_upper)
+            return Result(status=True, debug_str=self.debug_str, add=line_first_upper)
         return Result(status=False, debug_str=None)
 
-class CleanTrimModifyModule(ModifyModule):
 
+class CleanTrimModifyModule(ModifyModule):
     TRIM_BLOCKS = ('\\\\n', '\\\\r', '\\n', '\\r', '<br>', '<br />')
 
     @staticmethod
     def get_help_info():
         return HelpInfo(
             option='trim',
-            help_str="Remove whitespace from beginning and end of line. Whitespace detected is '\\\\n', '\\\\r', '\\n', '\r', '<br>' and '<br />'."
+            help_str="Remove whitespace from beginning and end of line. Whitespace detected is '\\\\n', '\\\\r', '\\n', '\\r', '<br>' and '<br />'."
         )
 
+    @property
     def debug_str(self):
         return 'Clean Trim; found trim sequence'
 
@@ -233,6 +284,7 @@ class CleanTrimModifyModule(ModifyModule):
 
         return self.get_result(line, cleaned_line)
 
+
 # TODO add argparse thing where option can only take certain arguments
 class TransliterateModifyModule(ModifyModule, ParamModule):
     @staticmethod
@@ -243,6 +295,7 @@ class TransliterateModifyModule(ModifyModule, ParamModule):
             metavar='<language>',
             param_type=str)
 
+    @property
     def debug_str(self):
         return 'Clean transliterate; transliterated'
 
@@ -251,3 +304,41 @@ class TransliterateModifyModule(ModifyModule, ParamModule):
         cleaned_line = translit(line, self._param, reversed=True)
 
         return self.get_result(line, cleaned_line)
+
+
+class HexModule(Module):
+
+    HEX_REGEX = re_compile(r'^\$(?:HEX|hex)\[((?:[0-9a-fA-F]{2})+)\]$')
+
+
+    @staticmethod
+    def get_help_info() -> HelpInfo | HelpInfoParam:
+        return HelpInfo(
+            option='hex',
+            help_str='Replace lines like: $HEX[41424344] with ABCD.'
+        )
+
+    @property
+    def debug_str(self) -> str:
+        return 'Clean hex; replaced $HEX[], added to queue and quitting'
+
+    def run(self, line):
+        match = self.HEX_REGEX.search(line)
+        if match:
+            return Result(status=True, debug_str=self.debug_str, add=unhexlify(match.group(1)))
+        return Result(status=False, debug_str=None)
+
+    def handle(self, result):
+        return Actions(
+            add=[result.add], # expects a list.
+            debug_str=result.debug_str,
+            stop=True,
+            do_not_re_encode=True)
+
+    @staticmethod
+    def get_pipeline_position():
+        return PipelinePosition.AFTER_ENCODE
+
+    @staticmethod
+    def get_parser_group():
+        return 'modify'

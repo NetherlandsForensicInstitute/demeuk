@@ -41,5 +41,6 @@ class Config:
         # Other configurations here, with defaults
         self.threads = int(args.threads) if args.threads else cpu_count()
 
-        self.input_encodings = args.input_encoding.split(',') if args.input_encoding else 'UTF-8'
+        # List
+        self.input_encodings = args.input_encoding.split(',') if args.input_encoding else ['UTF-8']
 

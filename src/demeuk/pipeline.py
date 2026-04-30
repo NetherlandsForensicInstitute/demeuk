@@ -3,6 +3,7 @@ from collections import deque
 from os import linesep
 
 from demeuk.modules.base import *
+from demeuk.modules.encode import DefaultEncodeModule
 
 
 class Pipeline:
@@ -20,23 +21,36 @@ class Pipeline:
             current_arg = argv[i]
             if current_arg in parser.lookup_table:
                 module = parser.lookup_table[current_arg]
+                if issubclass(module, ParamModule):
+                    # Instantiate with param
+                    instance = module(argv[i + 1])
+                else:
+                    # Instantiate a module without parameters
+                    instance = module()
+
+                if issubclass(module, ConfigModule):
+                    instance.set_configs(config)
+
+                # Append, insert at 0 or insert at encoding_slot?
                 match module.get_pipeline_position():
                     case PipelinePosition.BEFORE_ENCODE:
-                        pass
+                        self.modules.insert(encoding_slot, instance)
+                        # Bump up encoding slot. Also makes sure BEFORE_ENCODE modules are placed in order.
+                        encoding_slot += 1
                     case PipelinePosition.ENCODE:
-                        pass
+                        self.modules.insert(encoding_slot, instance)
+                        has_encoding = True
+                        # don't need to keep track of encoding_slot if inserted.
                     case PipelinePosition.AFTER_ENCODE:
-                        if issubclass(module, ParamModule):
-                            # Instantiate with param
-                            instance = module(argv[i + 1])
-                        else:
-                            # Instantiate a module without parameters
-                            instance = module()
-
-                        if issubclass(module, ConfigModule):
-                            instance.set_config(configs)
-
                         self.modules.append(instance)
+
+        if not has_encoding:
+            # Insert the standard encoder (is a config module)
+            default_encode = DefaultEncodeModule()
+            default_encode.set_configs(config)
+            self.modules.insert(encoding_slot, default_encode)
+
+
 
 
     # This is one worker job, process a list of lines.
@@ -61,17 +75,10 @@ class Pipeline:
             logger.log_debug(log_id, f'----BEGIN---- {hexlify(line)}{linesep}')
 
 
-            # If no encoding specified, assume UTF-8
-            try:
-                line_decoded = line.decode('UTF-8')
-                logger.log_debug(log_id, f'Clean_up; decoded using input_encoding option; {line_decoded}{linesep}')
-            except (UnicodeDecodeError) as e:  # noqa F841
-                logger.log(log_id, f'Clean_up; decoding error with unknown; {line}{linesep}')
-                continue
 
             for module in self.modules:
                 if not stop:
-                    result = module.run(line_decoded)
+                    result = module.run(line)
                     if result.status:
                         # Transform module result into actions
                         actions = module.handle(result)
@@ -91,25 +98,19 @@ class Pipeline:
                                     logger.log_debug(log_id, f'{actions.debug_add_str}; {word}{linesep}')
 
                         if actions.update is not None:
-                            line_decoded = actions.update
+                            line = actions.update
 
                         if actions.log_str is not None:
                             # Log a message (always)
-                            logger.log(log_id, f'{actions.log_str}; {line_decoded}{linesep}')
+                            logger.log(log_id, f'{actions.log_str}; {line}{linesep}')
                         if actions.debug_str is not None:
                             # Log a message (with --debug)
-                            logger.log_debug(log_id, f'{actions.debug_str}; {line_decoded}{linesep}')
-
-                    else:
-                        # TODO if this does not impact performance, keep it.
-                        if module.get_pipeline_position() == PipelinePosition.ENCODE:
-                            if actions.debug_str is not None:
-                                logger.log_debug(log_id, f'{actions.debug_str}; {line_decoded}{linesep}')
+                            logger.log_debug(log_id, f'{actions.debug_str}; {line}{linesep}')
 
             # If we got through all the modules:
             if not stop:
-                results.append(f'{line_decoded}{linesep}')
-                logger.log_debug(log_id, f'-----END----- {line_decoded}{linesep}{linesep}')
+                results.append(f'{line}{linesep}')
+                logger.log_debug(log_id, f'-----END----- {line}{linesep}{linesep}')
 
         return {'results': results, 'log': logger.get(log_id)}
 
