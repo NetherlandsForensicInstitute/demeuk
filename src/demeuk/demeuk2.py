@@ -1,7 +1,13 @@
 import sys
 from argparse import ArgumentParser
-from os import cpu_count, linesep
+from glob import glob
+from math import ceil
+from os import cpu_count, linesep, path, access, R_OK
+from signal import signal, SIGINT, SIG_IGN
 
+from multiprocess.pool import Pool
+from tqdm import tqdm
+from .chunk import chunkify, submit
 from .config import Config
 
 from .modules.base import *
@@ -19,6 +25,8 @@ from .pipeline import Pipeline
 from .discover import discover_modules
 
 
+def init_worker():
+    signal(SIGINT, SIG_IGN)
 
 def main():
     all_modules = discover_modules()
@@ -44,7 +52,7 @@ def main():
 
     cfg.logger.stderr_print(f'Running demeuk - {version}')
     cfg.logger.stderr_print(f'Using {cfg.threads} out of {cpu_count()} available CPUs')
-    cfg.logger.stderr_print(f'Chunking file {cfg.input_file}...')
+    cfg.logger.stderr_print(f'Chunking file {cfg.input_file}')
 
 
     # Read whole file (debug), chunk and multiprocess this.
@@ -52,13 +60,39 @@ def main():
     with open(cfg.input_file, 'rb') as file_handle:
         lines = [line.rstrip(b'\n') for line in file_handle.readlines()]
 
-    cfg.logger.stderr_print('Running pipeline...')
-
     cfg.logger.write_log(f'Running demeuk - {version}{linesep}')
 
-    results = pipeline.run(lines, cfg)
 
-    cfg.logger.stderr_print('Writing results to file')
-    cfg.logger.write_results(results)
+    with Pool(cfg.threads, init_worker) as pool:
+        jobs = []
+
+        if cfg.input_file:
+            for file in tqdm(glob(cfg.input_file, recursive=True),
+                             desc='Files processed',
+                             mininterval=0.5,
+                             unit=' files',
+                             disable=not cfg.progress,
+                             position=0):
+                if not access(file, R_OK):
+                    continue
+                total_chunks = ceil(path.getsize(file) / cfg.chunk_size)
+                for chunk in tqdm(chunkify(cfg),
+                                  desc='Chunks processed',
+                                  mininterval=0.5,
+                                  unit=' chunks',
+                                  disable=not cfg.progress,
+                                  total=total_chunks,
+                                  position=1):
+                    submit(pool, jobs, pipeline, chunk, cfg)
+        else:
+            # Submit all jobs...
+            pass
+        cfg.logger.stderr_print('Submitted jobs, waiting for jobs to finish...')
+
+        # Wait for jobs to finish
+        while len(jobs) > 0:
+            job = jobs.pop()
+            job.wait()
+            cfg.logger.write_results(job.get())
 
     cfg.logger.stderr_print('Done')

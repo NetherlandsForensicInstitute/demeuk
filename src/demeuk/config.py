@@ -39,6 +39,8 @@ class Config:
 
         # Other configurations here, with defaults
         self.threads = int(args.threads) if args.threads else cpu_count()
+        self.chunk_size = 1024 * 1024 # TODO do we want to be able to change this?
+        self.skip = args.skip if args.skip else 0
 
         # List
         self.input_encodings = args.input_encoding.split(',') if args.input_encoding else ['UTF-8']
