@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from binascii import unhexlify
 from enum import Enum
-from re import search
+from re import search, sub
 from re import compile as re_compile
-from typing import NamedTuple
+from typing import NamedTuple, List
 
 from transliterate import translit
 
@@ -12,8 +12,8 @@ from transliterate import translit
 class Result(NamedTuple):
     status: bool
     debug_str: str | None
-    add: str | list | None = None
-    update: str | None = None
+    add: str | bytes | list | None = None
+    update: str | bytes | None = None
 
 
 # NB: If you implement a standard module, you should not need to worry about this!
@@ -121,6 +121,37 @@ class ConfigModule(Module):
 
 # Some module implementations for testing
 
+# Module which contains a list of other modules to enable.
+# Can also include a "real" module with new functionaliry
+class MacroModule(Module):
+
+    @abstractmethod
+    def get_submodules(self) -> List[Module]:
+        raise NotImplementedError
+
+    @staticmethod
+    def get_parser_group():
+        return 'macro'
+
+    # By default, we assume that a macro module is only used as a collection of other modules.
+    # We implement this here so that you can easily create a new macro module
+
+    # However you can override these functions for custom behavior.
+    def run(self, line):
+        return Result(status=False, debug_str=None)
+
+    def handle(self, results):
+        return Actions()
+
+    @property
+    def debug_str(self) -> str:
+        pass
+
+    @staticmethod
+    def get_pipeline_position():
+        return PipelinePosition.AFTER_ENCODE
+
+
 class CheckModule(Module):
 
     @staticmethod
@@ -137,9 +168,9 @@ class CheckModule(Module):
 
     def handle(self, result):
         return Actions(
-            # If a check module is tripped, don't need to check anymore.
+            # If a check module is tripped, don't need to run any more modules.
             stop=True,
-            log_str=result.debug_str  # Always log
+            log_str=result.debug_str  # Always log checks
         )
 
 
@@ -342,3 +373,27 @@ class HexModule(Module):
     @staticmethod
     def get_parser_group():
         return 'modify'
+
+class TabModule(ModifyModule):
+    @staticmethod
+    def get_help_info():
+        return HelpInfo(
+            option='tab',
+            help_str="Enables replacing tab char with ':', sometimes leaks contain both ':' and '\\t'."
+        )
+
+    # This module runs on bytes
+    @staticmethod
+    def get_pipeline_position():
+        return PipelinePosition.BEFORE_ENCODE
+
+    @property
+    def debug_str(self) -> str:
+        return 'Clean_tab; replaced tab characters'
+
+    def run(self, line):
+        if b'\x09' in line:
+            line = sub(b'\x09+', b'\x3a', line)
+            return Result(status=True, debug_str=self.debug_str, update=line)
+        return Result(status=False, debug_str=None)
+

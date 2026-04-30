@@ -13,7 +13,7 @@ class EncodeModule(ConfigModule):
         return 'modify'
 
     @staticmethod
-    def get_pipeline_position() -> PipelinePosition:
+    def get_pipeline_position():
         return PipelinePosition.ENCODE
 
     @staticmethod

@@ -10,8 +10,8 @@ class Pipeline:
     def __init__(self, parser, argv, config):
 
         # Keep track where our encoding module (should) be
-        has_encoding = False
-        encoding_slot = 0
+        self.has_encoding = False
+        self.encoding_slot = 0
 
         self.modules = []
 
@@ -31,27 +31,38 @@ class Pipeline:
                 if issubclass(module, ConfigModule):
                     instance.set_configs(config)
 
-                # Append, insert at 0 or insert at encoding_slot?
-                match module.get_pipeline_position():
-                    case PipelinePosition.BEFORE_ENCODE:
-                        self.modules.insert(encoding_slot, instance)
-                        # Bump up encoding slot. Also makes sure BEFORE_ENCODE modules are placed in order.
-                        encoding_slot += 1
-                    case PipelinePosition.ENCODE:
-                        self.modules.insert(encoding_slot, instance)
-                        has_encoding = True
-                        # don't need to keep track of encoding_slot if inserted.
-                    case PipelinePosition.AFTER_ENCODE:
-                        self.modules.append(instance)
+                # Currently, the submodules are placed BEFORE the macro module.
+                # Does this matter?
+                if issubclass(module, MacroModule):
+                    for subinstance in instance.get_submodules():
+                        self.include_module(subinstance)
 
-        if not has_encoding:
+
+                self.include_module(instance)
+
+
+        # --encode not used
+        if not self.has_encoding:
             # Insert the standard encoder (is a config module)
             default_encode = DefaultEncodeModule()
             default_encode.set_configs(config)
-            self.modules.insert(encoding_slot, default_encode)
+            self.modules.insert(self.encoding_slot, default_encode)
 
 
-
+    # Include module at right point of pipeline
+    def include_module(self, instance):
+        # Append, insert at 0 or insert at encoding_slot?
+        match instance.get_pipeline_position():
+            case PipelinePosition.BEFORE_ENCODE:
+                self.modules.insert(self.encoding_slot, instance)
+                # Bump up encoding slot. Also makes sure BEFORE_ENCODE modules are placed in order.
+                self.encoding_slot += 1
+            case PipelinePosition.ENCODE:
+                self.modules.insert(self.encoding_slot, instance)
+                self.has_encoding = True
+                # don't need to keep track of encoding_slot if inserted.
+            case PipelinePosition.AFTER_ENCODE:
+                self.modules.append(instance)
 
     # This is one worker job, process a list of lines.
     def run(self, lines, config):

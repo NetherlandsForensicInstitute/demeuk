@@ -1,6 +1,33 @@
 from string import punctuation as string_punctuation
 
+from demeuk.modules.base import *
+from demeuk.modules.encode import *
+
 from nltk import WhitespaceTokenizer, str2tuple
+
+# NB: Macro module contains config module as submodule. So we pass the config on...
+# Maybe not the best way? or not too bad...
+class LeakModule(MacroModule, ConfigModule):
+    def set_configs(self, config):
+        # Store the entire config as config...
+        self.add_config('config', config)
+
+    @staticmethod
+    def get_help_info():
+        return HelpInfo(
+            option='leak',
+            help_str='When wet, demeuk will run the following modules: mojibake, encode, newline, check-controlchar. This is recommended when working with leaks.'
+        )
+
+    def get_submodules(self):
+        encode_module = EncodeModule()
+        encode_module.set_configs(self.get_config('config'))
+        return [
+            CleanTrimModifyModule(),
+            HexModule(),
+            encode_module,
+            TabModule(),
+        ]
 
 
 def clean_googlengram(line):

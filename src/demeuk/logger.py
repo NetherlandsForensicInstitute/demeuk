@@ -19,7 +19,7 @@ class Logger:
                 self.stderr_print_always(f'Logger: Cannot write output file to {args.output}!')
                 exit(2)
             # If we can access the output file:
-            self.output_file = open(args.output, 'w')
+            self.output_file = open(args.output, 'w') # Overwrite output file
             self.stderr_print(f'Logger: writing output to {args.output}')
         else:
             self.output_file = stdout
