@@ -85,14 +85,15 @@ def main():
                                   position=1):
                     submit(pool, jobs, pipeline, chunk, cfg)
         else:
-            # Submit all jobs...
+            # Submit all job with stdin...
             pass
         cfg.logger.stderr_print('Submitted jobs, waiting for jobs to finish...')
 
         # Wait for jobs to finish
         while len(jobs) > 0:
-            job = jobs.pop()
+            job = jobs.pop(0)
             job.wait()
             cfg.logger.write_results(job.get())
+            print("finished!")
 
     cfg.logger.stderr_print('Done')
