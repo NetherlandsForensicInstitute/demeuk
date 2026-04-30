@@ -52,18 +52,14 @@ def main():
 
     cfg.logger.stderr_print(f'Running demeuk - {version}')
     cfg.logger.stderr_print(f'Using {cfg.threads} out of {cpu_count()} available CPUs')
-    cfg.logger.stderr_print(f'Chunking file {cfg.input_file}')
 
-
-    # Read whole file (debug), chunk and multiprocess this.
-    lines = []
-    with open(cfg.input_file, 'rb') as file_handle:
-        lines = [line.rstrip(b'\n') for line in file_handle.readlines()]
 
     cfg.logger.write_log(f'Running demeuk - {version}{linesep}')
 
 
     with Pool(cfg.threads, init_worker) as pool:
+        cfg.logger.stderr_print(f'Chunking file {cfg.input_file}')
+
         jobs = []
 
         if cfg.input_file:
