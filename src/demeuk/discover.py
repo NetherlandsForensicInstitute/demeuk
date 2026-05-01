@@ -2,6 +2,9 @@ import importlib.util
 import inspect
 import os
 
+# Use this as a key to sort the arguments alphabetically.
+def class_name(cls):
+    return cls.__name__
 
 # Discover modules in demeuk/modules
 # TODO discover at custom location maybe? Check if this is possible
@@ -35,4 +38,5 @@ def discover_modules():
                     if inspect.isclass(obj) and name not in blacklist:
                         classes |= {obj}
 
-    return classes
+    # TODO Do we want a custom sorting order?
+    return sorted(classes, key=class_name)
