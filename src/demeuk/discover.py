@@ -27,8 +27,6 @@ def discover_modules():
             members = inspect.getmembers(importlib.import_module(module_name))
             for name, obj in members:
                 if inspect.isclass(obj) and name not in blacklist:
-                    # We can exclude a module from registration by setting its parser group to 'exclude'
-                    if obj.get_parser_group() != 'exclude':
-                        classes |= {obj}
+                    classes |= {obj}
 
     return classes

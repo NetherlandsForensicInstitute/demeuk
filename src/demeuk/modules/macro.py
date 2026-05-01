@@ -15,10 +15,6 @@ class MacroModule(Module):
     def get_submodules(self) -> List[Module]:
         raise NotImplementedError
 
-    @staticmethod
-    def get_parser_group():
-        return 'macro'
-
     # By default, we assume that a macro module is only used as a collection of other modules.
     # We implement this here so that you can easily create a new macro module
 

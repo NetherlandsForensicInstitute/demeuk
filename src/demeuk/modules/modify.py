@@ -19,10 +19,6 @@ from .add import clean_add_umlaut
 class ModifyModule(Module):
 
     @staticmethod
-    def get_parser_group():
-        return 'modify'
-
-    @staticmethod
     def get_pipeline_position():
         return PipelinePosition.AFTER_ENCODE
 
@@ -94,7 +90,7 @@ class TransliterateModule(ModifyModule, ParamModule):
 
 
 
-class HexModule(Module):
+class HexModule(ModifyModule):
 
     HEX_REGEX = re_compile(r'^\$(?:HEX|hex)\[((?:[0-9a-fA-F]{2})+)\]$')
 
@@ -126,10 +122,6 @@ class HexModule(Module):
     @staticmethod
     def get_pipeline_position():
         return PipelinePosition.AFTER_ENCODE
-
-    @staticmethod
-    def get_parser_group():
-        return 'modify'
 
 class TabModule(ModifyModule):
     @staticmethod

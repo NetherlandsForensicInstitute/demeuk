@@ -134,11 +134,23 @@ Example uses:
 
 
     def register(self, module):
-        group = module.get_parser_group()
+        # Hardcoded: Module Type determines help category
+        categories = {
+            CheckModule: 'check',
+            ModifyModule: 'modify',
+            AddModule: 'add',
+            #RemoveModule: 'remove',
+            MacroModule: 'macro',
+        }
 
-        if group == 'misc' and 'misc' not in self.parser_groups:
-            # Module does not fit in a group, so create misc group if it does not exist yet.
-            self.parser_groups['misc'] = self.parser.add_argument_group('Miscellaneous')
+        for module_type, group_str in categories.items():
+            if issubclass(module, module_type):
+                group = group_str
+                break
+        else:
+            # If a module is not one of the categories, don't register.
+            # Therefore, it cannot be called from the command-line, only internally!
+            return
 
         if issubclass(module, ParamModule):
             self.add_param_options(group, module.get_help_info())

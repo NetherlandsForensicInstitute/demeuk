@@ -16,10 +16,6 @@ from ..regexes import *
 class CheckModule(Module):
 
     @staticmethod
-    def get_parser_group():
-        return 'check'
-
-    @staticmethod
     def get_pipeline_position():
         return PipelinePosition.AFTER_ENCODE
 

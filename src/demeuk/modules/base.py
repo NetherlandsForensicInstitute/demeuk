@@ -60,11 +60,6 @@ class Module(ABC):
     def get_help_info() -> HelpInfo | HelpInfoParam:
         raise NotImplementedError
 
-    @staticmethod
-    @abstractmethod
-    def get_parser_group() -> str:
-        raise NotImplementedError
-
     @property
     @abstractmethod
     def debug_str(self) -> str:

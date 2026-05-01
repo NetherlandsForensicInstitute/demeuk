@@ -14,10 +14,6 @@ from ftfy.fixes import fix_latin_ligatures
 
 class AddModule(Module):
     @staticmethod
-    def get_parser_group():
-        return 'add'
-
-    @staticmethod
     def get_pipeline_position():
         return PipelinePosition.AFTER_ENCODE
 

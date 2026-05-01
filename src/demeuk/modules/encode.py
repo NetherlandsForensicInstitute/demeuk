@@ -2,15 +2,12 @@ from unicodedata import category
 
 from chardet import detect
 from demeuk.modules.base import Module, PipelinePosition, HelpInfo, HelpInfoParam, Result, Actions, ConfigModule
+from demeuk.modules.modify import ModifyModule
 
 
-class EncodeModule(ConfigModule):
+class EncodeModule(ModifyModule, ConfigModule):
     def set_configs(self, config):
         self.add_config('encodings', config.input_encodings)
-
-    @staticmethod
-    def get_parser_group() -> str:
-        return 'modify'
 
     @staticmethod
     def get_pipeline_position():
@@ -84,6 +81,7 @@ class EncodeModule(ConfigModule):
 
 
 # Dropped in place if --encode is not used
+# Don't inherit C/M/A/R-module, we don't want to register this to the argument parser
 class DefaultEncodeModule(ConfigModule):
 
     def set_configs(self, config):
@@ -114,11 +112,6 @@ class DefaultEncodeModule(ConfigModule):
     @staticmethod
     def get_help_info():
         pass
-
-    # Same as above
-    @staticmethod
-    def get_parser_group():
-        return 'exclude'
 
     # Pipeline ctor knows where to put this module.
     @staticmethod
