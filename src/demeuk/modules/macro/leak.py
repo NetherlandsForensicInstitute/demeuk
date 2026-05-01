@@ -1,13 +1,13 @@
 from .macro import MacroModule
 from ..base import *
-from ..check.character import ReplacementCharModule
 
 from ..modify.encode import EncodeModule
 from ..modify.html import *
 from ..modify.modify import MojibakeModule, NewlineModule
 from ..modify.hex import HexModule
 from ..check.regex import *
-from ..check.check import ControlCharModule
+from ..check.character import *
+from ..check.empty_line import EmptyLineModule
 
 # NB: Macro module contains config module as submodule. So we pass the config on...
 # Maybe not the best way? or not too bad...
@@ -53,12 +53,12 @@ class LeakFullModule(MacroModule, ConfigModule):
         encode_module.set_configs(self.get_config('config'))
         return [
             encode_module,
-            MojibakeModule(),
-            ControlCharModule(),
+            MojibakeModule(), ControlCharModule(),
             NewlineModule(),
             HexModule(),
-            HtmlModule(),
-            HtmlNamedModule(),
+            HtmlModule(), HtmlNamedModule(),
+            HashModule(), MacAddressModule(), UuidModule(), EmailModule(),
+            ReplacementCharModule(), EmptyLineModule()
         ]
 
 
