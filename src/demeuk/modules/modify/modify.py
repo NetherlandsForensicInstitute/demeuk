@@ -27,6 +27,10 @@ class ModifyModule(Module):
             debug_str=result.msg,
         )
 
+    @property
+    def debug_str(self):
+        return 'modified line'
+
     def get_result(self, line, cleaned_line):
         if line != cleaned_line:
             return Result(status=True, msg=self.debug_str, update=cleaned_line)
