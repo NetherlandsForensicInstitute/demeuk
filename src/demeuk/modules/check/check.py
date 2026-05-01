@@ -10,8 +10,7 @@
 from re import search
 from unicodedata import category
 
-from .base import *
-from ..regexes import *
+from ..base import *
 
 class CheckModule(Module):
 

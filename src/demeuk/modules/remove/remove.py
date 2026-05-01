@@ -7,8 +7,8 @@
 # log is a debug string which can be None. Logged when result is True (something changed)
 from re import search, sub
 
-from ..regexes import EMAIL_REGEX
-from .add import get_punctuation, global_store_punctuation
+from demeuk.regexes import EMAIL_REGEX
+from demeuk.modules.add.add import get_punctuation, global_store_punctuation
 
 
 global_store_delims = [':']

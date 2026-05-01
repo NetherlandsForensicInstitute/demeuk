@@ -2,11 +2,11 @@ from argparse import ArgumentTypeError, ArgumentParser, RawDescriptionHelpFormat
 from os import cpu_count
 from textwrap import dedent
 
-from demeuk.modules.add import AddModule
+from .modules.add.add import AddModule
 from demeuk.modules.base import ParamModule
-from demeuk.modules.check import CheckModule
-from demeuk.modules.macro import MacroModule
-from demeuk.modules.modify import ModifyModule
+from .modules.check.check import CheckModule
+from .modules.macro.macro import MacroModule
+from .modules.modify.modify import ModifyModule
 
 
 # -j can take int or 'all' as argument.
@@ -18,6 +18,8 @@ def int_or_all(arg):
     if arg == 'all':
         return cpu_count()
     raise ArgumentTypeError(f"invalid value {arg} not int or 'all'")
+
+
 
 class Parser:
     def __init__(self, version):

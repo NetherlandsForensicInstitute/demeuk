@@ -2,7 +2,7 @@ from unicodedata import category
 
 from chardet import detect
 from demeuk.modules.base import Module, PipelinePosition, HelpInfo, HelpInfoParam, Result, Actions, ConfigModule
-from demeuk.modules.modify import ModifyModule
+from .modify import ModifyModule
 
 
 class EncodeModule(ModifyModule, ConfigModule):

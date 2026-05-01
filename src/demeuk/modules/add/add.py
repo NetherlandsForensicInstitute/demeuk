@@ -8,7 +8,7 @@
 from re import split as re_split
 from string import punctuation as string_punctuation
 
-from .base import *
+from ..base import *
 
 from ftfy.fixes import fix_latin_ligatures
 
@@ -16,6 +16,10 @@ class AddModule(Module):
     @staticmethod
     def get_pipeline_position():
         return PipelinePosition.AFTER_ENCODE
+
+    @property
+    def debug_str(self) -> str:
+        return 'added line'
 
     def handle(self, result):
         # Add either a string or list of strings to the queue
@@ -37,10 +41,6 @@ class FirstUpperAddModule(AddModule):
             option='add-first-upper',
             help_str='If a line does not contain a capital letter this will add the capital variant.'
         )
-
-    @property
-    def debug_str(self):
-        return 'Add:\tFirst upper:\tnew line'
 
     def run(self, line):
         line_first_upper = line.capitalize()

@@ -12,9 +12,8 @@ from ftfy.chardata import HTML_ENTITIES, HTML_ENTITY_RE
 from transliterate import translit
 from unidecode import unidecode
 
-from .base import *
-from ..regexes import HEX_REGEX, TRIM_BLOCKS
-from .add import clean_add_umlaut
+from ..base import *
+from ..add.add import clean_add_umlaut
 
 class ModifyModule(Module):
 

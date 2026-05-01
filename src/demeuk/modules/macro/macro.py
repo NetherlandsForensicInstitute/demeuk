@@ -1,9 +1,9 @@
 from string import punctuation as string_punctuation
 
-from demeuk.modules.base import *
-from demeuk.modules.check import ControlCharModule
-from demeuk.modules.encode import *
-from demeuk.modules.modify import TrimModule, HexModule, TabModule, MojibakeModule, NewlineModule
+from ..base import *
+from ..check.check import ControlCharModule
+from ..modify.encode import EncodeModule, DefaultEncodeModule
+from ..modify.modify import *
 
 from nltk import WhitespaceTokenizer, str2tuple
 

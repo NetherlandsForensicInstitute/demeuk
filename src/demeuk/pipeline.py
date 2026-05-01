@@ -3,8 +3,8 @@ from collections import deque
 from os import linesep
 
 from .modules.base import *
-from .modules.macro import MacroModule
-from .modules.encode import DefaultEncodeModule
+from .modules.macro.macro import MacroModule
+from .modules.modify.encode import DefaultEncodeModule
 
 
 class Pipeline:

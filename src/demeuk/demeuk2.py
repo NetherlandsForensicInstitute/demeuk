@@ -1,5 +1,4 @@
 import sys
-from argparse import ArgumentParser
 from glob import glob
 from math import ceil
 from os import cpu_count, linesep, path, access, R_OK
@@ -9,15 +8,6 @@ from multiprocess.pool import Pool
 from tqdm import tqdm
 from .chunk import chunkify, submit
 from .config import Config
-
-from .modules.base import *
-from .modules.encode import *
-from .modules.macro import *
-
-from .modules.check import *
-from .modules.modify import *
-from .modules.add import *
-from .modules.remove import *
 
 from .parser2 import Parser
 from .pipeline import Pipeline
