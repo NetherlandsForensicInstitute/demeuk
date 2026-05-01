@@ -81,6 +81,14 @@ class Pipeline:
                 continue
             processed_lines.add(line)
 
+            # Process at most config.limit lines (per thread)
+            # Why is this per thread?
+            if config.limit is not None:
+                if config.limit > 0:
+                    config.limit -= 1
+                else:
+                    break
+
 
             # Could be done with continue?
             stop = False
