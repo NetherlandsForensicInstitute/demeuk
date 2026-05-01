@@ -81,7 +81,7 @@ class Module(ABC):
 # Has a parameter
 class ParamModule(Module):
     def __init__(self, parameter):
-        self._param = parameter
+        self._param = self.get_help_info().param_type(parameter)
 
     @staticmethod
     @abstractmethod
@@ -94,7 +94,7 @@ class ParamModule(Module):
 
     @param.setter
     def param(self, value):
-        self._param = value
+        self._param = self.get_help_info().param_type(value)
 
 # A module with some configuration.
 class ConfigModule(Module):

@@ -60,7 +60,7 @@ class EndingWithCheckModule(CheckModule, ParamModule):
             param_type=str)
 
     def run(self, line) -> Result:
-        for string in self._param.split(','):
+        for string in self.param.split(','):
             if line.endswith(string):
                 return Result(status=True, msg=self.debug_str)
         return Result(status=False, msg=None)
