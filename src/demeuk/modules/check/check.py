@@ -12,6 +12,7 @@ from unicodedata import category
 
 from ..base import *
 
+# Maybe add shortcut Result object ResultPass and ResultFail or something?
 class CheckModule(Module):
 
     @staticmethod
@@ -33,21 +34,6 @@ class CheckModule(Module):
             log_str=result.msg  # Always log checks
         )
 
-class EmailCheckModule(CheckModule):
-
-    EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]{1,63}\\.){1,3}[a-zA-Z]{2,6}'
-
-    @staticmethod
-    def get_help_info():
-        return HelpInfo(
-            option='check-email',
-            help_str='Drop lines containing e-mail addresses.',
-        )
-
-    def run(self, line) -> Result:
-        if search(self.EMAIL_REGEX, line):
-            return Result(status=True, msg=self.debug_str)
-        return Result(status=False, msg=None)
 
 
 class ControlCharModule(CheckModule):
@@ -92,24 +78,6 @@ class EndingWithCheckModule(CheckModule, ParamModule):
             if line.endswith(string):
                 return Result(status=True, msg=self.debug_str)
         return Result(status=False, msg=None)
-def check_regex(line, regex_list):
-    """Checks if a line matches a comma-separated list of regexes
-
-    Params:
-        line (unicode)
-        (str)
-
-    Returns:
-        true if all match
-        false if line does not match regex
-    """
-    for regex in regex_list.split(','):
-        if search(regex, line):
-            continue
-        else:
-            return True, 'Check_regex; dropped line because it does not match the regex'
-    return False, None
-
 
 def contains_at_least(line, bound, char_property):
     """Check if the line contains at least `bound` characters with given property.
@@ -266,56 +234,6 @@ def check_max_length(line, n):
     return True, f'Check_max_length; dropped line because length is more than {n}'
 
 
-def check_hash(line):
-    """Check if a line contains a hash
-
-    Params:
-        line (unicode)
-
-    Returns:
-        true if line does not contain hash
-    """
-    if len(line) in [32, 40, 64]:
-        if search(HASH_HEX_REGEX, line):
-            return True, 'Check_hash; dropped line because found a hash'
-    if len(line) > 0:
-        if line[0] == '$':
-            for hash_regex in HASH_REGEX_LIST:
-                if search(hash_regex, line):
-                    return True, 'Check_hash; dropped line because found a hash'
-    return False, None
-
-
-def check_mac_address(line):
-    """Check if a line contains a MAC-address
-
-    Params:
-        line (unicode)
-
-    Returns:
-        true if line does not contain a MAC-address
-    """
-    if search(MAC_REGEX, line):
-        return True, 'Check_mac_address; dropped line because found a MAC address'
-
-    return False, None
-
-
-def check_email(line):
-    """Check if lines contain e-mail addresses with a simple regex
-
-    Params:
-        line (unicode)
-
-    Returns:
-        true is line does not contain email
-    """
-    if search(EMAIL_REGEX, line):
-        return True, 'Check_email; dropped line because found email'
-    else:
-        return False, None
-
-
 def check_non_ascii(line):
     """Checks if a line contains a non ascii chars
 
@@ -369,21 +287,6 @@ def check_starting_with(line, strings):
     for string in strings.split(','):
         if line.startswith(string):
             return True, f'Check_starting_with; dropped line because {string} found'
-    return False, None
-
-
-def check_uuid(line):
-    """Check if a line contains a UUID
-
-    Params:
-        line (unicode)
-
-    Returns:
-        true if line does not contain a UUID
-    """
-    if search(UUID_REGEX, line):
-        return True, 'Check_uuid; dropped line because found a uuid'
-
     return False, None
 
 
