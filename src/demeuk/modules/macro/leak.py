@@ -5,6 +5,7 @@ from ..modify.encode import EncodeModule
 from ..modify.html import *
 from ..modify.modify import MojibakeModule, NewlineModule
 from ..modify.hex import HexModule
+from ..check.regex import *
 from ..check.check import ControlCharModule
 
 # NB: Macro module contains config module as submodule. So we pass the config on...
@@ -43,7 +44,7 @@ class LeakFullModule(MacroModule, ConfigModule):
             option='leak-full',
             help_str='When set, demeuk will run the following modules: mojibake, encode, newline, check-controlchar, '
                      'hex, html, html-named, check-hash, check-mac-address, check-uuid, check-email, '
-                     'check-replacement-character, check-empty,line.'
+                     'check-replacement-character, check-empty-line.'
         )
 
     def get_submodules(self):
