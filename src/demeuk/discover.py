@@ -32,7 +32,6 @@ def discover_modules():
                 relative_path = os.path.relpath(os.path.join(path, file), modules_dir)
                 # Truncate file extension
                 module_name = 'demeuk.modules.' + relative_path[:-3].replace('/', '.')
-                print(f'import {module_name}')
                 members = inspect.getmembers(importlib.import_module(module_name))
                 for name, obj in members:
                     if inspect.isclass(obj) and name not in blacklist:
