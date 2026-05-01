@@ -8,10 +8,12 @@ class RegexModule(CheckModule, ParamModule):
 
     @staticmethod
     def get_help_info():
-        return HelpInfo(
+        return HelpInfoParam(
             option='check-regex',
             help_str='Drop lines that do not match the regex. Option expects a comma-separated list of regexes.'
-                     'For example: [a-z]{1,8},[0-9]{1,8}.')
+                     'For example: [a-z]{1,8},[0-9]{1,8}.',
+            metavar='<regexes>',
+            param_type=str)
 
     def run(self, line):
         # TODO I think now we cannot have a regex containing a comma
