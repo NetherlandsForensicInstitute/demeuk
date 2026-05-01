@@ -3,6 +3,9 @@ from ..base import *
 
 # Maybe add a BoundsCheckModule which automatically creates min/max versions?
 
+# TODO strange bug where some test fail and some pass some of the time...?
+# investigate more.
+
 class MinDigitsModule(CheckModule, ParamModule):
     @staticmethod
     def get_help_info():
@@ -69,7 +72,7 @@ class MinSpecialsModule(CheckModule, ParamModule):
             param_type=int)
 
     def run(self, line):
-        if sum([not c.isanum() and not c.isspace() for c in line]) < self.param:
+        if sum([not c.isalnum() and not c.isspace() for c in line]) < self.param:
             return self.stop
         return self.next
 
@@ -83,6 +86,6 @@ class MaxSpecialsModule(CheckModule, ParamModule):
             param_type=int)
 
     def run(self, line):
-        if sum([not c.isanum() and not c.isspace() for c in line]) > self.param:
+        if sum([not c.isalnum() and not c.isspace() for c in line]) > self.param:
             return self.stop
         return self.next
