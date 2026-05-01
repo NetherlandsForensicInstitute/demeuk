@@ -38,8 +38,6 @@ def main():
 
     pipeline = Pipeline(parser, sys.argv, cfg)
 
-    print(pipeline.modules)
-
     cfg.logger.stderr_print(f'Running demeuk - {version}')
     cfg.logger.stderr_print(f'Using {cfg.threads} out of {cpu_count()} available CPUs')
 
