@@ -16,7 +16,6 @@ class Result(NamedTuple):
     update: str | bytes | None = None
 
 
-# NB: If you implement a standard module, you should not need to worry about this!
 # Result of module.handle, these can perform an action
 class Actions(NamedTuple):
     # Stop further demeuking if this is true
@@ -25,7 +24,7 @@ class Actions(NamedTuple):
     add: list | None = None
     # Update line
     update: str | None = None
-    # Add bytes back instead of re-encoding? (only used for --html)
+    # Add bytes back instead of re-encoding? (only used for --hex)
     do_not_re_encode: bool = False
     # Log this string if not None
     log_str: str | None = None
