@@ -1,5 +1,6 @@
 from .macro import MacroModule
 from ..base import *
+from ..check.character import ReplacementCharModule
 
 from ..modify.encode import EncodeModule
 from ..modify.html import *

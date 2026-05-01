@@ -47,31 +47,6 @@ class CheckModule(Module):
 
 
 
-class ControlCharModule(CheckModule):
-
-    def __init__(self):
-        self.cc_found = None
-
-    @staticmethod
-    def get_help_info():
-        return HelpInfo(
-            option='check-controlchar',
-            help_str='Drop lines containing control characters.')
-
-    def run(self, line) -> Result:
-        for c in line:
-            # https://en.wikipedia.org/wiki/Unicode_character_property#General_Category
-            # Characters (they have meaning):
-            # Cc -> Control Char (End of stream)
-            # Cf -> Control flow (right to left)
-            # Non chars:
-            # Cn -> Not assigned
-            # Co -> Private use
-            # Cs -> Surrogate
-            if category(c) in ['Cc', 'Cf', 'Cn', 'Co', 'Cs']:
-                self.cc_found = c
-                return Result(status=True, msg=self.debug_str)
-        return Result(status=False, msg=None)
 
 
 class EndingWithCheckModule(CheckModule, ParamModule):
@@ -169,29 +144,6 @@ def check_max_specials(line, n):
     if contains_at_most(line, n, lambda c: not c.isalnum() and not c.isspace()):
         return False, None
     return True, f'Check_max_specials; dropped line because it contains more than {n} special characters'
-
-
-def check_controlchar(line):
-    """Detects control chars, returns False when detected
-
-    Params:
-        line (Unicode)
-
-    Returns:
-        Status, String
-    """
-    for c in line:
-        # https://en.wikipedia.org/wiki/Unicode_character_property#General_Category
-        # Characters (they have meaning):
-        # Cc -> Control Char (End of stream)
-        # Cf -> Control flow (right to left)
-        # Non chars:
-        # Cn -> Not assigned
-        # Co -> Private use
-        # Cs -> Surrogate
-        if category(c) in ['Cc', 'Cf', 'Cn', 'Co', 'Cs']:
-            return True, f'Check_controlchar; found controlchar {c!r}'
-    return False, None
 
 
 def check_case(line, ignored_chars=(' ', "'", '-')):
