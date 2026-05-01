@@ -107,17 +107,17 @@ class Pipeline:
                                 else:
                                     work_queue.append(word.encode())
                                 if actions.debug_add_str is not None:
-                                    logger.log_debug(log_id, f'{actions.debug_add_str}; {word}{linesep}')
+                                    logger.log_debug(log_id, f"{module.__class__.__name__}:\t{actions.debug_add_str}:\t{word}{linesep}")
 
                         if actions.update is not None:
                             line = actions.update
 
                         if actions.log_str is not None:
                             # Log a message (always)
-                            logger.log(log_id, f'{actions.log_str}; {line}{linesep}')
+                            logger.log(log_id, f"{module.__class__.__name__}:\t{actions.log_str}:\t{line}{linesep}")
                         if actions.debug_str is not None:
                             # Log a message (with --debug)
-                            logger.log_debug(log_id, f'{actions.debug_str}; {line}{linesep}')
+                            logger.log_debug(log_id, f"{module.__class__.__name__}:\t{actions.debug_str}:\t{line}{linesep}")
 
             # If we got through all the modules:
             if not stop:

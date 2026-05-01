@@ -27,7 +27,7 @@ class MacroModule(Module):
 
     @property
     def debug_str(self) -> str:
-        pass
+        return f'performed action'
 
     @staticmethod
     def get_pipeline_position():
@@ -70,6 +70,10 @@ class GoogleNgramModule(MacroModule, ConfigModule):
             option=['g', 'googlengram'],
             help_str='When set, demeuk will strip universal pos tags like _NOUN_ or _ADJ.'
         )
+
+    @property
+    def debug_str(self):
+        return 'cleaned tags'
 
     def get_submodules(self):
         encode_module = EncodeModule()

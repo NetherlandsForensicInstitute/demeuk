@@ -19,6 +19,10 @@ class CheckModule(Module):
     def get_pipeline_position():
         return PipelinePosition.AFTER_ENCODE
 
+    @property
+    def debug_str(self) -> str:
+        return f'dropped line'
+
     @abstractmethod
     def run(self, line) -> Result:
         raise NotImplementedError
@@ -41,10 +45,6 @@ class EmailCheckModule(CheckModule):
             help_str='Drop lines containing e-mail addresses.',
         )
 
-    @property
-    def debug_str(self):
-        return 'Check email: Dropped line because found email'
-
     def run(self, line) -> Result:
         if search(self.EMAIL_REGEX, line):
             return Result(status=True, msg=self.debug_str)
@@ -61,10 +61,6 @@ class ControlCharModule(CheckModule):
         return HelpInfo(
             option='check-controlchar',
             help_str='Drop lines containing control characters.')
-
-    @property
-    def debug_str(self) -> str:
-        return f'Check:\tControl char:\tfound controlchar {self.cc_found!r}'
 
     def run(self, line) -> Result:
         for c in line:
@@ -91,10 +87,6 @@ class EndingWithCheckModule(CheckModule, ParamModule):
             help_str='Drop lines ending with string, can be multiple strings. Specify multiple with a comma-separated list.',
             metavar='<string>',
             param_type=str)
-
-    @property
-    def debug_str(self):
-        return f'Check ending with; Dropped line because {self._param} found'
 
     def run(self, line) -> Result:
         for string in self._param.split(','):
