@@ -84,35 +84,3 @@ def remove_email(line):
         if search(f'{EMAIL_REGEX}(:|;)', line):
             return True, sub(f'{EMAIL_REGEX}(:|;)', '', line), 'Remove_email; email found'
     return False, line, None
-
-
-# In the docs, cut is a separating module
-# I think it cna also be viewed as a remove module.
-def clean_cut(line):
-    """Finds the first delimiter and returns the remaining string either after
-    or before the delimiter.
-
-    Params:
-        line (unicode)
-        delimiters list(unicode)
-        fields (unicode)
-
-    Returns:
-        line (unicode)
-    """
-    fields = get_cut_fields()
-    for delimiter in get_delim():
-        if delimiter in line:
-            if '-' in fields:
-                start = fields.split('-')[0]
-                stop = fields.split('-')[1]
-                if start == '':
-                    start = 1
-                if stop == '':
-                    stop = len(line)
-                fields = slice(int(start) - 1, int(stop))
-            else:
-                fields = slice(int(fields) - 1, int(fields))
-            return True, delimiter.join(line.split(delimiter)[fields]), 'Clean_cut; field cutted'
-    else:
-        return False, line, None

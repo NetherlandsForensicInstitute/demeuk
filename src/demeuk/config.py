@@ -44,11 +44,17 @@ class Config:
         self.limit = args.limit
 
         # Delimiter determination
+        # config.delimiter is a list.
         if args.delimiter:
-            # TODO what is we want , as a delimiter
-            self.delimiters = args.delimiter.split(',')
+            splitter = ','
+            # We can have comma as delimiter, if we put it first and separate with semicolon.
+            # TODO add test for this
+            if len(args.delimiter) >= 1:
+                if args.delimiter[0] == ',':
+                    splitter = ';'
+            self.delimiters = args.delimiter.split(splitter)
         else:
-            self.delimiters = ':'
+            self.delimiters = [':']
 
         # Config for cut
         self.cut_fields = '2-'
