@@ -4,7 +4,7 @@ from os import linesep
 
 from .modules.base import *
 from .modules.macro.macro import MacroModule
-from .modules.modify.encode import DefaultEncodeModule
+from .modules.modify.input_encode import DefaultEncodeModule
 
 
 class Pipeline:

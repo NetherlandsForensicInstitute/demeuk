@@ -3,7 +3,7 @@ from string import punctuation as string_punctuation
 
 from .macro import MacroModule
 from ..base import *
-from ..modify.encode import EncodeModule
+from ..modify.input_encode import EncodeModule
 
 class GoogleNgramModule(MacroModule, ConfigModule):
 
