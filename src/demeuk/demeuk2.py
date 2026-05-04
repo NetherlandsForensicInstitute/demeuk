@@ -6,7 +6,7 @@ from signal import signal, SIGINT, SIG_IGN
 
 from multiprocess.pool import Pool
 from tqdm import tqdm
-from .chunk import chunkify, submit
+from .chunk import chunkify, submit, finish_up
 from .config import Config
 
 from .parser2 import Parser
@@ -60,7 +60,7 @@ def main():
                 if not access(file, R_OK):
                     continue
                 total_chunks = ceil(path.getsize(file) / cfg.chunk_size)
-                for chunk in tqdm(chunkify(cfg),
+                for chunk in tqdm(chunkify(file, cfg),
                                   desc='Chunks processed',
                                   mininterval=0.5,
                                   unit=' chunks',
@@ -74,9 +74,6 @@ def main():
         cfg.logger.stderr_print('Submitted jobs, waiting for jobs to finish...')
 
         # Wait for jobs to finish
-        while len(jobs) > 0:
-            job = jobs.pop(0)
-            job.wait()
-            cfg.logger.write_results(job.get())
+        finish_up(jobs, cfg)
 
     cfg.logger.stderr_print('Done')

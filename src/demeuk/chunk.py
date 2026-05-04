@@ -1,8 +1,8 @@
 from time import sleep
 
 
-def chunkify(cfg):
-    with open(cfg.input_file, 'rb') as fh:
+def chunkify(file, cfg):
+    with open(file, 'rb') as fh:
         for x in range(0, cfg.skip):
             fh.readline()
 
@@ -27,3 +27,9 @@ def submit(pool, jobs, pipeline, chunk, config):
         else:
             # Wait until a thread is available.
             sleep(0.5)
+
+def finish_up(jobs, config):
+    while len(jobs) > 0:
+        job = jobs.pop(0)
+        job.wait()
+        config.logger.write_results(job.get())
