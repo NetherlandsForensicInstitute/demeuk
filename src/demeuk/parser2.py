@@ -69,12 +69,6 @@ Example uses:
                                     "'all' to make demeuk auto detect the amount of threads to "
                                     "start based on the CPU's (default: all threads). Note: "
                                     'threading will cost some setup time. Only speeds up for larger files.')
-        self.parser_groups['standard'].add_argument('--input-encoding', action='store',
-                               metavar='<encoding>',
-                               help='Forces demeuk to decode the input using this encoding (default: en_US.UTF-8).')
-        self.parser_groups['standard'].add_argument('--output-encoding', action='store',
-                               metavar='<encoding>',
-                               help='Forces demeuk to encoding the output using this encoding (default: en_US.UTF-8).')
         self.parser_groups['standard'].add_argument('-v', '--verbose', action='store_true',
                                help='When set, printing some extra information to stderr. And will '
                                     'print the lines containing errors to logfile.')
@@ -87,13 +81,31 @@ Example uses:
                                metavar='<n>', help='Limit the number of lines per thread.')
         self.parser_groups['standard'].add_argument('-s', '--skip', action='store', type=int,
                                metavar='<n>', help='Skip <int> amount of lines per thread.')
-        self.parser_groups['standard'].add_argument('--punctuation', action='store',
-                               metavar='<punctuation>',
-                               help='Use to set the punctuation that is use by options. Defaults to: string.punctuation.')
         self.parser_groups['standard'].add_argument('--version', action='version', version='%(prog)s ' + str(version),
                                help='Prints the version of demeuk.')
         self.parser_groups['standard'].add_argument('-h', '--help', action='help',
                                help='Prints this message and exits.')
+
+        # Configuration options
+        self.parser_groups['config'].add_argument('--input-encoding', action='store',
+                                                    metavar='<encoding>',
+                                                    help='Forces demeuk to decode the input using this encoding (default: en_US.UTF-8).')
+        self.parser_groups['config'].add_argument('--output-encoding', action='store',
+                                                    metavar='<encoding>',
+                                                    help='Forces demeuk to encoding the output using this encoding (default: en_US.UTF-8).')
+        self.parser_groups['config'].add_argument('--punctuation', action='store',
+                                                    metavar='<punctuation>',
+                                                    help='Use to set the punctuation that is use by options. Defaults to: string.punctuation.')
+        self.parser_groups['config'].add_argument('-f','--cut-fields', action='store',
+                                                  metavar='<field>',
+                                                  help="Specifies the field to be returned, this is in the 'cut' language.")
+        # TODO do we want to explain cut in helpstr?
+        self.parser_groups['config'].add_argument('--cut-before', action='store_true',
+                                                  help='Specify if demeuk should return the string before the delimiter')
+        # Desribe default behavior of cut inside of CutModule
+        self.parser_groups['config'].add_argument('-d', '--delimiter', action='store',
+                                                  metavar='<delimiters>',
+                                                  help="Specify what delimiter to use for --cut. Multiple delimiteres can be specified with ','")
 
     # Resolve 'g' -> '-g' and 'check-something' -> '--check-something'
     @staticmethod

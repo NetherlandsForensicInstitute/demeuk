@@ -43,6 +43,24 @@ class Config:
         self.skip = args.skip if args.skip else 0
         self.limit = args.limit
 
+        # Delimiter determination
+        if args.delimiter:
+            # TODO what is we want , as a delimiter
+            self.delimiters = args.delimiter.split(',')
+        else:
+            self.delimiters = ':'
+
+        # Config for cut
+        self.cut_fields = '2-'
+        if args.cut_before:
+            self.cut_fields = '-1'
+        if args.cut_fields:
+            # --cut-fields overrides --cut-before
+            self.cut_fields = args.cut_fields
+
+        self.cut_before = True if args.cut_before else False
+
+
         # List
         self.input_encodings = args.input_encoding.split(',') if args.input_encoding else ['UTF-8']
 
