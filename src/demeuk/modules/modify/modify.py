@@ -199,40 +199,6 @@ def clean_non_ascii(line):
         return False, line, None
 
 
-def clean_lowercase(line):
-    """Replace all capitals to lowercase
-
-        Params:
-            line (Unicode)
-
-        Returns:
-            line (Unicode)
-
-        """
-    cleaned_line = line.lower()
-    if line != cleaned_line:
-        return True, cleaned_line, 'Clean_lowercase; all capitals replaced'
-    else:
-        return False, line, None
-
-
-def clean_title_case(line):
-    """Replace words to title word (uppercasing first letter)
-
-    Params:
-        line (Unicode)
-
-    Returns:
-        line (Unicode)
-
-    """
-    cleaned_line = line.title()
-    if line != cleaned_line:
-        return True, cleaned_line, 'Clean_title_case; lowercase characters replaced'
-    else:
-        return False, line, None
-
-
 def clean_trim(line):
     """Delete leading and trailing character sequences representing a newline
     from beginning end end of line.
