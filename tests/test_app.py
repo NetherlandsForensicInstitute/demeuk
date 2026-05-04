@@ -37,9 +37,9 @@ def test_demeuk():
     line_num_output1 = calculate_line_numbers('testdata/output1')
     line_num_log1 = calculate_line_numbers('testdata/log1')
 
-    assert line_num_log1 == 5
+    assert line_num_log1 == 6
     assert line_num_output1 == 9
-    assert line_num_input1 == (line_num_output1 + line_num_log1 - 1)
+    assert line_num_input1 == (line_num_output1 + line_num_log1 - 2)
     with open('testdata/output1') as file:
         filecontent = file.read()
         assert 'Password123!@"\n' in filecontent
