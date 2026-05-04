@@ -1,4 +1,5 @@
 # Handle debug logging, but also writing the output to file.
+from locale import getlocale
 from os import access, path, W_OK, F_OK
 from sys import stdout, stderr
 
@@ -13,13 +14,14 @@ class Logger:
         self.debug = args.debug
 
 
+        encoding = getlocale()[1]
         # Check if we can write to output and log files
         if args.output:
             if not access(path.dirname(args.output), W_OK):
                 self.stderr_print_always(f'Logger: Cannot write output file to {args.output}!')
                 exit(2)
             # If we can access the output file:
-            self.output_file = open(args.output, 'w') # Overwrite output file
+            self.output_file = open(args.output, 'w', encoding=encoding, newline='') # Overwrite output file
             self.stderr_print(f'Logger: writing output to {args.output}')
         else:
             self.output_file = stdout
@@ -30,7 +32,7 @@ class Logger:
             if not (access(path.dirname(args.log), W_OK) or access(args.log, F_OK)):
                 self.stderr_print_always(f'Logger: Cannot write log file to {args.log}!')
                 exit(2)
-            self.log_file = open(args.log, 'a') # Append to log file
+            self.log_file = open(args.log, 'a', encoding=encoding, newline='') # Append to log file
             self.stderr_print(f'Logger: writing log to {args.log}')
         else:
             self.log_file = stderr
