@@ -12,6 +12,9 @@ from ..base import *
 
 from ftfy.fixes import fix_latin_ligatures
 
+
+# For certain string checks/operations, we maybe want to construct an Add, Remove and Modify(Clean) module in one go?
+# For example umlauting
 class AddModule(Module):
     @staticmethod
     def get_pipeline_position():
@@ -65,42 +68,3 @@ def add_latin_ligatures(line):
         return True, cleaned_line, 'Add_latin_ligatures; new line'
     else:
         return False, line, None
-
-
-def clean_add_umlaut(line):
-    """Returns the line cleaned of incorrect umlauting
-
-    Param:
-        line (unicode)
-
-    Returns:
-        Corrected line
-    """
-    cleaned_line = line
-
-    umlaut_dict = {
-        'a"': 'ä',
-        'i"': 'ï',
-        'o"': 'ö',
-        'u"': 'ü',
-        'e"': 'ë',
-        'A"': 'Ä',
-        'I"': 'Ï',
-        'O"': 'Ö',
-        'U"': 'Ü',
-        'E"': 'Ë',
-    }
-    for letter in umlaut_dict.keys():
-        cleaned_line = cleaned_line.replace(letter, umlaut_dict.get(letter))
-
-    if line != cleaned_line:
-        return True, cleaned_line
-    else:
-        return False, line
-
-
-def add_umlaut(line):
-    status, result = clean_add_umlaut(line)
-    if status:
-        return True, result, 'Add_umlaut; new line'
-    return False, line, None
