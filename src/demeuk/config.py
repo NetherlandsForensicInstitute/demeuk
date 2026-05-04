@@ -22,6 +22,14 @@ class Config:
         self.verbose = args.verbose
         self.debug = args.debug
 
+        # Encodings (set these before logger, as logger opens output files)
+        self.input_encodings = args.input_encoding.split(',') if args.input_encoding else ['UTF-8']
+
+        if args.output_encoding is not None:
+            setlocale(LC_ALL, args.output_encoding)
+        else:
+            setlocale(LC_ALL, 'en_US.UTF-8')
+
         self.logger = Logger(args)
 
         # Check if we can read input file (output files are checked by logger ctor)
@@ -70,11 +78,4 @@ class Config:
 
         self.cut_before = True if args.cut_before else False
 
-        # Encodings
-        self.input_encodings = args.input_encoding.split(',') if args.input_encoding else ['UTF-8']
-
-        if args.output_encoding is not None:
-            setlocale(LC_ALL, args.output_encoding)
-        else:
-            setlocale(LC_ALL, 'en_US.UTF-8')
 
