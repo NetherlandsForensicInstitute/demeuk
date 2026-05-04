@@ -54,8 +54,8 @@ class LeakFullModule(MacroModule, ConfigModule):
         encode_module.set_configs(self.get_config('config'))
         return [
             encode_module,
-            MojibakeModule(), ControlCharModule(),
             NewlineModule(),
+            MojibakeModule(), ControlCharModule(),
             HexModule(),
             HtmlModule(), HtmlNamedModule(),
             HashModule(), MacAddressModule(), UuidModule(), EmailModule(),
