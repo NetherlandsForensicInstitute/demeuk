@@ -96,7 +96,7 @@ class MinSpecialsModule(CheckModule, ParamModule):
     @staticmethod
     def get_help_info():
         return HelpInfoParam(
-            option='check-min-specials',
+            option='check-min-special',
             help_str='Require that entries contain at least <N> special characters.',
             metavar='<N>',
             param_type=int)
@@ -110,7 +110,7 @@ class MaxSpecialsModule(CheckModule, ParamModule):
     @staticmethod
     def get_help_info():
         return HelpInfoParam(
-            option='check-max-specials',
+            option='check-max-special',
             help_str='Require that entries contain at most <N> special characters.',
             metavar='<N>',
             param_type=int)
