@@ -53,12 +53,10 @@ def test_demeuk():
 
 
 def test_multithread():
-    testargs = ['demeuk', '-i', 'testdata/input2', '-o', 'testdata/output2', '-j', '3']
-    with patch.object(sys, 'argv', testargs):
-        main()
+    results = _run_demeuk(2, '-j', '3')
 
     line_num_input1 = calculate_line_numbers('testdata/input2')
-    line_num_output1 = calculate_line_numbers('testdata/output2')
+    line_num_output1 = len(results)
 
     assert line_num_output1 == 8
     assert line_num_input1 == line_num_output1
@@ -626,23 +624,16 @@ def test_trim():
 
 
 def test_invalid_unhex():
-    testargs = [
-        'demeuk', '-i', 'testdata/input37', '-o', 'testdata/output37', '-l', 'testdata/log37',
-        '--verbose', '--hex',
-    ]
-    with patch.object(sys, 'argv', testargs):
-        main()
+    results = _run_demeuk(37, '--hex')
 
-    with open('testdata/output37') as f:
-        filecontent = f.read()
-        # Invalid hex string, leaving at as is.
-        assert '$HEX[e]tiredofwaiting\n' in filecontent
-        # Invalid hex string, leaving at as is.
-        assert '\n$HEX[eee]\n' in filecontent
-        # This is a valid hash, but it is not a hex string from start to end.
-        assert '\n$HEX[6C657469746B69636B696E]123!\n' in filecontent
-        # Valid upcase test
-        assert '\nlosingtouch\n' in filecontent
+    # Invalid hex string, leaving at as is.
+    assert '$HEX[e]tiredofwaiting' in results
+    # Invalid hex string, leaving at as is.
+    assert '$HEX[eee]' in results
+    # This is a valid hash, but it is not a hex string from start to end.
+    assert '$HEX[6C657469746B69636B696E]123!' in results
+    # Valid upcase test
+    assert 'losingtouch' in results
 
 
 def test_skip():
@@ -738,17 +729,8 @@ def test_check_ending_with():
 
 
 def test_check_title_case():
-    testargs = [
-        'demeuk', '-i', 'testdata/input44', '-o', 'testdata/output44', '-l', 'testdata/log44',
-        '--verbose', '--title-case',
-    ]
-    with patch.object(sys, 'argv', testargs):
-        main()
-
-    with open('testdata/output44') as f:
-        filecontent = f.read()
-
-    assert '3 Doors Down' in filecontent
+    results = _run_demeuk(44, '--title-case')
+    assert '3 Doors Down' in results
 
 
 def test_leak_full():
