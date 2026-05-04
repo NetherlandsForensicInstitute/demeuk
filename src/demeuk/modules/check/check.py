@@ -46,26 +46,6 @@ class CheckModule(Module):
         return Result(status=False, msg=None)
 
 
-
-
-
-class EndingWithCheckModule(CheckModule, ParamModule):
-
-    @staticmethod
-    def get_help_info():
-        return HelpInfoParam(
-            option='check-ending-with',
-            help_str='Drop lines ending with string, can be multiple strings. Specify multiple with a comma-separated list.',
-            metavar='<string>',
-            param_type=str)
-
-    def run(self, line) -> Result:
-        for string in self.param.split(','):
-            if line.endswith(string):
-                return Result(status=True, msg=self.debug_str)
-        return Result(status=False, msg=None)
-
-
 def check_case(line, ignored_chars=(' ', "'", '-')):
     """Checks if an uppercase line is equal to a lowercase line.
 
