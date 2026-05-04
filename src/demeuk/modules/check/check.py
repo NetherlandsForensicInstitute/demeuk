@@ -46,26 +46,6 @@ class CheckModule(Module):
         return Result(status=False, msg=None)
 
 
-def check_case(line, ignored_chars=(' ', "'", '-')):
-    """Checks if an uppercase line is equal to a lowercase line.
-
-    Param:
-        line (unicode)
-        ignored_chars list(string)
-
-    Returns:
-        true if uppercase line is equal to uppercase line
-    """
-    for c in line:
-        c = str(c)
-        if c.lower() == c.upper():
-            if c in ignored_chars:
-                continue
-            else:
-                return True, f'Check_case; dropped line because of {c}'
-    return False, None
-
-
 def check_non_ascii(line):
     """Checks if a line contains a non ascii chars
 
@@ -80,55 +60,3 @@ def check_non_ascii(line):
         return False, None
     except UnicodeEncodeError:
         return True, 'Check_non_ascii; dropped line because non ascii char found'
-
-
-
-def check_starting_with(line, strings):
-    """Checks if a line start with a specific strings
-
-    Params:
-        line (unicode)
-        strings[str]
-
-    Returns:
-        true if line does start with one of the strings
-
-    """
-    for string in strings.split(','):
-        if line.startswith(string):
-            return True, f'Check_starting_with; dropped line because {string} found'
-    return False, None
-
-
-def check_ending_with(line, strings):
-    """Checks if a line ends with specific strings
-
-    Params:
-        line (unicode)
-        strings[str]
-
-    Returns:
-        true if line does end with one of the strings
-
-    """
-    for string in strings.split(','):
-        if line.endswith(string):
-            return True, f'Check_ending_with; dropped line because {string} found'
-    return False, None
-
-
-def check_contains(line, strings):
-    """Checks if a line does not contain specific strings
-
-    Params:
-        line (unicode)
-        strings[str]
-
-    Returns:
-        true if line does contain any one of the strings
-
-    """
-    for string in strings.split(','):
-        if string in line:
-            return True, f'Check-contains; dropped line because {string} found'
-    return False, None
