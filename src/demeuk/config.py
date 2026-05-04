@@ -1,3 +1,4 @@
+from locale import setlocale, LC_ALL
 from os import cpu_count, R_OK, access
 from string import punctuation as string_punctuation
 
@@ -69,7 +70,11 @@ class Config:
 
         self.cut_before = True if args.cut_before else False
 
-
-        # List
+        # Encodings
         self.input_encodings = args.input_encoding.split(',') if args.input_encoding else ['UTF-8']
+
+        if args.output_encoding is not None:
+            setlocale(LC_ALL, args.output_encoding)
+        else:
+            setlocale(LC_ALL, 'en_US.UTF-8')
 
