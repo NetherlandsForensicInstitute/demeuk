@@ -1,10 +1,40 @@
 from .check import CheckModule
 from ..base import *
 
-# Maybe add a BoundsCheckModule which automatically creates min/max versions?
+# Maybe add a BoundsCheckModule which automatically creates min/max versions based on a lambda?
 
 # TODO strange bug where some test fail and some pass some of the time...?
 # investigate more.
+
+
+class MinLengthModule(CheckModule, ParamModule):
+    @staticmethod
+    def get_help_info():
+        return HelpInfoParam(
+            option='check-min-length',
+            help_str='Require that entries contain at least <N> characters.',
+            metavar='<N>',
+            param_type=int)
+
+    def run(self, line):
+        if len(line) < self.param:
+            return self.stop
+        return self.next
+
+
+class MaxLengthModule(CheckModule, ParamModule):
+    @staticmethod
+    def get_help_info():
+        return HelpInfoParam(
+            option='check-max-length',
+            help_str='Require that entries contain at most <N> characters.',
+            metavar='<N>',
+            param_type=int)
+
+    def run(self, line):
+        if len(line) > self.param:
+            return self.stop
+        return self.next
 
 class MinDigitsModule(CheckModule, ParamModule):
     @staticmethod

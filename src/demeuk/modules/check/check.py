@@ -86,37 +86,6 @@ def check_case(line, ignored_chars=(' ', "'", '-')):
     return False, None
 
 
-def check_length(line, min=0, max=0):
-    """Does a length check on the line
-
-    Params:
-        line (unicode)
-        min (int)
-        max (int)
-
-    Returns:
-        true if length is ok
-    """
-    status = True
-    if min and status:
-        status = len(line) >= min
-    if max and status:
-        status = len(line) < max
-    return status
-
-
-def check_min_length(line, n):
-    if check_length(line, min=n):
-        return False, None
-    return True, f'Check_min_length; dropped line because length is less than {n}'
-
-
-def check_max_length(line, n):
-    if check_length(line, max=n):
-        return False, None
-    return True, f'Check_max_length; dropped line because length is more than {n}'
-
-
 def check_non_ascii(line):
     """Checks if a line contains a non ascii chars
 
