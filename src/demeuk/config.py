@@ -43,7 +43,8 @@ class Config:
         self.chunk_size = 1024 * 1024 # TODO do we want to be able to change this?
         self.skip = args.skip if args.skip else 0
         self.limit = args.limit
-        self.punctuation = args.punctuation if args.punctuation else string_punctuation
+        # TODO can we supply punctuation with space?
+        self.punctuation = args.punctuation if args.punctuation else string_punctuation + ' '
 
         # Delimiter determination
         # config.delimiter is a list.
