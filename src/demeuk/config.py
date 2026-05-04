@@ -1,4 +1,5 @@
 from os import cpu_count, R_OK, access
+from string import punctuation as string_punctuation
 
 from demeuk.logger import Logger
 
@@ -42,6 +43,7 @@ class Config:
         self.chunk_size = 1024 * 1024 # TODO do we want to be able to change this?
         self.skip = args.skip if args.skip else 0
         self.limit = args.limit
+        self.punctuation = args.punctuation if args.punctuation else string_punctuation
 
         # Delimiter determination
         # config.delimiter is a list.

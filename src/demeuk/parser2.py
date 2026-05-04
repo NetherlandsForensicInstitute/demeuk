@@ -2,11 +2,12 @@ from argparse import ArgumentTypeError, ArgumentParser, RawDescriptionHelpFormat
 from os import cpu_count
 from textwrap import dedent
 
+from .modules.base import *
 from .modules.add.add import AddModule
-from demeuk.modules.base import ParamModule
 from .modules.check.check import CheckModule
 from .modules.macro.macro import MacroModule
 from .modules.modify.modify import ModifyModule
+from .modules.remove.remove import RemoveModule
 
 
 # -j can take int or 'all' as argument.
@@ -153,7 +154,7 @@ Example uses:
             CheckModule: 'check',
             ModifyModule: 'modify',
             AddModule: 'add',
-            #RemoveModule: 'remove',
+            RemoveModule: 'remove',
             MacroModule: 'macro',
         }
 

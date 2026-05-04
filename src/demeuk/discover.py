@@ -20,7 +20,7 @@ def discover_modules():
     blacklist = ['ABC', 'Enum', # Python
                  'HelpInfo', 'HelpInfoParam', 'PipelinePosition', 'Result', 'Actions', # Auxiliary objects
                  'Module', 'ParamModule', 'ConfigModule', # Base modules
-                 'CheckModule', 'AddModule', 'ModifyModule', 'MacroModule', # Module types
+                 'CheckModule', 'AddModule', 'ModifyModule', 'MacroModule', 'RemoveModule', # Module types
                  'WhitespaceTokenizer', # Not sure why this one is included...
                  ]
 
