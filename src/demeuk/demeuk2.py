@@ -19,6 +19,9 @@ def init_worker():
     signal(SIGINT, SIG_IGN)
 
 def main():
+    _main(sys.argv)
+
+def _main(args):
     all_modules = discover_modules()
 
     version = '5.0.0'
@@ -30,7 +33,7 @@ def main():
         parser.register(module)
 
     # Argparse validates arguments
-    parser.parse_args()
+    parser.parse_args(args)
 
     cfg = Config(parser.args)
 

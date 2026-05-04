@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from pytest import mark, raises
 
-from demeuk.demeuk2 import main
+from demeuk.demeuk2 import main, _main
 
 
 # Q: test_check_email (22)

@@ -177,5 +177,5 @@ Example uses:
             self.lookup_table[option] = module
 
     # Parse arguments and set global config
-    def parse_args(self):
-        self.args = self.parser.parse_args()
+    def parse_args(self, args):
+        self.args = self.parser.parse_args(args[1:]) # First arg is program name, we don't need that
