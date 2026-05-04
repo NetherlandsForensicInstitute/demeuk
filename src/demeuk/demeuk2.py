@@ -76,4 +76,5 @@ def main():
         # Wait for jobs to finish
         finish_up(jobs, cfg)
 
+    cfg.logger.close_files()
     cfg.logger.stderr_print('Done')

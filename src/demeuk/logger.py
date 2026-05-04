@@ -82,3 +82,9 @@ class Logger:
     def stderr_print_always(*args, **kwargs):
         kwargs.setdefault('file', stderr)
         print(*args, **kwargs)
+
+    def close_files(self):
+        if self.output_file != stdout:
+            self.output_file.close()
+        if self.log_file != stderr:
+            self.log_file.close()
