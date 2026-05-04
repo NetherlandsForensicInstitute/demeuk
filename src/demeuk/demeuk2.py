@@ -21,7 +21,7 @@ def init_worker():
 def main():
     # We should read input here, chunk where?
 
-    _main(sys.argv)
+    results, logs = _main(sys.argv)
 
     # We should write the files here.
 
@@ -43,7 +43,10 @@ def _main(args):
 
     # Global config can be done here (in/out file, log etc.)
 
-    pipeline = Pipeline(parser, sys.argv, cfg)
+    pipeline = Pipeline(parser, args, cfg)
+
+    cfg.logger.write_log(f'Running pipeline {[module.__class__.__name__ for module in pipeline.modules]}\n')
+
 
     cfg.logger.stderr_print(f'Running demeuk - {version}')
     cfg.logger.stderr_print(f'Using {cfg.threads} out of {cpu_count()} available CPUs')
