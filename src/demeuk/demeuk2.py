@@ -79,8 +79,13 @@ def _main(args):
                                   position=1):
                     submit(pool, jobs, pipeline, chunk, cfg)
         else:
-            # Submit all job with stdin...
-            pass
+            # Read from stdin
+            chunks = sys.stdin.readlines(cfg.chunk_size)
+            while chunks:
+                chunk = [line.rstrip('\n').encode(cfg.input_encodings[0]) for line in chunks]
+                submit(pool, jobs, pipeline, chunk, cfg)
+
+                chunks = sys.stdin.readlines(cfg.chunk_size)
         cfg.logger.stderr_print('Submitted jobs, waiting for jobs to finish...')
 
         # Wait for jobs to finish
