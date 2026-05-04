@@ -19,7 +19,11 @@ def init_worker():
     signal(SIGINT, SIG_IGN)
 
 def main():
+    # We should read input here, chunk where?
+
     _main(sys.argv)
+
+    # We should write the files here.
 
 def _main(args):
     all_modules = discover_modules()
@@ -81,3 +85,6 @@ def _main(args):
 
     cfg.logger.close_files()
     cfg.logger.stderr_print('Done')
+
+    # This returns the list of results, and the logs.
+    return cfg.logger.list_results, cfg.logger.list_log

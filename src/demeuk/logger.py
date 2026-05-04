@@ -41,6 +41,9 @@ class Logger:
         # A dict of logs.
         self.logs = {}
 
+        self.list_results = []
+        self.list_log = []
+
 
     def create(self, log):
         self.logs[log] = []
@@ -76,6 +79,9 @@ class Logger:
     def write_results(self, async_result):
         self.write_out(async_result['results'])
         self.write_log(async_result['log'])
+
+        self.list_results += async_result['results']
+        self.list_log += async_result['log']
 
     # Print to stderr always, use for errors or incorrect input
     @staticmethod
