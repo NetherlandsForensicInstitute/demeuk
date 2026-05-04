@@ -317,7 +317,7 @@ def test_verbose():
         main()
     with open('testdata/log18') as f:
         filecontent = f.read()
-        assert 'CutModule: ' in filecontent
+        assert 'CutModule:' in filecontent
 
 
 def test_limit():
