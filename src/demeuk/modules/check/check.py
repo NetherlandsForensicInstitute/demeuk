@@ -65,86 +65,6 @@ class EndingWithCheckModule(CheckModule, ParamModule):
                 return Result(status=True, msg=self.debug_str)
         return Result(status=False, msg=None)
 
-def contains_at_least(line, bound, char_property):
-    """Check if the line contains at least `bound` characters with given property.
-
-    Params:
-        line (unicode)
-        bound (int)
-        char_property (str -> bool)
-
-    Returns:
-        true if at least `bound` characters match
-        false otherwise
-    """
-    if bound == 0:
-        return True
-
-    count = 0
-    for char in line:
-        if char_property(char):
-            count += 1
-            if count >= bound:
-                return True
-    return False
-
-
-def check_min_digits(line, n):
-    if contains_at_least(line, n, str.isdigit):
-        return False, None
-    return True, f'Check_min_digits; dropped line because it contains less than {n} digits'
-
-
-def check_min_uppercase(line, n):
-    if contains_at_least(line, n, str.isupper):
-        return False, None
-    return True, f'Check_min_uppercase; dropped line because it contains less than {n} uppercase characters'
-
-
-def check_min_specials(line, n):
-    if contains_at_least(line, n, lambda c: not c.isalnum() and not c.isspace()):
-        return False, None
-    return True, f'Check_min_specials; dropped line because it contains less than {n} special characters'
-
-
-def contains_at_most(line, bound, char_property):
-    """Check if the line contains at most `bound` characters with given property.
-
-    Params:
-        line (unicode)
-        bound (int)
-        char_property (str -> bool)
-
-    Returns:
-        true if at most `bound` characters match
-        false otherwise
-    """
-    count = 0
-    for char in line:
-        if char_property(char):
-            count += 1
-            if count > bound:
-                return False
-    return True
-
-
-def check_max_digits(line, n):
-    if contains_at_most(line, n, str.isdigit):
-        return False, None
-    return True, f'Check_max_digits; dropped line because it contains more than {n} digits'
-
-
-def check_max_uppercase(line, n):
-    if contains_at_most(line, n, str.isupper):
-        return False, None
-    return True, f'Check_max_uppercase; dropped line because it contains more than {n} uppercase characters'
-
-
-def check_max_specials(line, n):
-    if contains_at_most(line, n, lambda c: not c.isalnum() and not c.isspace()):
-        return False, None
-    return True, f'Check_max_specials; dropped line because it contains more than {n} special characters'
-
 
 def check_case(line, ignored_chars=(' ', "'", '-')):
     """Checks if an uppercase line is equal to a lowercase line.
@@ -213,28 +133,6 @@ def check_non_ascii(line):
         return True, 'Check_non_ascii; dropped line because non ascii char found'
 
 
-def check_character(line, character):
-    """Checks if a line contains a specific character
-
-    Params:
-        line (unicode)
-
-    Returns:
-        true if line does contain the specific character
-
-    """
-    if character in line:
-        return True
-    else:
-        return False
-
-
-def check_replacement_character(line):
-    if check_character(line, '�'):
-        return True, 'Check_replacement_character; dropped line because "�" found'
-    else:
-        return False, None
-
 
 def check_starting_with(line, strings):
     """Checks if a line start with a specific strings
@@ -284,18 +182,4 @@ def check_contains(line, strings):
     for string in strings.split(','):
         if string in line:
             return True, f'Check-contains; dropped line because {string} found'
-    return False, None
-
-
-def check_empty_line(line):
-    """Checks if a line is empty or only contains whitespace chars
-
-    Params:
-        line (unicode)
-
-    Returns:
-        true of line is empty or only contains whitespace chars
-    """
-    if line == '' or line.isspace():
-        return True, 'Check_empty_line; dropped line because is empty or only contains whitespace'
     return False, None

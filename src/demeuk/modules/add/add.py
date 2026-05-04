@@ -38,33 +38,3 @@ class AddModule(Module):
         if line != added_line:
             return Result(status=True, msg=self.debug_str, add=added_line)
         return Result(status=False, msg=None)
-
-
-
-global_store_punctuation = string_punctuation + ' '
-
-
-def set_punctuation(punc):
-    global global_store_punctuation
-    global_store_punctuation = punc
-
-
-def get_punctuation():
-    return global_store_punctuation
-
-
-def add_latin_ligatures(line):
-    """Returns the line cleaned of latin ligatures if there are any.
-
-    Param:
-        line (unicode)
-
-    Returns:
-        False if there are not any latin ligatures
-        Corrected line
-    """
-    cleaned_line = fix_latin_ligatures(line)
-    if line != cleaned_line:
-        return True, cleaned_line, 'Add_latin_ligatures; new line'
-    else:
-        return False, line, None
