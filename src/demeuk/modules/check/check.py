@@ -44,19 +44,3 @@ class CheckModule(Module):
     @property
     def next(self) -> Result:
         return Result(status=False, msg=None)
-
-
-def check_non_ascii(line):
-    """Checks if a line contains a non ascii chars
-
-    Params:
-        line (unicode)
-
-    Returns:
-        true if line does not contain non ascii chars
-    """
-    try:
-        line.encode('ascii')
-        return False, None
-    except UnicodeEncodeError:
-        return True, 'Check_non_ascii; dropped line because non ascii char found'
