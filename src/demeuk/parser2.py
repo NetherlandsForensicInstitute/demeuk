@@ -56,6 +56,7 @@ Example uses:
 
         # Standard options
         self.parser_groups['standard'].add_argument('-i', '--input', action='store',
+                               nargs='*',
                                metavar='<path>',
                                help='Specify the input file to be cleaned, or provide a glob pattern. (default: stdin)')
         self.parser_groups['standard'].add_argument('-o', '--output', action='store',

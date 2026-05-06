@@ -1,5 +1,4 @@
 import sys
-from glob import glob
 from math import ceil
 from os import cpu_count, linesep, path, access, R_OK
 from signal import signal, SIGINT, SIG_IGN
@@ -56,12 +55,12 @@ def _main(args):
 
 
     with Pool(cfg.threads, init_worker) as pool:
-        cfg.logger.stderr_print(f'Chunking file {cfg.input_file}')
+        cfg.logger.stderr_print(f'Reading input file(s)...')
 
         jobs = []
 
-        if cfg.input_file:
-            for file in tqdm(glob(cfg.input_file, recursive=True),
+        if cfg.input_files:
+            for file in tqdm(cfg.input_files,
                              desc='Files processed',
                              mininterval=0.5,
                              unit=' files',

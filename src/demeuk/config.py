@@ -1,3 +1,4 @@
+from glob import glob
 from locale import setlocale, LC_ALL
 from os import cpu_count, R_OK, access
 from string import punctuation as string_punctuation
@@ -13,7 +14,7 @@ class Config:
     # Initialize config with argparse output
     def __init__(self, args):
         # I/O
-        self.input_file = args.input
+        self.input_files = args.input
         self.output_file = args.output
         self.log_file = args.log
 
@@ -34,8 +35,16 @@ class Config:
 
         # Check if we can read input file (output files are checked by logger ctor)
         if args.input:
-            if not access(args.input, R_OK):
-                Logger.stderr_print_always(f'Config: Cannot read input file from {args.input}!')
+            # args.input is a list (nargs *)
+            if len(args.input) > 1:
+                # Pass multiple files through command-line
+                self.input_files = args.input
+            else:
+                self.input_files = glob(args.input[0], recursive=True)
+
+            for input_file in self.input_files:
+                if not access(input_file, R_OK):
+                    Logger.stderr_print_always(f'Config: Cannot read input file from {input_file}!')
 
 
         if self.progress:
@@ -43,7 +52,7 @@ class Config:
                 if not self.log_file:
                     Logger.stderr_print_always('Config: --progress cannot be used with --verbose or --debug!')
                     exit(2)
-            if not self.input_file:
+            if not self.input_files:
                 Logger.stderr_print_always('Config: --progress cannot be used when using stdin!')
                 exit(2)
 
