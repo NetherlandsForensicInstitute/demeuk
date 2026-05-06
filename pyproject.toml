@@ -20,7 +20,6 @@ license = {text = "Apache-2.0"}
 
 [project.scripts]
 demeuk = "demeuk.demeuk:main"
-demeuk2 = "demeuk.demeuk2:main"
 
 [project.optional-dependencies]
 test = [
@@ -37,7 +36,7 @@ distribution = true
 
 [tool.pdm.version]
 source = "file"
-path = "src/demeuk/demeuk2.py"
+path = "src/demeuk/demeuk.py"
 pattern = "version = '([^']+)'"
 
 [tool.pdm.build]

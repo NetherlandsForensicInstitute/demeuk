@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from pytest import mark, raises
 
-from demeuk.demeuk2 import main, _main
+from demeuk.demeuk import main, _main
 
 
 # Q: test_check_email (22)
@@ -804,7 +804,7 @@ def test_check_multiple_regexes():
 
 
 def test_stdin_stdout():
-    comlist = ['pdm', 'run', 'demeuk2']
+    comlist = ['pdm', 'run', 'demeuk']
     script = b'input\nlines\n'
     res = run(comlist, input=script,
               stdout=PIPE, stderr=PIPE)
