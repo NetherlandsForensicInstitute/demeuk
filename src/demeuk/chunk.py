@@ -32,4 +32,8 @@ def finish_up(jobs, config):
     while len(jobs) > 0:
         job = jobs.pop(0)
         job.wait()
+        # For some reason, sometimes job.wait() continues execution a fraction of a second early
+        # Waiting until job.ready() has the same issue.
+        # Waiting 5ms to let the thread finish "solves" this problem.
+        sleep(5 / 1000)
         config.logger.write_results(job.get())
