@@ -54,15 +54,16 @@ def _main(args):
 
 
     cfg.logger.write_log(f'Running demeuk - {get_version()}{linesep}')
-    results, logs = demeuk_files(pipeline, cfg.input_files, args, cfg)
+    if cfg.input_files:
+        results, logs = demeuk_files(pipeline, cfg.input_files, cfg)
+    else:
+        results, logs = demeuk_stdin(pipeline, cfg)
     cfg.logger.stderr_print('Done')
 
     return results, logs
 
 
-def demeuk_files(pipeline, input_files, args, cfg):
-
-
+def demeuk_files(pipeline, input_files, cfg):
     with Pool(cfg.threads, init_worker) as pool:
         cfg.logger.stderr_print(f'Reading input file(s)...')
 
@@ -90,4 +91,23 @@ def demeuk_files(pipeline, input_files, args, cfg):
         # Wait for jobs to finish
         finish_up(jobs, cfg)
     # This returns the list of results, and the logs.
+    return cfg.logger.list_results, cfg.logger.list_log
+
+def demeuk_stdin(pipeline, cfg):
+    with Pool(cfg.threads, init_worker) as pool:
+        cfg.logger.stderr_print(f'Reading from stdin...')
+
+        jobs = []
+
+        chunks = sys.stdin.readlines(cfg.chunk_size)
+        while chunks:
+            chunk = [line.rstrip('\n').encode(cfg.input_encodings[0]) for line in chunks]
+            submit(pool, jobs, pipeline, chunk, cfg)
+
+            chunks = sys.stdin.readlines(cfg.chunk_size)
+        cfg.logger.stderr_print('Submitted jobs, waiting for jobs to finish...')
+
+        # Wait for jobs to finish
+        finish_up(jobs, cfg)
+
     return cfg.logger.list_results, cfg.logger.list_log
