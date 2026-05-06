@@ -8,6 +8,7 @@ from .modules.modify.input_encode import DefaultEncodeModule
 
 
 class Pipeline:
+    # TODO: Create different ctor from a list of modules.
     def __init__(self, parser, argv, config):
 
         # Keep track where our encoding module (should) be

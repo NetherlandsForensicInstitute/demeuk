@@ -13,6 +13,10 @@ from .pipeline import Pipeline
 
 from .discover import discover_modules
 
+def get_version():
+    version = '5.0.0'
+    return version
+
 
 def init_worker():
     signal(SIGINT, SIG_IGN)
@@ -27,9 +31,7 @@ def main():
 def _main(args):
     all_modules = discover_modules()
 
-    version = '5.0.0'
-
-    parser = Parser(version)
+    parser = Parser(get_version())
 
 
     for module in all_modules:
@@ -47,11 +49,18 @@ def _main(args):
     cfg.logger.write_log(f'Running pipeline {[module.__class__.__name__ for module in pipeline.modules]}\n')
 
 
-    cfg.logger.stderr_print(f'Running demeuk - {version}')
+    cfg.logger.stderr_print(f'Running demeuk - {get_version()}')
     cfg.logger.stderr_print(f'Using {cfg.threads} out of {cpu_count()} available CPUs')
 
 
-    cfg.logger.write_log(f'Running demeuk - {version}{linesep}')
+    cfg.logger.write_log(f'Running demeuk - {get_version()}{linesep}')
+    results, logs = demeuk_files(pipeline, cfg.input_files, args, cfg)
+    cfg.logger.stderr_print('Done')
+
+    return results, logs
+
+
+def demeuk_files(pipeline, input_files, args, cfg):
 
 
     with Pool(cfg.threads, init_worker) as pool:
@@ -59,39 +68,26 @@ def _main(args):
 
         jobs = []
 
-        if cfg.input_files:
-            for file in tqdm(cfg.input_files,
-                             desc='Files processed',
-                             mininterval=0.5,
-                             unit=' files',
-                             disable=not cfg.progress,
-                             position=0):
-                if not access(file, R_OK):
-                    continue
-                total_chunks = ceil(path.getsize(file) / cfg.chunk_size)
-                for chunk in tqdm(chunkify(file, cfg),
-                                  desc='Chunks processed',
-                                  mininterval=0.5,
-                                  unit=' chunks',
-                                  disable=not cfg.progress,
-                                  total=total_chunks,
-                                  position=1):
-                    submit(pool, jobs, pipeline, chunk, cfg)
-        else:
-            # Read from stdin
-            chunks = sys.stdin.readlines(cfg.chunk_size)
-            while chunks:
-                chunk = [line.rstrip('\n').encode(cfg.input_encodings[0]) for line in chunks]
+        for file in tqdm(input_files,
+                         desc='Files processed',
+                         mininterval=0.5,
+                         unit=' files',
+                         disable=not cfg.progress,
+                         position=0):
+            if not access(file, R_OK):
+                continue
+            total_chunks = ceil(path.getsize(file) / cfg.chunk_size)
+            for chunk in tqdm(chunkify(file, cfg),
+                              desc='Chunks processed',
+                              mininterval=0.5,
+                              unit=' chunks',
+                              disable=not cfg.progress,
+                              total=total_chunks,
+                              position=1):
                 submit(pool, jobs, pipeline, chunk, cfg)
-
-                chunks = sys.stdin.readlines(cfg.chunk_size)
         cfg.logger.stderr_print('Submitted jobs, waiting for jobs to finish...')
 
         # Wait for jobs to finish
         finish_up(jobs, cfg)
-
-    cfg.logger.close_files()
-    cfg.logger.stderr_print('Done')
-
     # This returns the list of results, and the logs.
     return cfg.logger.list_results, cfg.logger.list_log
