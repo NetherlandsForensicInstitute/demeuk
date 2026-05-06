@@ -77,8 +77,6 @@ def demeuk_files(pipeline, input_files, cfg):
                          unit=' files',
                          disable=not cfg.progress,
                          position=0):
-            if not access(file, R_OK):
-                continue
             total_chunks = ceil(path.getsize(file) / cfg.chunk_size)
             for chunk in tqdm(chunkify(file, cfg),
                               desc='Chunks processed',
