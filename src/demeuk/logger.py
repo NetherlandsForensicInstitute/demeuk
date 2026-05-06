@@ -16,13 +16,14 @@ class Logger:
 
         encoding = getlocale()[1]
         # Check if we can write to output and log files
+        # TODO:Phase out os.access in favour of try/except PermissionError?
         if args.output:
-            if not access(path.dirname(args.output), W_OK):
+            try:
+                self.output_file = open(args.output, 'w', encoding=encoding, newline='') # Overwrite output file
+                self.stderr_print(f'Logger: writing output to {args.output}')
+            except PermissionError:
                 self.stderr_print_always(f'Logger: Cannot write output file to {args.output}!')
                 exit(2)
-            # If we can access the output file:
-            self.output_file = open(args.output, 'w', encoding=encoding, newline='') # Overwrite output file
-            self.stderr_print(f'Logger: writing output to {args.output}')
         else:
             self.output_file = stdout
             self.stderr_print(f'Logger: writing output to stdout')
