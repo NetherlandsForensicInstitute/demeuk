@@ -58,6 +58,8 @@ def _main(args):
         results, logs = demeuk_files(pipeline, cfg.input_files, cfg)
     else:
         results, logs = demeuk_stdin(pipeline, cfg)
+
+    cfg.logger.close_files()
     cfg.logger.stderr_print('Done')
 
     return results, logs
