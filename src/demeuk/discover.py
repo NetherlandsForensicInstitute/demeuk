@@ -1,5 +1,6 @@
 import importlib.util
 import inspect
+from pathlib import Path
 import os
 
 # Use this as a key to sort the arguments alphabetically.
@@ -10,9 +11,8 @@ def class_name(cls):
 # TODO discover at custom location maybe? Check if this is possible
 # TODO look at pathlib for this
 def discover_modules():
-    project_dir = os.path.dirname(__file__)
-    modules_dir = project_dir + '/modules/'
-
+    root_dir = Path('.') / 'src' / 'demeuk'
+    modules_dir = root_dir / 'modules'
 
     classes = set()
 
@@ -24,15 +24,14 @@ def discover_modules():
                  'WhitespaceTokenizer', # Not sure why this one is included...
                  ]
 
-    # Recursively look through subdirectories of /modules
-    for path, names, files in os.walk(modules_dir):
-        for file in files:
-            # Look for non-hidden python scripts
-            if file.endswith('.py') and not file.startswith('_'):
-                relative_path = os.path.relpath(os.path.join(path, file), modules_dir)
-                # Truncate file extension
-                module_name = 'demeuk.modules.' + relative_path[:-3].replace('/', '.')
-                members = inspect.getmembers(importlib.import_module(module_name))
+    for path, names, files in modules_dir.walk():
+        for file in [path/file for file in files]:
+            # This way file is a Path object instead of a string.
+            if file.suffix == '.py' and file.stem != '__init__':
+                module_name = str(file.relative_to(modules_dir))
+                # Turn modify/hex.py into .modify.hex
+                module_name = '.' + module_name.replace('/', '.').replace('.py', '')
+                members = inspect.getmembers(importlib.import_module(module_name, 'demeuk.modules'))
                 for name, obj in members:
                     if inspect.isclass(obj) and name not in blacklist:
                         classes |= {obj}
