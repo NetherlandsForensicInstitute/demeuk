@@ -81,9 +81,6 @@ class Logger:
         self.write_out(async_result['results'])
         self.write_log(async_result['log'])
 
-        #self.list_results += [word.rstrip('\n') for word in async_result['results']]
-        #self.list_log += [word.rstrip('\n') for word in async_result['log']]
-
     # Print to stderr always, use for errors or incorrect input
     @staticmethod
     def stderr_print_always(*args, **kwargs):

@@ -22,11 +22,9 @@ def init_worker():
     signal(SIGINT, SIG_IGN)
 
 def cli_entry_point():
-    # We should read input here, chunk where?
 
-    results, logs = run_cli(sys.argv)
+    run_cli(sys.argv)
 
-    # We should write the files here.
 
 def run_cli(args):
     all_modules = discover_modules()
@@ -54,18 +52,19 @@ def run_cli(args):
 
 
     cfg.logger.write_log(f'Running demeuk - {get_version()}{linesep}')
+
+
+
     if cfg.input_files:
         if cfg.threads > 1:
-            results, logs = demeuk_files(pipeline, cfg.input_files, cfg)
+            demeuk_files(pipeline, cfg.input_files, cfg)
         else:
-            results, logs = demeuk_files_single_threaded(pipeline, cfg.input_files, cfg)
+            demeuk_files_single_threaded(pipeline, cfg.input_files, cfg)
     else:
-        results, logs = demeuk_stdin(pipeline, cfg)
+        demeuk_stdin(pipeline, cfg)
 
     cfg.logger.close_files()
     cfg.logger.stderr_print('Done')
-
-    return results, logs
 
 
 def demeuk_files(pipeline, input_files, cfg):
