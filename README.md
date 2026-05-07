@@ -24,43 +24,36 @@ grant agreement No. 82201
 Please read the docs for more information.
 
 ## Quick start
-Demeuk support Python versions 3.10 and up.
-The recommended way to install demeuk is to use [PDM](https://pdm-project.org/en/latest/).
+Demeuk supports Python versions 3.10 and up.
+The recommended way to install demeuk is to use [pipx](github.com/bulletmark/pipxu/).
 
 ```
-# Initialize an empty project
-pdm -n --no-git --python 3.14
-# Install demeuk
-pdm add demeuk
+# Python 3.11+ is faster than 3.10
+pipx install demeuk --python /usr/bin/python3.14
 ```
 
-Now you can invoke demeuk using `pdm run demeuk`
+Now you can invoke demeuk directly from the command-line:
 
 Examples:
 ```
-    # From inside the install directory
-    pdm run demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt
-    pdm run demeuk -i inputfile -o outputfile -j 24 -l logfile.log
-    pdm run demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt --leak
-    # From outside the install directory
-    pdm run -p /path/to/demeuk demeuk -i inputfile -o outputfile -j 24 -l logfile.log --leak-full
-    pdm run -p /path/to/demeuk demeuk -i inputdir/*.txt -o outputfile.dict -l logfile.log
-    pdm run -p /path/to/demeuk demeuk -o outputfile.dict -l logfile.log
+    demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt
+    demeuk -i inputfile -o outputfile -j 24 -l logfile.log
+    demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt --leak
+    demeuk -i inputfile -o outputfile -j 24 -l logfile.log --leak-full
+    demeuk -i inputdir/*.txt -o outputfile.dict -l logfile.log
+    demeuk -o outputfile.dict -l logfile.log
 ```
 
-## Running from source
+## Development
 To make changes to demeuk, you need to run it from the source Python files.
 ```
 git clone https://github.com/NetherlandsForensicInstitute/demeuk.git
 cd demeuk
-# Choose a Python interpreter (optional)
-pdm use
-# Install dependencies
-pdm install
-# Run the included test suite
-pdm test
+pipx install ./ --python /usr/bin/python3.14
 ```
-Now you can run demeuk as in the examples.
+Now you can run demeuk as in the examples. Note that the shortcut `demeuk` only updates after you
+run `pipx upgrade demeuk`. You can also use PDM, this circumvents this issue although you have to
+run demeuk with `pdm run demeuk`.
 
 ## Docs
 The docs are available at: <http://demeuk.rtfd.io/>
