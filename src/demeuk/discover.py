@@ -29,8 +29,10 @@ def discover_modules():
                 module_name = str(file.relative_to(modules_dir))
                 # Turn modify/hex.py into .modify.hex
                 module_name = '.' + module_name.replace('/', '.').replace('.py', '')
+                # Get all python objects in the file
                 members = inspect.getmembers(importlib.import_module(module_name, 'demeuk.modules'))
                 for name, obj in members:
+                    # Save only the class-type objects which are not blacklisted. These should only be the modules.
                     if inspect.isclass(obj) and name not in blacklist:
                         classes |= {obj}
 
