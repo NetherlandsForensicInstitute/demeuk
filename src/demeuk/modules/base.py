@@ -16,7 +16,7 @@ class Result(NamedTuple):
     update: str | bytes | None = None
 
 # Class (namedtuple/dataclass) creation is expensive!
-# For the results/actions we use often, create them once and use them everywhere
+# For the results we use often, create them once and use them everywhere
 
 # This result can be used if you want to continue, and not take any action
 result_next=Result(status=False, msg=None)

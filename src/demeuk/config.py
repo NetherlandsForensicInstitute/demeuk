@@ -9,6 +9,7 @@ from demeuk.logger import Logger
 # This class carries global configuration, so configurations which either:
 #       do not impact the functionality of the modules directly.
 # or:   do impact modules, but cannot be passed as a parameter
+# TODO: Think about Logger class, does it need to be in here?
 class Config:
 
     # Initialize config with argparse output

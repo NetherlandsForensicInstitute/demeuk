@@ -12,8 +12,7 @@ class ModifyModule(Module):
     def handle(self, result):
         return Actions(
             update=result.update,
-            debug_str=result.msg,
-        )
+            debug_str=result.msg)
 
     @property
     def debug_str(self):

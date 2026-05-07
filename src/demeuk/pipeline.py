@@ -8,7 +8,6 @@ from .modules.modify.input_encode import DefaultEncodeModule
 
 
 class Pipeline:
-    # TODO: Create different ctor from a list of modules.
     def __init__(self, parser, argv, config):
 
         # Keep track where our encoding module (should) be
@@ -69,9 +68,9 @@ class Pipeline:
     # This is one worker job, process a list of lines.
     def run(self, lines, config):
         results = []
-        log_id = 0
+        log_id = 0 # TODO use stdlib logging module?
         logger = config.logger
-        logger.create(log_id) # TODO auto-increment per call of run()
+        logger.create(log_id)
         processed_lines = set()
         work_queue = deque(lines)
 

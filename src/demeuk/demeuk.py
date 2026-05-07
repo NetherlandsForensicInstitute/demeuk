@@ -8,7 +8,7 @@ from tqdm import tqdm
 from .chunk import chunkify, submit, finish_up
 from .config import Config
 
-from .parser import Parser
+from .parser import CommandLineParser
 from .pipeline import Pipeline
 
 from .discover import discover_modules
@@ -29,7 +29,7 @@ def cli_entry_point():
 def run_cli(args):
     all_modules = discover_modules()
 
-    parser = Parser(get_version())
+    parser = CommandLineParser(get_version())
 
 
     for module in all_modules:

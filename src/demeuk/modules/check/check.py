@@ -31,8 +31,7 @@ class CheckModule(Module):
         return Actions(
             # If a check module is tripped, don't need to run any more modules.
             stop=True,
-            log_str=result.msg  # Always log checks
-        )
+            log_str=result.msg)  # Always log checks
 
     # Stop prints a message to the logs, and does not process the line any further
     @property

@@ -22,7 +22,8 @@ def int_or_all(arg):
 
 
 
-class Parser:
+# Parses command-line arguments
+class CommandLineParser:
     def __init__(self, version):
         desc = dedent("""Demeuk - a simple tool to clean up corpora
 
@@ -121,14 +122,14 @@ Example uses:
     @staticmethod
     def make_cli_options(options):
         if isinstance(options, str):
-            return [Parser.make_cli_option(options)]
+            return [CommandLineParser.make_cli_option(options)]
         else:
-            return [Parser.make_cli_option(option) for option in options]
+            return [CommandLineParser.make_cli_option(option) for option in options]
 
     # Utility function, get a list of cli options from a module
     @staticmethod
     def make_cli_options_from_module(module):
-        return Parser.make_cli_options(module.get_help_info().option)
+        return CommandLineParser.make_cli_options(module.get_help_info().option)
 
 
     def add_flag_options(self, group, help_info):
@@ -174,7 +175,7 @@ Example uses:
             self.add_flag_options(group, module.get_help_info())
 
 
-        for option in Parser.make_cli_options_from_module(module):
+        for option in CommandLineParser.make_cli_options_from_module(module):
             self.lookup_table[option] = module
 
     # Parse arguments and set global config
