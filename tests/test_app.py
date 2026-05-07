@@ -836,8 +836,11 @@ def _run_demeuk(test_num, *extra_args):
         '--verbose',
     ]
     testargs.extend(extra_args)
+    with patch.object(sys, 'argv', testargs):
+        main()
 
-    results, _ = run_cli(testargs)
+    with open(f'testdata/output{test_num}') as f:
+        results = [line.rstrip('\n') for line in f.readlines()]
 
     return results
 
