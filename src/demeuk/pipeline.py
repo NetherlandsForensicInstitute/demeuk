@@ -91,45 +91,44 @@ class Pipeline:
                     break
 
 
-            # Could be done with continue?
-            stop = False
             logger.log_debug(log_id, f'----BEGIN---- {hexlify(line)}{linesep}')
 
 
 
             for module in self.modules:
-                if not stop:
-                    result = module.run(line)
-                    if result.status:
-                        # Transform module result into actions
-                        actions = module.handle(result)
+                result = module.run(line)
+                if result.status:
+                    # Transform module result into actions
+                    actions = module.handle(result)
 
-                        stop = actions.stop
+                    # Perform actions if they are set
 
-                        # Perform actions if they are set
+                    if actions.add is not None:
+                        # Add (a list of) word(s) to the queue
+                        for word in actions.add:
+                            if actions.do_not_re_encode:
+                                work_queue.append(word) # for --hex
+                            else:
+                                work_queue.append(word.encode())
+                            if actions.debug_add_str is not None:
+                                logger.log_debug(log_id, f"{module.__class__.__name__}:\t{actions.debug_add_str}:\t{word}{linesep}")
 
-                        if actions.add is not None:
-                            # Add (a list of) word(s) to the queue
-                            for word in actions.add:
-                                if actions.do_not_re_encode:
-                                    work_queue.append(word) # for --hex
-                                else:
-                                    work_queue.append(word.encode())
-                                if actions.debug_add_str is not None:
-                                    logger.log_debug(log_id, f"{module.__class__.__name__}:\t{actions.debug_add_str}:\t{word}{linesep}")
+                    if actions.update is not None:
+                        line = actions.update
 
-                        if actions.update is not None:
-                            line = actions.update
+                    if actions.log_str is not None:
+                        # Log a message (always)
+                        logger.log(log_id, f"{module.__class__.__name__}:\t{actions.log_str}:\t{line}{linesep}")
+                    if actions.debug_str is not None:
+                        # Log a message (with --debug)
+                        logger.log_debug(log_id, f"{module.__class__.__name__}:\t{actions.debug_str}:\t{line}{linesep}")
 
-                        if actions.log_str is not None:
-                            # Log a message (always)
-                            logger.log(log_id, f"{module.__class__.__name__}:\t{actions.log_str}:\t{line}{linesep}")
-                        if actions.debug_str is not None:
-                            # Log a message (with --debug)
-                            logger.log_debug(log_id, f"{module.__class__.__name__}:\t{actions.debug_str}:\t{line}{linesep}")
-
-            # If we got through all the modules:
-            if not stop:
+                    # Do this last
+                    # If stop is set, don't do anything else.
+                    if actions.stop:
+                        break
+            else:
+                # This gets executed if we do not break out of the for loop
                 results.append(f'{line}{linesep}')
                 logger.log_debug(log_id, f'-----END----- {line}{linesep}{linesep}')
 
