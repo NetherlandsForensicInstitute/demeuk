@@ -19,7 +19,7 @@ readme = "README.md"
 license = {text = "Apache-2.0"}
 
 [project.scripts]
-demeuk = "demeuk.demeuk:main"
+demeuk = "demeuk.demeuk:cli_entry_point"
 
 [project.optional-dependencies]
 test = [

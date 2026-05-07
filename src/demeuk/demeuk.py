@@ -21,14 +21,14 @@ def get_version():
 def init_worker():
     signal(SIGINT, SIG_IGN)
 
-def main():
+def cli_entry_point():
     # We should read input here, chunk where?
 
-    results, logs = _main(sys.argv)
+    results, logs = run_cli(sys.argv)
 
     # We should write the files here.
 
-def _main(args):
+def run_cli(args):
     all_modules = discover_modules()
 
     parser = Parser(get_version())
