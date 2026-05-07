@@ -8,8 +8,6 @@ def class_name(cls):
     return cls.__name__
 
 # Discover modules in demeuk/modules
-# TODO discover at custom location maybe? Check if this is possible
-# TODO look at pathlib for this
 def discover_modules():
     root_dir = Path('.') / 'src' / 'demeuk'
     modules_dir = root_dir / 'modules'
