@@ -510,8 +510,10 @@ def test_glob():
         'demeuk', '-i', 'testdata/input*', '-o', 'testdata/output30', '-l', 'testdata/log30',
         '--verbose', '-c', '-d', ',;:',
     ]
-    results, _ = run_cli(testargs)
-    assert(len(results) > 100)
+    run_cli(testargs)
+    with open('testdata/output30') as f:
+        results = f.readlines()
+    assert len(results) > 100
 
 def test_bug_html_control():
     testargs = [
