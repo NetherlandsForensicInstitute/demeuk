@@ -1,11 +1,7 @@
 from .macro import MacroModule
 from ..base import *
 
-from ..modify.input_encode import EncodeModule
-from ..modify.char_encoding import MojibakeModule
-from ..modify.html import *
-from ..modify.hex import HexModule
-from ..modify.whitespace import NewlineModule
+from ..modify import *
 from ..check.regex import *
 from ..check.character import *
 from ..check.empty_line import EmptyLineModule

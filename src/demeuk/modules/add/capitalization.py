@@ -26,7 +26,7 @@ class LowerModule(AddModule):
         add_line = line.lower()
         return self.get_result(line, add_line)
 
-class TitleCase(AddModule):
+class TitleCaseModule(AddModule):
     @staticmethod
     def get_help_info():
         return HelpInfo(
