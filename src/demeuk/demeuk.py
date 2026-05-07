@@ -55,7 +55,10 @@ def run_cli(args):
 
     cfg.logger.write_log(f'Running demeuk - {get_version()}{linesep}')
     if cfg.input_files:
-        results, logs = demeuk_files(pipeline, cfg.input_files, cfg)
+        if cfg.threads > 1:
+            results, logs = demeuk_files(pipeline, cfg.input_files, cfg)
+        else:
+            results, logs = demeuk_files_single_threaded(pipeline, cfg.input_files, cfg)
     else:
         results, logs = demeuk_stdin(pipeline, cfg)
 
@@ -91,6 +94,17 @@ def demeuk_files(pipeline, input_files, cfg):
         # Wait for jobs to finish
         finish_up(jobs, cfg)
     # This returns the list of results, and the logs.
+    return cfg.logger.list_results, cfg.logger.list_log
+
+# For profiling
+def demeuk_files_single_threaded(pipeline, input_files, cfg):
+    cfg.logger.stderr_print(f'Reading input file(s)...')
+    with open(input_files[0], 'rb') as fh:
+        lines = [line.rstrip(linesep.encode()) for line in fh.readlines(cfg.chunk_size)]
+    cfg.logger.stderr_print('Submitted jobs, waiting for jobs to finish...')
+
+    res = pipeline.run(lines, cfg)
+    cfg.logger.write_results(res)
     return cfg.logger.list_results, cfg.logger.list_log
 
 def demeuk_stdin(pipeline, cfg):
