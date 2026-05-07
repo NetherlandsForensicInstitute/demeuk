@@ -1,3 +1,4 @@
+from os import linesep
 from time import sleep
 
 
@@ -7,7 +8,7 @@ def chunkify(file, cfg):
             fh.readline()
 
         while True:
-            lines = [line.rstrip(b'\n') for line in fh.readlines(cfg.chunk_size)]
+            lines = [line.rstrip(linesep.encode()) for line in fh.readlines(cfg.chunk_size)]
             yield lines
             if len(lines) == 0:
                 break
