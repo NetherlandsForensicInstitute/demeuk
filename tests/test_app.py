@@ -4,7 +4,8 @@ from unittest.mock import patch
 
 from pytest import mark, raises
 
-from demeuk.demeuk import main, _main
+from demeuk.demeuk import run_cli
+from demeuk.demeuk import cli_entry_point as main
 
 
 # Q: test_check_email (22)
@@ -509,7 +510,7 @@ def test_glob():
         'demeuk', '-i', 'testdata/input*', '-o', 'testdata/output30', '-l', 'testdata/log30',
         '--verbose', '-c', '-d', ',;:',
     ]
-    results, _ = _main(testargs)
+    results, _ = run_cli(testargs)
     assert(len(results) > 100)
 
 def test_bug_html_control():
@@ -836,7 +837,7 @@ def _run_demeuk(test_num, *extra_args):
     ]
     testargs.extend(extra_args)
 
-    results, _ = _main(testargs)
+    results, _ = run_cli(testargs)
 
     return results
 
