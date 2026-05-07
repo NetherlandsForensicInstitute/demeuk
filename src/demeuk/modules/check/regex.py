@@ -22,7 +22,7 @@ class RegexModule(CheckModule, ParamModule):
                 continue
             else:
                 return self.stop
-        return self.next
+        return result_next
 
 
 class EmailModule(CheckModule):
@@ -38,7 +38,7 @@ class EmailModule(CheckModule):
     def run(self, line) -> Result:
         if search(self.EMAIL_REGEX, line):
             return self.stop
-        return self.next
+        return result_next
 
 class MacAddressModule(CheckModule):
 
@@ -53,8 +53,8 @@ class MacAddressModule(CheckModule):
 
     def run(self, line) -> Result:
         if search(self.MAC_REGEX, line):
-            return Result(status=True, msg=self.debug_str)
-        return Result(status=False, msg=None)
+            return self.stop
+        return result_next
 
 class UuidModule(CheckModule):
 
@@ -70,7 +70,7 @@ class UuidModule(CheckModule):
     def run(self, line):
         if search(self.UUID_REGEX, line):
             return self.stop
-        return self.next
+        return result_next
 
 class HashModule(CheckModule):
     # Official bcrypt hashes have a bit more fixed size, but saw some weird once:
@@ -104,4 +104,4 @@ class HashModule(CheckModule):
                 for hash_regex in self.HASH_REGEX_LIST:
                     if search(hash_regex, line):
                         return self.stop
-        return self.next
+        return result_next

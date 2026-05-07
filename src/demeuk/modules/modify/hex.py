@@ -23,7 +23,7 @@ class HexModule(ModifyModule):
         match = self.HEX_REGEX.search(line)
         if match:
             return Result(status=True, msg=self.debug_str, add=unhexlify(match.group(1)))
-        return Result(status=False, msg=None)
+        return result_next
 
     def handle(self, result):
         return Actions(

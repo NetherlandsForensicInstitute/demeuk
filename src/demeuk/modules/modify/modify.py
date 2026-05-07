@@ -22,4 +22,4 @@ class ModifyModule(Module):
     def get_result(self, line, cleaned_line):
         if line != cleaned_line:
             return Result(status=True, msg=self.debug_str, update=cleaned_line)
-        return Result(status=False, msg=None)
+        return result_next

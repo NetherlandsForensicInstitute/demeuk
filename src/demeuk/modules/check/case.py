@@ -19,6 +19,6 @@ class CaseModule(CheckModule):
                     continue
                 else:
                     return self.stop
-        return self.next
+        return result_next
 
 

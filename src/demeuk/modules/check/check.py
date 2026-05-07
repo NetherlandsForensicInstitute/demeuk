@@ -34,13 +34,7 @@ class CheckModule(Module):
             log_str=result.msg  # Always log checks
         )
 
-    # Standard results for check modules:
     # Stop prints a message to the logs, and does not process the line any further
     @property
     def stop(self) -> Result:
         return Result(status=True, msg=self.debug_str)
-
-    # Next does nothing and continues to the next line
-    @property
-    def next(self) -> Result:
-        return Result(status=False, msg=None)

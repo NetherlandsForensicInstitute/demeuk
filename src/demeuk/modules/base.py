@@ -15,6 +15,11 @@ class Result(NamedTuple):
     add: str | bytes | list | None = None
     update: str | bytes | None = None
 
+# Class (namedtuple/dataclass) creation is expensive!
+# For the results/actions we use often, create them once and use them everywhere
+
+# This result can be used if you want to continue, and not take any action
+result_next=Result(status=False, msg=None)
 
 # Result of module.handle, these can perform an action
 class Actions(NamedTuple):
