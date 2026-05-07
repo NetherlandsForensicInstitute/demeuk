@@ -53,9 +53,7 @@ def run_cli(args):
 
     cfg.logger.write_log(f'Running demeuk - {get_version()}{linesep}')
 
-
-
-    if cfg.input_files:
+    if cfg.input_files is not None:
         if cfg.threads > 1:
             demeuk_files(pipeline, cfg.input_files, cfg)
         else:
