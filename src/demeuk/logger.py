@@ -29,12 +29,11 @@ class Logger:
             self.stderr_print(f'Logger: writing output to stdout')
 
         if args.log:
-            # Check if logfile exists, or that the directory is at least writable.
-            if not (access(path.dirname(args.log), W_OK) or access(args.log, F_OK)):
+            try:
+                self.log_file = open(args.log, 'a+', encoding=encoding, newline='') # Append or write
+            except PermissionError:
                 self.stderr_print_always(f'Logger: Cannot write log file to {args.log}!')
                 exit(2)
-            self.log_file = open(args.log, 'a', encoding=encoding, newline='') # Append to log file
-            self.stderr_print(f'Logger: writing log to {args.log}')
         else:
             self.log_file = stderr
             self.stderr_print(f'Logger: writing log to stderr')
