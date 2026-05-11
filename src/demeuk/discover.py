@@ -1,13 +1,22 @@
 import importlib.util
 import inspect
+
+from demeuk.modules.base import Module
 from pathlib import Path
 import os
 
-# Use this as a key to sort the arguments alphabetically.
+"""
+Discovers demeuk modules dynamically.
+"""
+
+"""Utility function to determine sorting of command-line options"""
 def class_name(cls):
     return cls.__name__
 
-# Discover modules in demeuk/modules
+"""
+Discover demeuk modules in src/demeuk/modules.
+Any class which is a subclass of Module is detected and registered automatically.
+"""
 def discover_modules():
     root_dir = Path('.') / 'src' / 'demeuk'
     modules_dir = root_dir / 'modules'
@@ -15,12 +24,10 @@ def discover_modules():
     classes = set()
 
     # Hardcoded list of classes not to register.
-    blacklist = ['ABC', 'Enum', # Python
-                 'HelpInfo', 'HelpInfoParam', 'PipelinePosition', 'Result', 'Actions', # Auxiliary objects
+    blacklist = [
                  'Module', 'ParamModule', 'ConfigModule', # Base modules
                  'CheckModule', 'AddModule', 'ModifyModule', 'MacroModule', 'RemoveModule', # Module types
-                 'WhitespaceTokenizer', # Not sure why this one is included...
-                 ]
+                ]
 
     # Path.walk is Python 3.12+
     for path, names, files in modules_dir.walk():
@@ -34,8 +41,8 @@ def discover_modules():
                 members = inspect.getmembers(importlib.import_module(module_name, 'demeuk.modules'))
                 for name, obj in members:
                     # Save only the class-type objects which are not blacklisted. These should only be the modules.
-                    if inspect.isclass(obj) and name not in blacklist:
-                        classes |= {obj}
+                    if inspect.isclass(obj):
+                        if issubclass(obj, Module) and name not in blacklist:
+                            classes |= {obj}
 
-    # TODO Do we want a custom sorting order?
     return sorted(classes, key=class_name)
