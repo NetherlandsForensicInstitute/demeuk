@@ -9,15 +9,15 @@ import os
 Discovers demeuk modules dynamically.
 """
 
-"""Utility function to determine sorting of command-line options"""
 def class_name(cls):
+    """Utility function to determine sorting of command-line options"""
     return cls.__name__
 
-"""
-Discover demeuk modules in src/demeuk/modules.
-Any class which is a subclass of Module is detected and registered automatically.
-"""
 def discover_modules():
+    """
+    Discover demeuk modules in src/demeuk/modules.
+    Any class which is a subclass of Module is detected and registered automatically.
+    """
     root_dir = Path('.') / 'src' / 'demeuk'
     modules_dir = root_dir / 'modules'
 
