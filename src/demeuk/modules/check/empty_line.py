@@ -11,4 +11,4 @@ class EmptyLineModule(CheckModule):
     def run(self, line):
         if line == '' or line.isspace():
             return self.stop
-        return result_next
+        return RESULT_NEXT

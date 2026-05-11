@@ -22,4 +22,4 @@ class RemoveEmailModule(RemoveModule):
             if search(f'{self.EMAIL_REGEX}(:|;)', line):
                 result_line = sub(f'{self.EMAIL_REGEX}(:|;)', '', line)
                 return Result(status=True, msg=self.debug_str, update=result_line)
-        return result_next
+        return RESULT_NEXT

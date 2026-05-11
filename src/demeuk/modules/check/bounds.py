@@ -19,7 +19,7 @@ class MinLengthModule(CheckModule, ParamModule):
     def run(self, line):
         if len(line) < self.param:
             return self.stop
-        return result_next
+        return RESULT_NEXT
 
 
 class MaxLengthModule(CheckModule, ParamModule):
@@ -34,7 +34,7 @@ class MaxLengthModule(CheckModule, ParamModule):
     def run(self, line):
         if len(line) > self.param:
             return self.stop
-        return result_next
+        return RESULT_NEXT
 
 class MinDigitsModule(CheckModule, ParamModule):
     @staticmethod
@@ -48,7 +48,7 @@ class MinDigitsModule(CheckModule, ParamModule):
     def run(self, line):
         if sum([c.isdigit() for c in line]) < self.param:
             return self.stop
-        return result_next
+        return RESULT_NEXT
 
 class MaxDigitsModule(CheckModule, ParamModule):
     @staticmethod
@@ -62,7 +62,7 @@ class MaxDigitsModule(CheckModule, ParamModule):
     def run(self, line):
         if sum([c.isdigit() for c in line]) > self.param:
             return self.stop
-        return result_next
+        return RESULT_NEXT
 
 class MinUppercaseModule(CheckModule, ParamModule):
     @staticmethod
@@ -76,7 +76,7 @@ class MinUppercaseModule(CheckModule, ParamModule):
     def run(self, line):
         if sum([c.isupper() for c in line]) < self.param:
             return self.stop
-        return result_next
+        return RESULT_NEXT
 
 class MaxUppercaseModule(CheckModule, ParamModule):
     @staticmethod
@@ -90,7 +90,7 @@ class MaxUppercaseModule(CheckModule, ParamModule):
     def run(self, line):
         if sum([c.isupper() for c in line]) > self.param:
             return self.stop
-        return result_next
+        return RESULT_NEXT
 
 class MinSpecialsModule(CheckModule, ParamModule):
     @staticmethod
@@ -104,7 +104,7 @@ class MinSpecialsModule(CheckModule, ParamModule):
     def run(self, line):
         if sum([not c.isalnum() and not c.isspace() for c in line]) < self.param:
             return self.stop
-        return result_next
+        return RESULT_NEXT
 
 class MaxSpecialsModule(CheckModule, ParamModule):
     @staticmethod
@@ -118,4 +118,4 @@ class MaxSpecialsModule(CheckModule, ParamModule):
     def run(self, line):
         if sum([not c.isalnum() and not c.isspace() for c in line]) > self.param:
             return self.stop
-        return result_next
+        return RESULT_NEXT

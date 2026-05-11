@@ -37,4 +37,4 @@ class AddModule(Module):
     def get_result(self, line, added_line):
         if line != added_line:
             return Result(status=True, msg=self.debug_str, add=added_line)
-        return result_next
+        return RESULT_NEXT

@@ -12,6 +12,6 @@ class NonAsciiCheckModule(CheckModule):
     def run(self, line):
         try:
             line.encode('ascii')
-            return result_next
+            return RESULT_NEXT
         except UnicodeEncodeError:
             return self.stop

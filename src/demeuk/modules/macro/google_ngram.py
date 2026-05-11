@@ -57,7 +57,7 @@ class GoogleNgramModule(MacroModule, ConfigModule):
         cleaned_line = ' '.join(clean)
         if cleaned_line != line:
             return Result(status=True, msg=self.debug_str, update=cleaned_line)
-        return result_next
+        return RESULT_NEXT
 
     def handle(self, results):
         return Actions(

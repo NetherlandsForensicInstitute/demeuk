@@ -61,4 +61,4 @@ class TabModule(ModifyModule):
         if b'\x09' in line:
             line = sub(b'\x09+', b'\x3a', line)
             return Result(status=True, msg=self.debug_str, update=line)
-        return result_next
+        return RESULT_NEXT

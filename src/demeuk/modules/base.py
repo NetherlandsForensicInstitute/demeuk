@@ -18,8 +18,8 @@ class Result(NamedTuple):
 # Class (namedtuple/dataclass) creation is expensive!
 # For the results we use often, create them once and use them everywhere
 
-# This result can be used if you want to continue, and not take any action
-result_next=Result(status=False, msg=None)
+# This result can be used if you want to continue to the next line, and not take any action
+RESULT_NEXT=Result(status=False, msg=None)
 
 # Result of module.handle, these can perform an action
 class Actions(NamedTuple):

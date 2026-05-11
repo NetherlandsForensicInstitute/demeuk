@@ -29,4 +29,4 @@ class CutModule(ModifyModule, ConfigModule):
                 cleaned_line = delimiter.join(line.split(delimiter)[fields])
                 return Result(status=True, msg=self.debug_str, update=cleaned_line)
         else:
-            return result_next
+            return RESULT_NEXT

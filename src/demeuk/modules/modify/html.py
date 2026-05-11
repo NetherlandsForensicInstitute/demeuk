@@ -39,7 +39,7 @@ class HtmlModule(ModifyModule):
         cleaned_line = HTML_ENTITY_RE.sub(self._unescape_fixup, line)
         if line != cleaned_line:
             return Result(status=True, msg=self.debug_str, add=cleaned_line)
-        return result_next
+        return RESULT_NEXT
 
     def handle(self, result):
         return Actions(

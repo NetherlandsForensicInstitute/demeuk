@@ -14,7 +14,7 @@ class StartingWithModule(CheckModule, ParamModule):
         for substr in self.param.split(','):
             if line.startswith(substr):
                 return self.stop
-        return result_next
+        return RESULT_NEXT
 
 class EndingWithModule(CheckModule, ParamModule):
     @staticmethod
@@ -29,7 +29,7 @@ class EndingWithModule(CheckModule, ParamModule):
         for substr in self.param.split(','):
             if line.endswith(substr):
                 return self.stop
-        return result_next
+        return RESULT_NEXT
 
 class ContainsModule(CheckModule, ParamModule):
     @staticmethod
@@ -44,4 +44,4 @@ class ContainsModule(CheckModule, ParamModule):
         for substr in self.param.split(','):
             if substr in line:
                 return self.stop
-        return result_next
+        return RESULT_NEXT

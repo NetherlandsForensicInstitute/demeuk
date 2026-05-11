@@ -13,7 +13,7 @@ class MacroModule(Module):
 
     # However you can override these functions for custom behavior.
     def run(self, line):
-        return result_next
+        return RESULT_NEXT
 
     def handle(self, results):
         return Actions()
