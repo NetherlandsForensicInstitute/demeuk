@@ -3,8 +3,8 @@ from locale import setlocale, LC_ALL
 from os import cpu_count, R_OK, access
 from string import punctuation as string_punctuation
 
-from demeuk.logger import Logger
-from demeuk.output import OutputFileHandler
+from .logger import Logger
+from .output import OutputFileHandler
 
 
 # This class carries global configuration, so configurations which either:
@@ -12,9 +12,16 @@ from demeuk.output import OutputFileHandler
 # or:   do impact modules, but cannot be passed as a parameter
 # TODO: Think about Logger class, does it need to be in here?
 class Config:
+    """
+    A class containing all configuration for demeuk
+    """
 
     # Initialize config with argparse output
     def __init__(self, args):
+        """
+        Initialize config based on command-line arguments
+        :param args: Parsed command line arguments, available in CommandLineParser.args after calling parse_args()
+        """
         # I/O
         self.input_files = args.input
         self.output_file = args.output
@@ -73,7 +80,6 @@ class Config:
         if args.delimiter:
             splitter = ','
             # We can have comma as delimiter, if we put it first and separate with semicolon.
-            # TODO add test for this
             if len(args.delimiter) >= 1:
                 if args.delimiter[0] == ',':
                     splitter = ';'

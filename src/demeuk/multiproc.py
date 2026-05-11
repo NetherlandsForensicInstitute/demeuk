@@ -3,7 +3,7 @@ from signal import signal, SIGINT, SIG_IGN
 from time import sleep
 
 """
-Utility functions for multiprocessing
+Utility functions for multiprocessing and chunking input files
 """
 
 def init_worker():

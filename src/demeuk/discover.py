@@ -24,6 +24,7 @@ def discover_modules():
     classes = set()
 
     # Hardcoded list of classes not to register.
+    # This is because Python does not distinguish between concrete and abstract subclasses.
     blacklist = [
                  'Module', 'ParamModule', 'ConfigModule', # Base modules
                  'CheckModule', 'AddModule', 'ModifyModule', 'MacroModule', 'RemoveModule', # Module types

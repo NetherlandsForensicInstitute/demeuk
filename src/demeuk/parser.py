@@ -22,21 +22,30 @@ def int_or_all(arg):
 
 
 
-# Parses command-line arguments
 class CommandLineParser:
+    """
+    A class to manage, parse and display command-line options of demeuk.
+    Modules need to be registered, which uses the overridden get_help_info() to display the correct help string when
+    running demeuk -h.
+    """
+
     def __init__(self, version):
+        """
+        Initialize an arguments parser with just the standard options (no modules).
+        :param version: demeuk version
+        """
         desc = dedent("""Demeuk - a simple tool to clean up corpora
 
 Example uses:
-    pdm run demeuk -i inputfile.tmp -o outputfile.dict -l logfile.txt
-    pdm run demeuk -i "inputfile*.txt" -o outputfile.dict -l logfile.txt
-    pdm run demeuk -i "inputdir/*" -o outputfile.dict -l logfile.txt
-    pdm run demeuk -i inputfile -o outputfile -j 24
-    pdm run demeuk -i inputfile -o outputfile -c -e
-    pdm run demeuk -i inputfile -o outputfile --threads all
-    cat inputfile | pdm run demeuk --leak -j all | sort -u > outputfile""")
+    demeuk -i inputfile.tmp -o outputfile.dict -l logfile.txt
+    demeuk -i "inputfile*.txt" -o outputfile.dict -l logfile.txt
+    demeuk -i "inputdir/*" -o outputfile.dict -l logfile.txt
+    demeuk -i inputfile -o outputfile -j 24
+    demeuk -i inputfile -o outputfile -c -e
+    demeuk -i inputfile -o outputfile --threads all
+    cat inputfile | demeuk --leak -j all | sort -u > outputfile""")
 
-        self.parser = ArgumentParser(prog='demeuk', description=desc, usage='pdm run %(prog)s [options]',
+        self.parser = ArgumentParser(prog='demeuk', description=desc, usage='%(prog)s [options]',
                                 add_help=False,  # We add our own help so that it is grouped correctly
                                 formatter_class=RawDescriptionHelpFormatter)
 
@@ -52,7 +61,6 @@ Example uses:
         }
 
         self.args = None
-        self.order = []
         self.lookup_table = {}
 
         # Standard options
@@ -110,29 +118,47 @@ Example uses:
                                                   metavar='<delimiters>',
                                                   help="Specify what delimiter to use for --cut. Multiple delimiteres can be specified with ','")
 
-    # Resolve 'g' -> '-g' and 'check-something' -> '--check-something'
     @staticmethod
     def make_cli_option(option):
+        """
+        Transforms a string into a command-line option: For example 'c' to '-c' and 'cut' to '--cut'.
+        :param option: A string to transform
+        :return: The resulting option
+        """
         if len(option) == 1:
             return '-' + option
         else:
             return '--' + option
 
-    # The above, but allow string or list[str]
     @staticmethod
     def make_cli_options(options):
+        """
+        Transform a string or a list of strings into a list of command-line options.
+        :param options: A string or list of strings to transform
+        :return: A list of options
+        """
         if isinstance(options, str):
             return [CommandLineParser.make_cli_option(options)]
         else:
             return [CommandLineParser.make_cli_option(option) for option in options]
 
-    # Utility function, get a list of cli options from a module
     @staticmethod
     def make_cli_options_from_module(module):
+        """
+        Use a modules get_help_info() to get its list of command-line options.
+        :param module: A module
+        :return: A list of command-line options
+        """
         return CommandLineParser.make_cli_options(module.get_help_info().option)
 
 
     def add_flag_options(self, group, help_info):
+        """
+        Add options to the argument parser so that they are recognized on the command-line.
+        This is for flags, which are command-line options which do not take an argument.
+        :param group: The category in which to list the option(s).
+        :param help_info: The HelpInfo object containing the option and help string.
+        """
         options = self.make_cli_options(help_info.option)
         self.parser_groups[group].add_argument(
             *options,
@@ -140,6 +166,12 @@ Example uses:
             action='store_true')
 
     def add_param_options(self, group, help_info_param):
+        """
+        Add options to the argument parser so that they are recognized on the command-line.
+        THis is for parameters, which are command-line options which take one argument.
+        :param group: The category in which to list the option(s).
+        :param help_info_param: The HelpInfoParam object containing the option and help string, and info about the parameter.
+        """
         options = self.make_cli_options(help_info_param.option)
         self.parser_groups[group].add_argument(
             *options,
@@ -151,6 +183,10 @@ Example uses:
 
 
     def register(self, module):
+        """
+        Register a module to the argument parser
+        :param module: The module to register
+        """
         # Hardcoded: Module Type determines help category
         categories = {
             CheckModule: 'check',
@@ -178,6 +214,9 @@ Example uses:
         for option in CommandLineParser.make_cli_options_from_module(module):
             self.lookup_table[option] = module
 
-    # Parse arguments and set global config
     def parse_args(self, args):
+        """
+        Parse arguments, this needs to be done after all modules are registered.
+        :param args: A list of command-line arguments (for example sys.argv).
+        """
         self.args = self.parser.parse_args(args[1:]) # First arg is program name, we don't need that

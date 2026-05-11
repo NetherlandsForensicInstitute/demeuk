@@ -8,8 +8,16 @@ from .modules.modify.input_encode import DefaultEncodeModule
 
 
 class Pipeline:
+    """
+    Contains a record of what modules to run, and in what order
+    """
     def __init__(self, parser, argv, config):
-
+        """
+        Construct a pipeline from a list of command-line arguments.
+        :param parser: A CommandLineParser instance, used for a lookup table between options and modules.
+        :param argv: The list of command-line arguments
+        :param config: The config object, used to pass global config to modules
+        """
         # Keep track where our encoding module (should) be
         self.has_encoding = False
         self.encoding_slot = 0
@@ -50,8 +58,11 @@ class Pipeline:
             self.modules.insert(self.encoding_slot, default_encode)
 
 
-    # Include module at right point of pipeline
     def include_module(self, instance):
+        """
+        Insert a module in the pipeline based on its get_pipeline_position.
+        :param instance: The instanced module to include
+        """
         # Append, insert at 0 or insert at encoding_slot?
         match instance.get_pipeline_position():
             case PipelinePosition.BEFORE_ENCODE:
@@ -67,6 +78,12 @@ class Pipeline:
 
     # This is one worker job, process a list of lines.
     def run(self, lines, config):
+        """
+        Run a list of lines through the pipeline
+        :param lines: The list of lines to demeuk
+        :param config: Config object, used for --limit and its logger
+        :return: A dict containing a list of results, and a list of log lines
+        """
         results = []
         logger = config.logger # This is fine, multiprocessing creates a new copy.
         processed_lines = set()

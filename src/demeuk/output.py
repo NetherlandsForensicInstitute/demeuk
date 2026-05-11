@@ -5,12 +5,17 @@ from sys import stdout, stderr
 
 # Manages file handle to output file
 class OutputFileHandler:
+    """
+    Manage the output file
+    """
 
     def __init__(self, args, logger):
-
+        """
+        Open the output file
+        :param args:
+        :param logger:
+        """
         encoding = getlocale()[1]
-        # Check if we can write to output and log files
-        # TODO:Phase out os.access in favour of try/except PermissionError?
         if args.output:
             try:
                 self.output_file = open(args.output, 'w', encoding=encoding, newline='') # Overwrite output file
@@ -23,9 +28,16 @@ class OutputFileHandler:
             logger.stderr_print(f'Writing output to stdout')
 
     def write(self, lines):
+        """
+        Write (and flush) lines to the output file
+        :param lines: A list of lines (with newlines) to write to the output file
+        """
         self.output_file.writelines(lines)
         self.output_file.flush()
 
     def close(self):
+        """
+        Close the file handle to the output file
+        """
         if self.output_file != stdout:
             self.output_file.close()
