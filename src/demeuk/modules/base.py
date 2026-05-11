@@ -7,50 +7,84 @@ from typing import NamedTuple, List
 
 from transliterate import translit
 
+"""
+This modules contains the abstract base versions of demeuk modules, and some auxiliary help classes.
+"""
 
 # Result of module.run
 class Result(NamedTuple):
+    """
+    The result of a module run() on a single line
+
+    status: If this is True, some action needs to be performed. If this is false, continue to the next module.
+    msg: A log or debug string
+    add: Lines to add to the demeuk queue
+    update: Change this line for future modules
+    """
     status: bool
     msg: str | None
     add: str | bytes | list | None = None
     update: str | bytes | None = None
 
-# Class (namedtuple/dataclass) creation is expensive!
+# Class (namedtuple/dataclass) creation is slow!
 # For the results we use often, create them once and use them everywhere
 
 # This result can be used if you want to continue to the next line, and not take any action
 RESULT_NEXT=Result(status=False, msg=None)
 
 # Result of module.handle, these can perform an action
+# Note that we expect almost all of our input lines to return a Result with status=False, so almost none will go through
+# to the handle phase. Therefore we don't reuse our Actions objects, even though they are slow to create.
 class Actions(NamedTuple):
-    # Stop further demeuking if this is true
+    """
+    The result of a modules handle(), run on a Result when its status is True. These encode information on
+    control flow and the actions to take after a module is tripped. Multiple actions can be set.
+    If an attribute is not None, the corresponding action will be performed.
+
+    stop: If True, don't do any more demeuking on this line and do not include it in the results.
+    add: A list of lines to add to the work queue
+    update: Update the current line to this string
+    do_not_re_encode: A flag for use in combination with add. When set, we add back a byte sequence instead of a string into the queue
+    log_str: When set, log a string.
+    debug_str: When set, log a string if --debug is set.
+    debug_add_str: For use in combination with add. When set, log a string for every added line if --debug is set.
+    """
     stop: bool = False
-    # Add lines to work queue
     add: list | None = None
-    # Update line
     update: str | None = None
-    # Add bytes back instead of re-encoding? (only used for --hex)
     do_not_re_encode: bool = False
-    # Log this string if not None
     log_str: str | None = None
-    # Log this string if not None and --debug
     debug_str: str | None = None
-    # Log for all added line is not None and --debug
     debug_add_str: str | None = None
 
 
 class HelpInfo(NamedTuple):
+    """
+    Tuple containing 'help info' about a module which does not take a parameter.
+
+    option: A string or list of strings of command-line names. These should not start with dashes.
+    help_str: The explainer string for this module for use in demeuk -h.
+    """
     option: str | list[str]
     help_str: str
 
 
 class HelpInfoParam(NamedTuple):
+    """
+    Tuple containing 'help info' about a module which does take a parameter.
+
+    option: A string or list of strings of command-line names. These should not start with dashes.
+    help_str: The explainer string for this module for use in demeuk -h.
+    param_type: The type of the parametere this module expects
+    metavar: The name by which the parameter can be reference in the help string, for example '<string>'
+    """
     option: str | list[str]
     help_str: str
     param_type: type
     metavar: str
 
 
+# An enum describing the different positions which a module can be in, depending on how they act on types
 PipelinePosition = Enum('PipelinePosition', [
     ('BEFORE_ENCODE', 0),   # Modules which act on bytes
     ('ENCODE', 1),          # Modules which turn bytes into strings
@@ -59,27 +93,53 @@ PipelinePosition = Enum('PipelinePosition', [
 
 
 class Module(ABC):
+    """
+    The abstract base class for a demeuk module. If you want to add a new module to demeuk, you should probably not
+    implement this class unless you know what you're doing. You should instead implement one of:
+    AddModule, CheckModule, ModifyModule, RemoveModule or MacroModule.
+    """
     @staticmethod
     @abstractmethod
     def get_help_info() -> HelpInfo | HelpInfoParam:
+        """
+        Return either a HelpInfo or HelpInfoParam tuple, for the command-line option and the info displayed when running demeuk -h.
+        """
         raise NotImplementedError
 
     @property
     @abstractmethod
     def debug_str(self) -> str:
+        """
+        Returns a small debug string describing the action of a module. For example: 'dropped line', 'modified line'.
+        NB: When logging with --debug, the class name is logged, along with the debug string and the line in question.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def run(self, line) -> Result:
+        """
+        Run the module on a line. Note that this module is runs for every word in the word list!
+        :param line: The line on which the module runs
+        :return: A Result object.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def handle(self, result):
+        """
+        Handle the result of Module.run().
+        :param result: The result of Module.run().
+        :return: An Actions object containing the actions to perform.
+        """
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
     def get_pipeline_position() -> PipelinePosition:
+        """
+        Here you can set where in the pipeline this module should be placed. If it takes a string and spits out a string,
+        this should be PipelinePosition.AFTER_ENCODE.
+        """
         raise NotImplementedError
 
 

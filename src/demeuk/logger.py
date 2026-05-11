@@ -7,6 +7,9 @@ from sys import stdout, stderr
 class Logger:
     """
     Manage logging tasks
+
+    Verbose messages are info messages on program execution, for example a message when all lines are submitted to the pool.
+    Debug messages are more detailed, and these log information about the pipeline run (anytime a module returns a Result with status=True, its corresponding debug message is logged).
     """
 
     def __init__(self, args):
