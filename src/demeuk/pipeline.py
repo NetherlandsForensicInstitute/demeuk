@@ -68,9 +68,7 @@ class Pipeline:
     # This is one worker job, process a list of lines.
     def run(self, lines, config):
         results = []
-        log_id = 0 # TODO use stdlib logging module?
-        logger = config.logger
-        logger.create(log_id)
+        logger = config.logger # This is fine, multiprocessing creates a new copy.
         processed_lines = set()
         work_queue = deque(lines)
 
@@ -90,7 +88,7 @@ class Pipeline:
                     break
 
 
-            logger.log_debug(log_id, f'----BEGIN---- {hexlify(line)}{linesep}')
+            logger.log_debug(f'----BEGIN---- {hexlify(line)}{linesep}')
 
 
 
@@ -110,17 +108,17 @@ class Pipeline:
                             else:
                                 work_queue.append(word.encode())
                             if actions.debug_add_str is not None:
-                                logger.log_debug(log_id, f"{module.__class__.__name__}:\t{actions.debug_add_str}:\t{word}{linesep}")
+                                logger.log_debug(f"{module.__class__.__name__}:\t{actions.debug_add_str}:\t{word}{linesep}")
 
                     if actions.update is not None:
                         line = actions.update
 
                     if actions.log_str is not None:
                         # Log a message (always)
-                        logger.log(log_id, f"{module.__class__.__name__}:\t{actions.log_str}:\t{line}{linesep}")
+                        logger.log(f"{module.__class__.__name__}:\t{actions.log_str}:\t{line}{linesep}")
                     if actions.debug_str is not None:
                         # Log a message (with --debug)
-                        logger.log_debug(log_id, f"{module.__class__.__name__}:\t{actions.debug_str}:\t{line}{linesep}")
+                        logger.log_debug(f"{module.__class__.__name__}:\t{actions.debug_str}:\t{line}{linesep}")
 
                     # Do this last
                     # If stop is set, don't do anything else.
@@ -129,9 +127,9 @@ class Pipeline:
             else:
                 # This gets executed if we do not break out of the for loop
                 results.append(f'{line}{linesep}')
-                logger.log_debug(log_id, f'-----END----- {line}{linesep}{linesep}')
+                logger.log_debug(f'-----END----- {line}{linesep}{linesep}')
 
-        return {'results': results, 'log': logger.get(log_id)}
+        return {'results': results, 'log': logger.get()}
 
 
 

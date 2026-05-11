@@ -25,34 +25,26 @@ class Logger:
             self.log_file = stderr
             self.stderr_print(f'Logger: writing log to stderr')
 
-        # A dict of logs.
-        self.logs = {}
-
-        self.list_results = []
-        self.list_log = []
-
-
-    def create(self, log):
-        self.logs[log] = []
+        self.logs = []
 
     # Do we want to separate stderr print and log_verbose?
     def stderr_print(self, *args, **kwargs):
         if self.verbose:
             Logger.stderr_print_always(*args, **kwargs)
 
-    def log(self, log, msg):
-        self.logs[log].append(msg)
+    def log(self, msg):
+        self.logs.append(msg)
 
-    def log_debug(self, log, msg):
+    def log_debug(self, msg):
         if self.debug:
-            self.logs[log].append(msg)
+            self.logs.append(msg)
 
-    def log_verbose(self, log, msg):
+    def log_verbose(self, msg):
         if self.verbose:
-            self.logs[log].append(msg)
+            self.logs.append(msg)
 
-    def get(self, log):
-        return self.logs[log]
+    def get(self):
+        return self.logs
 
 
     def write(self, lines):
