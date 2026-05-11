@@ -5,7 +5,7 @@ from signal import signal, SIGINT, SIG_IGN
 
 from multiprocess.pool import Pool
 from tqdm import tqdm
-from .multiproc import chunkify, submit, finish_up
+from .multiproc import chunkify, submit, finish_up, init_worker
 from .config import Config
 
 from .parser import CommandLineParser
@@ -13,20 +13,26 @@ from .pipeline import Pipeline
 
 from .discover import discover_modules
 
+"""
+Demeuk is a tool to clean up lists of words.
+"""
+
 def get_version():
     version = '5.0.0'
     return version
 
 
-def init_worker():
-    signal(SIGINT, SIG_IGN)
-
 def cli_entry_point():
-
+    """
+    Entry point for demeuk, when run from the command-line.
+    """
     run_cli(sys.argv)
 
-
 def run_cli(args):
+    """
+    Invoke demeuk with command-line arguments
+    :param args: A list of command-line arguments, split by space
+    """
     all_modules = discover_modules()
 
     parser = CommandLineParser(get_version())
@@ -66,6 +72,12 @@ def run_cli(args):
 
 
 def demeuk_files(pipeline, input_files, cfg):
+    """
+    Demeuk a list of input files
+    :param pipeline: The module pipeline to run
+    :param input_files: A list of input files
+    :param cfg: Config object
+    """
     with Pool(cfg.threads, init_worker) as pool:
         cfg.logger.stderr_print(f'Reading input file(s)...')
 
@@ -105,6 +117,11 @@ def demeuk_files_single_threaded(pipeline, input_files, cfg):
     return cfg.logger.list_results, cfg.logger.list_log
 
 def demeuk_stdin(pipeline, cfg):
+    """
+    Demeuk input from stdin
+    :param pipeline: The module pipeline to run
+    :param cfg: Config object
+    """
     with Pool(cfg.threads, init_worker) as pool:
         cfg.logger.stderr_print(f'Reading from stdin...')
 
