@@ -5,7 +5,7 @@ from signal import signal, SIGINT, SIG_IGN
 
 from multiprocess.pool import Pool
 from tqdm import tqdm
-from .multiproc import chunkify, submit, finish_up, init_worker
+from .multiproc import chunkify, submit, finish_up, init_worker, write_results
 from .config import Config
 
 from .parser import CommandLineParser
@@ -50,14 +50,11 @@ def run_cli(args):
 
     pipeline = Pipeline(parser, args, cfg)
 
-    cfg.logger.write_log(f'Running pipeline {[module.__class__.__name__ for module in pipeline.modules]}\n')
-
+    cfg.logger.write(f'Running demeuk - {get_version()}{linesep}')
+    cfg.logger.write(f'Running pipeline {[module.__class__.__name__ for module in pipeline.modules]}\n')
 
     cfg.logger.stderr_print(f'Running demeuk - {get_version()}')
     cfg.logger.stderr_print(f'Using {cfg.threads} out of {cpu_count()} available CPUs')
-
-
-    cfg.logger.write_log(f'Running demeuk - {get_version()}{linesep}')
 
     if cfg.input_files is not None:
         if cfg.threads > 1:
@@ -67,8 +64,9 @@ def run_cli(args):
     else:
         demeuk_stdin(pipeline, cfg)
 
-    cfg.logger.close_files()
     cfg.logger.stderr_print('Done')
+    cfg.logger.close()
+    cfg.output_fh.close()
 
 
 def demeuk_files(pipeline, input_files, cfg):
@@ -102,8 +100,6 @@ def demeuk_files(pipeline, input_files, cfg):
 
         # Wait for jobs to finish
         finish_up(jobs, cfg)
-    # This returns the list of results, and the logs.
-    return cfg.logger.list_results, cfg.logger.list_log
 
 # For profiling
 def demeuk_files_single_threaded(pipeline, input_files, cfg):
@@ -113,8 +109,7 @@ def demeuk_files_single_threaded(pipeline, input_files, cfg):
     cfg.logger.stderr_print('Submitted jobs, waiting for jobs to finish...')
 
     res = pipeline.run(lines, cfg)
-    cfg.logger.write_results(res)
-    return cfg.logger.list_results, cfg.logger.list_log
+    write_results(cfg.output_fh, cfg.logger, res)
 
 def demeuk_stdin(pipeline, cfg):
     """
@@ -137,5 +132,3 @@ def demeuk_stdin(pipeline, cfg):
 
         # Wait for jobs to finish
         finish_up(jobs, cfg)
-
-    return cfg.logger.list_results, cfg.logger.list_log

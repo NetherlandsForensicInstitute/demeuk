@@ -25,7 +25,7 @@ def chunkify(file, cfg):
             if len(lines) == 0:
                 break
 
-def check_finished_jobs(jobs, logger):
+def check_finished_jobs(jobs, config):
     """
     Check jobs queue for any finished jobs
     :param jobs:    Jobs queue
@@ -33,7 +33,7 @@ def check_finished_jobs(jobs, logger):
     """
     while jobs and jobs[0].ready():
         job = jobs.pop(0)
-        logger.write_results(job.get())
+        write_results(config.output_fh, config.logger, job.get())
 
 def submit(pool, jobs, pipeline, chunk, config):
     """
@@ -66,4 +66,8 @@ def finish_up(jobs, config):
         # Waiting until job.ready() has the same issue.
         # Waiting 8ms to let the thread finish "solves" this problem.
         sleep(8 / 1000)
-        config.logger.write_results(job.get())
+        write_results(config.output_fh, config.logger, job.get())
+
+def write_results(output_fh, logger, async_result):
+    output_fh.write(async_result['results'])
+    logger.write(async_result['log'])

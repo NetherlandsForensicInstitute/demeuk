@@ -4,6 +4,7 @@ from os import cpu_count, R_OK, access
 from string import punctuation as string_punctuation
 
 from demeuk.logger import Logger
+from demeuk.output import OutputFileHandler
 
 
 # This class carries global configuration, so configurations which either:
@@ -34,7 +35,9 @@ class Config:
 
         self.logger = Logger(args)
 
-        # Check if we can read input file (output files are checked by logger ctor)
+        self.output_fh = OutputFileHandler(args, self.logger)
+
+        # Check if we can read input file
         if args.input:
             # args.input is a list (nargs *)
             if len(args.input) > 1:
@@ -45,16 +48,16 @@ class Config:
 
             for input_file in self.input_files:
                 if not access(input_file, R_OK):
-                    Logger.stderr_print_always(f'Config: Cannot read input file from {input_file}!')
+                    self.logger.stderr_print_always(f'Config: Cannot read input file from {input_file}!')
 
 
         if self.progress:
             if self.verbose or self.debug:
                 if not self.log_file:
-                    Logger.stderr_print_always('Config: --progress cannot be used with --verbose or --debug!')
+                    self.logger.stderr_print_always('Config: --progress cannot be used with --verbose or --debug!')
                     exit(2)
             if not self.input_files:
-                Logger.stderr_print_always('Config: --progress cannot be used when using stdin!')
+                self.logger.stderr_print_always('Config: --progress cannot be used when using stdin!')
                 exit(2)
 
         # Other configurations here, with defaults
