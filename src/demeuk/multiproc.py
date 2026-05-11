@@ -1,6 +1,11 @@
 from os import linesep
+from signal import signal, SIGINT, SIG_IGN
 from time import sleep
 
+
+
+def init_worker():
+    signal(SIGINT, SIG_IGN)
 
 def chunkify(file, cfg):
     with open(file, 'rb') as fh:

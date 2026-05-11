@@ -5,7 +5,7 @@ from signal import signal, SIGINT, SIG_IGN
 
 from multiprocess.pool import Pool
 from tqdm import tqdm
-from .chunk import chunkify, submit, finish_up
+from .multiproc import chunkify, submit, finish_up
 from .config import Config
 
 from .parser import CommandLineParser
