@@ -22,6 +22,7 @@ def discover_modules():
                  'WhitespaceTokenizer', # Not sure why this one is included...
                  ]
 
+    # Path.walk is Python 3.12+
     for path, names, files in modules_dir.walk():
         for file in [path/file for file in files]:
             # This way file is a Path object instead of a string.
