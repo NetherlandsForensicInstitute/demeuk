@@ -9,16 +9,16 @@ is a must read for anyone adding features to demeuk.
 Threading
 ---------
 In cause of an input file, the file is 'chunked' by the main processes. It will split
-the input files in chunks. It does so by reading the file per 1 KB. After reading 1 KB
-it will search for the next newline after the 1 KB. It will then read again 1 KB and 
+the input files in chunks. It does so by reading the file per 1 MB. After reading 1 MB
+it will search for the next newline after the 1 MB. It will then read again 1 MB and
 search for the first new line after that. This will continue until the end of the file.
 
-The size of 1 KB is used to reduce memory load and was found to be a solid number for
+The size of 1 MB is used to reduce memory load and was found to be a solid number for
 good performance.
 
 When using stdin, the input is not chunked. This is because stdin is a stream and
 thus we can not seek to a specific offset. So the main thread will read the input
-per 1 KB and search for the first newline after that.
+per 1 MB and search for the first newline after that.
 
 Searching for the next newline is done using the python's splitlines() 
 function. This means the line will be splitted on: line feed, carriage return,
