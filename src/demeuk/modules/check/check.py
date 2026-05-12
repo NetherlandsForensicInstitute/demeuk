@@ -1,12 +1,3 @@
-# - Check module -
-# Check modules check some property of a line.
-# These should take a line as input, possibly with one argument.
-# The module should return a bool result and a str log
-# result is True if it needs to be dropped, so False if it is included in the list.
-# log is a string which can be None. It is logged when result if True (line dropped)
-
-# TODO: change docstrings, return values are wrong.
-
 from re import search
 from unicodedata import category
 
@@ -14,6 +5,10 @@ from ..base import *
 
 # Maybe add shortcut Result object ResultPass and ResultFail or something?
 class CheckModule(Module):
+    """
+    The abstract base class for check modules.
+    Check modules test a certain property, and can drop a line if this property is (not) met.
+    """
 
     @staticmethod
     def get_pipeline_position():
@@ -23,17 +18,13 @@ class CheckModule(Module):
     def debug_str(self) -> str:
         return f'dropped line'
 
-    @abstractmethod
-    def run(self, line) -> Result:
-        raise NotImplementedError
-
     def handle(self, result):
         return Actions(
             # If a check module is tripped, don't need to run any more modules.
             stop=True,
-            log_str=result.msg)  # Always log checks
+            log_str=result.msg)  # Always log if this happens
 
-    # Stop prints a message to the logs, and does not process the line any further
+    # Return this to stop further processing.
     @property
     def stop(self) -> Result:
         return Result(status=True, msg=self.debug_str)

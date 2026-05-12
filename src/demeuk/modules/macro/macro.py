@@ -1,11 +1,17 @@
 from ..base import *
 
-# Module which contains a list of other modules to enable.
-# Can also include a "real" module with new functionaliry
 class MacroModule(Module):
+    """
+    The abstract base class for a macro module.
+    Macro modules are modules which can invoke other modules.
+    """
 
     @abstractmethod
     def get_submodules(self) -> List[Module]:
+        """
+        Determines what modules to add to the pipeline.
+        :return: An ordered list of instances of modules to add to the pipeline.
+        """
         raise NotImplementedError
 
     # By default, we assume that a macro module is only used as a collection of other modules.

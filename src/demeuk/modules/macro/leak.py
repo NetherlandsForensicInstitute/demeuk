@@ -10,7 +10,7 @@ from ..check.empty_line import EmptyLineModule
 # Maybe not the best way? or not too bad...
 class LeakModule(MacroModule, ConfigModule):
     def set_configs(self, config):
-        # Store the entire config as config...
+        # Store the entire config as config,
         self.add_config('config', config)
 
     @staticmethod

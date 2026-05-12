@@ -127,7 +127,8 @@ class Module(ABC):
     @abstractmethod
     def handle(self, result):
         """
-        Handle the result of Module.run().
+        Handle the result of Module.run(). Unless you are implementing a new category of module, you should use the
+        implementation of AddModule, CheckModule, etc.
         :param result: The result of Module.run().
         :return: An Actions object containing the actions to perform.
         """

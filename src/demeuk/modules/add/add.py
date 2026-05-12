@@ -1,10 +1,3 @@
-# - Add modules -
-# Add modules take a line as input, and output either a list of lines or a single line
-# which is to be added to the work queue.
-# Input is a single str
-# Output is either bool result, str out_line, str log OR:
-# bool result, list[str] out_lines, str log.
-# result should be true if it out_line or out_lines need to be added to the queue
 from re import split as re_split
 from string import punctuation as string_punctuation
 
@@ -16,6 +9,10 @@ from ftfy.fixes import fix_latin_ligatures
 # For certain string checks/operations, we maybe want to construct an Add, Remove and Modify(Clean) module in one go?
 # For example umlauting
 class AddModule(Module):
+    """
+    The abstract base class for add modules.
+    Add modules can add variants of lines to the work queue
+    """
     @staticmethod
     def get_pipeline_position():
         return PipelinePosition.AFTER_ENCODE
@@ -30,11 +27,19 @@ class AddModule(Module):
             add_list = result.add
         else:
             add_list = [result.add]
+        # Log a message for every added line if --debug is set.
         return Actions(
             add=add_list,
             debug_add_str=result.msg)
 
     def get_result(self, line, added_line):
+        """
+        Utility function to get the appropriate Result object when (possibly) adding one line, to return from run().
+        Checks if the new candidate is equal to the input line and only adds it if they differ.
+        :param line: The input line
+        :param added_line: The line to add
+        :return: The result to return from run()
+        """
         if line != added_line:
             return Result(status=True, msg=self.debug_str, add=added_line)
         return RESULT_NEXT
