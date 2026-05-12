@@ -10,14 +10,13 @@ Requirements
 
 Installing
 ----------
-
-PDM
-~~~
 The recommended way is to install demeuk using `pipx`_. ::
 
     pipx install demeuk --python /usr/bin/python3.14
-   This will make demeuk available everywhere by simply running ``demeuk``.
-.. _a link: github.com/bulletmark/pipxu/
+
+This will make demeuk available everywhere by simply running ``demeuk``.
+
+.. _pipx: github.com/bulletmark/pipxu/
 
 Running
 -------
@@ -34,10 +33,12 @@ If you want to run demeuk from source you can also easily do this with pipx.::
     cd demeuk
     # Install from source
     pipx install ./ --python /usr/bin/python3.14
+
 Upgrading
 ---------
 
 Upgrading demeuk is quite simple. In case you have installed demeuk through PDM, run::
 
     pipx upgrade demeuk
+
 and you're done!

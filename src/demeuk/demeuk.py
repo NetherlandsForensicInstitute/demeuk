@@ -31,7 +31,9 @@ def cli_entry_point():
 def run_cli(args):
     """
     Invoke demeuk with command-line arguments
+
     :param args: A list of command-line arguments, split by space
+    :type args: list
     """
     all_modules = discover_modules()
 
@@ -72,9 +74,13 @@ def run_cli(args):
 def demeuk_files(pipeline, input_files, cfg):
     """
     Demeuk a list of input files
+
     :param pipeline: The module pipeline to run
+    :type pipeline: :class:`Pipeline`
     :param input_files: A list of input files
-    :param cfg: Config object
+    :type input_files: list
+    :param cfg: Configuration
+    :type cfg: :class:`Config`
     """
     with Pool(cfg.threads, init_worker) as pool:
         cfg.logger.stderr_print(f'Reading input file(s)...')
@@ -114,8 +120,11 @@ def demeuk_files_single_threaded(pipeline, input_files, cfg):
 def demeuk_stdin(pipeline, cfg):
     """
     Demeuk input from stdin
+
     :param pipeline: The module pipeline to run
+    :type pipeline: :class:`Pipeline`
     :param cfg: Config object
+    :type cfg: :class:`Config`
     """
     with Pool(cfg.threads, init_worker) as pool:
         cfg.logger.stderr_print(f'Reading from stdin...')
