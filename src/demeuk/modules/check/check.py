@@ -28,3 +28,10 @@ class CheckModule(Module):
     @property
     def stop(self) -> Result:
         return Result(status=True, msg=self.debug_str)
+
+    # Return this to continue to the next module.
+    @property
+    def next(self) -> Result:
+        # Creating a Result is slow so we reference one instance.
+        # For stop, this is not needed as we expect almost all lines to return next.
+        return RESULT_NEXT

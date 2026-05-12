@@ -13,7 +13,7 @@ class ReplacementCharModule(CheckModule):
     def run(self, line) -> Result:
         if '�' in line:
             return self.stop
-        return RESULT_NEXT
+        return self.next
 
 class ControlCharModule(CheckModule):
 
@@ -35,4 +35,4 @@ class ControlCharModule(CheckModule):
             # Cs -> Surrogate
             if category(c) in ['Cc', 'Cf', 'Cn', 'Co', 'Cs']:
                 return self.stop
-        return RESULT_NEXT
+        return self.next
