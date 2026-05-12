@@ -18,4 +18,5 @@ Table of content
     install
     usage
     design
+    new_module
     api_ref

@@ -92,6 +92,10 @@ different new lines that thread might be busier then other threads. But because
 the chunksize is quite small, this will probably not be an issue. If this is an
 issue for someone please submit a bug.
 
+There is another class of modules called macro modules. These are modules which invoke a number of
+other modules, and may provide other functionality themselves. Examples of macro modules are
+``leak`` and ``leak-full``, which are simply a sensible collection of other modules to clean up data leaks.
+
 Module ordering
 ---------------
 After successfully decoding the string, there are many different modules which can be run,
