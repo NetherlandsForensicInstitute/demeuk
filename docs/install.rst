@@ -16,7 +16,7 @@ The recommended way is to install demeuk using `pipx`_. ::
 
 This will make demeuk available everywhere by simply running ``demeuk``.
 
-.. _pipx: github.com/bulletmark/pipxu/
+.. _pipx: https://pipx.pypa.io/stable/
 
 Running
 -------
