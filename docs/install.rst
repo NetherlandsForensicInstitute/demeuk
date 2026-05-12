@@ -2,19 +2,10 @@ Install
 =======
 This document describes how to install demeuk.
 
-There are multiple ways to install python packages
-
-- System-wide
-- User specific
-- Virtual environment
-
-The recommended way to install demeuk is to install it in a virtual
-environment.
-
 Requirements
 ------------
 
-- Python 3.10 is required, Python 3.14 is recommended.
+- Python 3.12 is required, Python 3.14 is recommended.
 - Ubuntu is the only OS on which demeuk has been tested.
 
 Installing
@@ -22,38 +13,31 @@ Installing
 
 PDM
 ~~~
-The recommended way is to install demeuk using `PDM`_. ::
+The recommended way is to install demeuk using `pipx`_. ::
 
-    # Initialize an empty project
-    pdm -n --no-git --python 3.14
-    # Install demeuk
-    pdm add demeuk
-.. _a link: https://pdm-project.org/latest/
+    pipx install demeuk --python /usr/bin/python3.14
+   This will make demeuk available everywhere by simply running ``demeuk``.
+.. _a link: github.com/bulletmark/pipxu/
 
 Running
 -------
 You can run demeuk using::
 
-    pdm run demeuk [options]
-when inside of the project directory. You can also run from somewhere else:::
+    demeuk [options]
 
-    pdm run -p /path/to/demeuk demeuk [options]
-
-Run from source
+Development
 ~~~~~~~~~~~~~~~
-If you want to run demeuk from source you can also easily do this with PDM.::
+If you want to run demeuk from source you can also easily do this with pipx.::
 
     # Clone the repo
     git clone <link to repository>
     cd demeuk
-    # Choose a Python interpreter to use (optional)
-    pdm use
-    # Install dependencies
-    pdm install
+    # Install from source
+    pipx install ./ --python /usr/bin/python3.14
 Upgrading
 ---------
 
 Upgrading demeuk is quite simple. In case you have installed demeuk through PDM, run::
 
-    pdm update
+    pipx upgrade demeuk
 and you're done!

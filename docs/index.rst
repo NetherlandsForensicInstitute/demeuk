@@ -16,7 +16,7 @@ Table of content
     :maxdepth: 3
 
     install
-    usage
     design
     new_module
+    usage
     api_ref

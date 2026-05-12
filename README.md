@@ -24,15 +24,14 @@ grant agreement No. 82201
 Please read the docs for more information.
 
 ## Quick start
-Demeuk supports Python versions 3.10 and up.
+Demeuk supports Python versions 3.12 and up.
 The recommended way to install demeuk is to use [pipx](github.com/bulletmark/pipxu/).
 
 ```
-# Python 3.11+ is faster than 3.10
 pipx install demeuk --python /usr/bin/python3.14
 ```
 
-Now you can invoke demeuk directly from the command-line:
+Now you can invoke demeuk directly from the command-line from any directory:
 
 Examples:
 ```
