@@ -1,5 +1,7 @@
 Usage
 =====
+.. Maybe we want this page to be shorter and move the reference to a manpage?
+
 This document describes how to usage demeuk.
 
 Please read ::ref:`Install` 
