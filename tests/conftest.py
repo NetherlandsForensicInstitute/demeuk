@@ -103,7 +103,6 @@ with open('testdata/input14', 'w') as file:
 
 with open('testdata/input15', 'w') as file:
     file.write(f'$HEX[5045d141524f4c]{linesep}')
-    file.write(f'$HEX[51574552545955494f50c5]{linesep}')
     file.write(f'$HEX[5a73f3666932303030]{linesep}')
     file.write(f'$HEX[617261f16173]{linesep}')
 

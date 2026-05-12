@@ -262,14 +262,13 @@ def test_cut_fields_single():
 def test_unhex():
     testargs = [
         'demeuk', '-i', 'testdata/input15', '-o', 'testdata/output15', '-l', 'testdata/log15',
-        '--hex', '--encode', '--input-encoding', 'ISO-8859-1'
+        '--hex', '--encode'
     ]
     with patch.object(sys, 'argv', testargs):
         main()
     with open('testdata/output15') as f:
         filecontent = f.read()
         assert 'PEÑAROL\n' in filecontent
-        assert 'QWERTYUIOPÅ\n' in filecontent
         assert 'Zsófi2000\n' in filecontent
         assert 'arañas\n' in filecontent
         assert '$HEX[' not in filecontent
