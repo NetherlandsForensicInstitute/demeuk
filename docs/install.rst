@@ -37,7 +37,7 @@ If you want to run demeuk from source you can also easily do this with pipx.::
 Upgrading
 ---------
 
-Upgrading demeuk is quite simple. In case you have installed demeuk through PDM, run::
+Upgrading demeuk is quite simple. In case you have installed demeuk through pipx, run::
 
     pipx upgrade demeuk
 
