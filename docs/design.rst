@@ -36,18 +36,18 @@ Encoding detection
 Next, when ``--tab`` is enabled all tabs will be converted to ':' greedy. This is to have
 a single cut/splitting char. This is done on binary level.
 
-Next, we arrive at one of the most important things of this application. The encoding detecting
-enable this with ``--encode``. Some dataset are a combination of different sources. This means
+Next, we arrive at one of the most important things of this application. The encoding detection,
+enabled with ``--encode``. Some dataset are a combination of different sources. This means
 EVERY line can have a different encoding. People or applications tend to make a lot
 of errors in encoding, as does this application. Demeuk tries its best to detect
 and correct as much as possible, but there will for sure be some weird case where it fails
 to do so. By default the application will try to decode the data using UTF-8.
 
 So we start by checking if we have a default encoding to try. This is either
-UTF-8 or supplied by the user. If the line decodes and there does not appear to be
-control character inside the line we can assume that the detection went correctly.
-Note: If you supply a list of input encodings. Put multibyte encodings first.
-Because single byte encodings will cause false positives.
+UTF-8 or supplied by the user with ``--input-encoding``. If the line decodes and there does not
+appear to be control characters inside the line we can assume that the detection went correctly.
+Note: If you supply a list of input encodings. Put multibyte encodings first, because single byte
+encodings will cause false positives.
 
 If that fails we run the detect function of the chardet library. Note: first the 
 cchardet library was implemented, but this library resulted in too many wrongly
@@ -71,7 +71,7 @@ Demeuk consist of 4 different type of modules.
   character with ':'. The commandline parameters will have the name of the module 
   without a prefix.
 - Add modules. Those modules will modify something in a line, but keep the original
-  line aswell. For example, add a lower case variant of a line. These modules will
+  line as well. For example, add a lower case variant of a line. These modules will
   have the commandline parameters start with 'add-' prefix.
 - Check modules. Those modules will check if a line passes some test. For example
   a minimal length check. The commandline parameters start with the 'check-' prefix.
@@ -95,8 +95,8 @@ issue for someone please submit a bug.
 Module ordering
 ---------------
 After successfully decoding the string, there are many different modules which can be run,
-and these may be run in any order. Apart from the ``--tab``, ``--encode``, ``--hex``, ``--html`` and
-``-g``/``--googlengram`` options, all modules will be run in the order in which they are supplied to
-the program. This enables greate flexibility, but it also means you need to think about this order.
+and these may be run in any order. Apart from the ``--tab`` and ``--encode`` options, all modules
+will be run in the order in which they are supplied to the program. This enables great
+flexibility, but it also means you need to think about this order.
 If you don't know where to start, put modify modules first, then check modules, remove modules and
 finally add modules.
