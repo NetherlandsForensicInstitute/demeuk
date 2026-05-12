@@ -1006,3 +1006,12 @@ def test_transliterate():
 
     assert 'zdravo prijatelju' in filecontent
     assert 'zuta banana' in filecontent
+
+def test_order():
+    results = _run_demeuk(56, '--check-email', '--remove-email')
+    assert len(results) == 0
+
+    results = _run_demeuk(56, '--remove-email', '--check-email')
+    assert 'test@example.com' not in results
+    assert 'password1' in results
+    assert 'password' in results
