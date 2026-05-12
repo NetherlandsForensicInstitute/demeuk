@@ -8,7 +8,7 @@ from typing import NamedTuple, List
 from transliterate import translit
 
 """
-This modules contains the abstract base versions of demeuk modules, and some auxiliary help classes.
+This module contains the abstract base versions of demeuk modules, and some auxiliary help classes.
 """
 
 # Result of module.run
@@ -143,14 +143,20 @@ class Module(ABC):
         raise NotImplementedError
 
 
-# Has a parameter
 class ParamModule(Module):
+    """
+    The abstract base class for a demeuk module which takes a parameter.
+    If you implement this class, you need to supply the parameter to the constructor, which can then be recalled by accessing the class property param.
+    """
     def __init__(self, parameter):
         self._param = self.get_help_info().param_type(parameter)
 
     @staticmethod
     @abstractmethod
     def get_help_info() -> HelpInfoParam:
+        """
+        Return a HelpInfoParam tuple containing the help info for this module.
+        """
         raise NotImplementedError
 
     @property
@@ -163,17 +169,36 @@ class ParamModule(Module):
 
 # A module with some configuration.
 class ConfigModule(Module):
+    """
+    The abstract base class for a demeuk module which depends on configuration.
+    If you implement this class, you need to add key-value pairs of config values in set_configs, which can then be accessed by get_config.
+    This can be used to let some global config option influence multiple modules at the same time.
+    """
     def __init__(self):
         self._config = {}
 
     @abstractmethod
     def set_configs(self, config):
+        """
+        Set config values for this module. You can use add_config in this function to actually store the values.
+        :param config: The Config object obtained from the parsed command-line arguments.
+        """
         raise NotImplementedError
 
     def add_config(self, key, value):
+        """
+        Store a key-value pair in the config dict for this module.
+        :param key: The key
+        :param value: The value
+        """
         self._config[key] = value
 
     def get_config(self, key):
+        """
+        Retrieve a config value from the config dict
+        :param key: The key
+        :return: The associated config value
+        """
         return self._config[key]
 
 

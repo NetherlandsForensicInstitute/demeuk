@@ -168,7 +168,7 @@ Example uses:
     def add_param_options(self, group, help_info_param):
         """
         Add options to the argument parser so that they are recognized on the command-line.
-        THis is for parameters, which are command-line options which take one argument.
+        This is for parameters, which are command-line options which take one argument.
         :param group: The category in which to list the option(s).
         :param help_info_param: The HelpInfoParam object containing the option and help string, and info about the parameter.
         """
