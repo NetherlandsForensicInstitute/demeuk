@@ -13,19 +13,19 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../src'))
 source_suffix = ['.rst', '.md']
 
-from bin.demeuk import version  # noqa: E402
+from demeuk.demeuk import get_version
 
 # -- Project information -----------------------------------------------------
 
 project = 'demeuk'
-copyright = '2019 - 2021, NFI'
+copyright = '2019 - 2026, NFI'
 author = 'Netherlands Forensic Institute (NFI)'
 
 # The full version, including alpha/beta/rc tags
-release = version
+release = get_version()
 
 
 # -- General configuration ---------------------------------------------------
@@ -53,7 +53,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'classic'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
