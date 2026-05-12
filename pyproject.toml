@@ -26,6 +26,7 @@ test = [
     "coverage>=7.13.5",
     "pytest>=9.0.3",
     "tox>=4.53.0",
+    "pytest-timeout>=2.4.0",
 ]
 check = [
     "ruff>=0.15.11",
@@ -91,6 +92,11 @@ isort.lines-after-imports = 2
 [tool.mdformat]
 end_of_line = "lf"
 wrap = 120
+
+[tool.pytest.ini_options]
+markers = [
+    "timeout: maximum runtime for a test",
+]
 
 [build-system]
 requires = ["pdm-backend"]
