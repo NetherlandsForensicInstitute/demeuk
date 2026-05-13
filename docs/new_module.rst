@@ -1,10 +1,8 @@
 Adding new modules to demeuk
 ============================
 Demeuk contains a lot of modules already, but if you want to add your own custom module these are
-some things to keep in mind:
+some things to keep in mind.
 
-General ideas
--------------
 To implement a custom module, create a Python file in ``src/demeuk/modules`` and create a class
 which inherits from either CheckModule, ModifyModule, AddModule, RemoveModule or MacroModule
 depending on the desired functionality. Additionally this class may inherit from ParamModule, for
@@ -73,21 +71,10 @@ expose a lot of flexibility.
 
 Position in pipeline
 ^^^^^^^^^^^^^^^^^^^^
-Demeuk runs its input through a pipeline, which is a linear sequence of modules. The action
-of a module on types determines its place in the pipeline.
-
-Input is read as bytes, at some point it is *encoded*, at which point these bytes are treated as a
-Python string. At this point we can work with the input as strings of characters. Keeping this in
-mind, a module can fall in three classes:
-
-* A module which takes bytes as input and returns a byte sequence,
-* A module which takes bytes as input and returns a string (an *encoding* module),
-* A module which takes a string as input and returns a string.
-
-The position can be set by overriding ``get_pipeline_position()``, which should return either
+The position of a module in the :ref:`pipeline` can be set by overriding ``get_pipeline_position()``, which should return either
 ``PipelinePosition.BEFORE_ENCODE``, ``PipelinePosition.ENCODE`` or ``PipelinePosition.AFTER_ENCODE``
-for the first, second and respectively third category.
-Most modules simply take in a string and output a string, so they fall in the third category.
+depending on their input and output signature.
+Most modules simply take in a string and output a string, so they occur after encoding.
 This is the default behaviour (what happens when you don't override ``get_pipeline_position()``).
 
 Accessing config
@@ -129,8 +116,8 @@ which tells the program what actions to take concerning the current line.
 * ``update`` - The string to replace the current line with
 * ``do_not_re_encode`` - A flag which, if set to True, adds a line back without re-encoding it as a string.
 * ``log_str`` - A string to log to the log file or stderr
-* ``debug_str`` - A string to log to the log file or stderr if ``--debug`` is set
-* ``debug_add_str`` - A string to log to the log file or stderr if ``--debug`` is set, for adding lines to the queue.
+* ``debug_str`` - A string to log if ``--debug`` is set
+* ``debug_add_str`` - A string to log if ``--debug`` is set, for adding lines to the queue.
 
 If a value is not set, no action will be taken. So for example, if we want to add a single line
 without logging anything we simply return a ``Actions(add=[line])`` from ``handle()``.

@@ -6,69 +6,15 @@ some insight on how the application works. Mostly it is useful in case you
 are working with a bug or don't understand why something is happening and it
 is a must read for anyone adding features to demeuk.
 
-Threading
----------
-In cause of an input file, the file is 'chunked' by the main processes. It will split
-the input files in chunks. It does so by reading the file per 1 MB. After reading 1 MB
-it will search for the next newline after the 1 MB. It will then read again 1 MB and
-search for the first new line after that. This will continue until the end of the file.
-
-The size of 1 MB is used to reduce memory load and was found to be a solid number for
-good performance.
-
-When using stdin, the input is not chunked. This is because stdin is a stream and
-thus we can not seek to a specific offset. So the main thread will read the input
-per 1 MB and search for the first newline after that.
-
-Searching for the next newline is done using the python's splitlines() 
-function. This means the line will be splitted on: line feed, carriage return,
-LF + CR, formfeeds, file separator, etc. See https://docs.python.org/3/library/stdtypes.html
-for more information.
-
-Next a thread will process the list of lines.
-
-Once all threads are done, the main thread will combine all of the results. 
-You should note that the order inside the final output will be completely
-un ordered and thus if you want to have a sorted list you need to sort it yourself.
-
-Encoding detection
-------------------
-Next, when ``--tab`` is enabled all tabs will be converted to ':' greedy. This is to have
-a single cut/splitting char. This is done on binary level.
-
-Next, we arrive at one of the most important things of this application. The encoding detection,
-enabled with ``--encode``. Some dataset are a combination of different sources. This means
-EVERY line can have a different encoding. People or applications tend to make a lot
-of errors in encoding, as does this application. Demeuk tries its best to detect
-and correct as much as possible, but there will for sure be some weird case where it fails
-to do so. By default the application will try to decode the data using UTF-8.
-
-So we start by checking if we have a default encoding to try. This is either
-UTF-8 or supplied by the user with ``--input-encoding``. If the line decodes and there does not
-appear to be control characters inside the line we can assume that the detection went correctly.
-Note: If you supply a list of input encodings. Put multibyte encodings first, because single byte
-encodings will cause false positives.
-
-If that fails we run the detect function of the chardet library. Note: first the 
-cchardet library was implemented, but this library resulted in too many wrongly
-encoded lines. Inside the tests of demeuk there are lot of edge cases which were
-found and corrected. So if you change something in the encoding detection
-please run the tests to verify that you have not broken something.
-
-If it managed detect any encoding, it will try to decode this line. If no unicode
-error happens we assume that we got some result.
-
-You can enable the ``--mojibake`` option to let demeuk try to fix mojibakes, which are
-artifacts of wrong decoding. For this we use the FTFY library.
-
 .. _modules:
+
 Modules
 -------
-After a line has been decoded correctly demeuk will start to run all the modules.
-Demeuk consist of 4 different type of modules.
+Demeuk is a modular program; you can enable functionality by specifying their respective command-line options.
+Demeuk supports four different type of modules.
 
 - Modify or Clean modules. Those modules modify something in a line. For example replace tab
-  character with ':'. The commandline parameters will have the name of the module 
+  character with ':'. The commandline parameters will have the name of the module
   without a prefix.
 - Add modules. Those modules will modify something in a line, but keep the original
   line as well. For example, add a lower case variant of a line. These modules will
@@ -84,23 +30,91 @@ Note that when any add option is used, any other modules (like clean, check, rem
 AND even add) will be ran on the modified line again. This might result in creating
 an loop if it keeps creating new lines. So be careful with using those options.
 
-Another note on the add modules and threading. Lines are dedicated to different
+
+There is another class of modules called macro modules. These are modules which invoke a number of
+other modules, and may provide other functionality themselves. Examples of macro modules are
+``leak`` and ``leak-full``, which are simply a sensible collection of other modules to clean up data leaks.
+
+
+.. _pipeline:
+
+Pipeline
+--------
+Demeuk runs its input through a pipeline, which is a linear sequence of modules. The action
+of a module on types determines its place in the pipeline.
+
+Input is read as bytes, at some point it is *encoded*, at which point these bytes are treated as a
+Python string. At this point we can work with the input as strings of characters. Keeping this in
+mind, a module can fall in three classes:
+
+* A module which takes bytes as input and returns a byte sequence,
+* A module which takes bytes as input and returns a string (an *encoding* module),
+* A module which takes a string as input and returns a string.
+
+Threading
+---------
+In cause of an input file, the file is 'chunked' by the main processes. It will split
+the input files in chunks. It does so by reading the file per 1 MB. After reading 1 MB
+it will search for the next newline after the 1 MB. It will then read again 1 MB and
+search for the first new line after that. This will continue until the end of the file.
+
+The size of 1 MB is used to reduce memory load and was found to be a solid number for
+good performance.
+
+When using stdin, the input is not chunked. This is because stdin is a stream and
+thus we can not seek to a specific offset. So the main thread will read the input
+per 1 MB and search for the first newline after that.
+
+Searching for the next newline is done using the python's splitlines()
+function. This means the line will be splitted on: line feed, carriage return,
+LF + CR, formfeeds, file separator, etc. See https://docs.python.org/3/library/stdtypes.html
+for more information.
+
+Next a thread will process the list of lines.
+
+Once all threads are done, the main thread will combine all of the results.
+You should note that the order inside the final output will be completely
+un ordered and thus if you want to have a sorted list you need to sort it yourself.
+
+A note on the add modules and threading: Lines are dedicated to different
 threads based on a configured chunk size. When additional lines are added, all
 other modules will run again on the line. The thread that created the new line
 will also run those modules again. Meaning that if one thread creates a lot of
 different new lines that thread might be busier then other threads. But because
 the chunksize is quite small, this will probably not be an issue. If this is an
 issue for someone please submit a bug.
+Encoding detection
+------------------
+One of the most important things of this application is the encoding detection,
+enabled with ``--encode``. Some datasets are a combination of different sources. This means
+EVERY line can have a different encoding. People or applications tend to make a lot
+of errors in encoding, as does this application. Demeuk tries its best to detect
+and correct as much as possible, but there will for sure be some weird case where it fails
+to do so. By default the application will try to decode the data using UTF-8.
 
-There is another class of modules called macro modules. These are modules which invoke a number of
-other modules, and may provide other functionality themselves. Examples of macro modules are
-``leak`` and ``leak-full``, which are simply a sensible collection of other modules to clean up data leaks.
+So we start by checking if we have a default encoding to try. This is either
+UTF-8 or supplied by the user with ``--input-encoding``. If the line decodes and there does not
+appear to be control characters inside the line we can assume that the detection went correctly.
+Note: If you supply a list of input encodings. Put multibyte encodings first, because single byte
+encodings will cause false positives.
+
+If that fails we run the detect function of the chardet library. Note: first the
+cchardet library was implemented, but this library resulted in too many wrongly
+encoded lines. Inside the tests of demeuk there are lot of edge cases which were
+found and corrected. So if you change something in the encoding detection
+please run the tests to verify that you have not broken something.
+
+If it managed detect any encoding, it will try to decode this line. If no unicode
+error happens we assume that we got some result.
+
+You can enable the ``--mojibake`` option to let demeuk try to fix mojibakes, which are
+artifacts of wrong decoding. For this we use the FTFY library.
+
 
 Module ordering
 ---------------
-After successfully decoding the string, there are many different modules which can be run,
-and these may be run in any order. Apart from the ``--tab`` and ``--encode`` options, all modules
-will be run in the order in which they are supplied to the program. This enables great
-flexibility, but it also means you need to think about this order.
-If you don't know where to start, put modify modules first, then check modules, remove modules and
-finally add modules.
+After successfully figuring out the decoding of the line, there are many different modules which
+can be run. All modules which function after the encoding step will be run in the order in which
+they are supplied to the program. This enables great flexibility, but it also means you need to
+think about this order. If you don't know where to start, put modify modules first, then check
+modules, remove modules and finally add modules.
