@@ -90,6 +90,7 @@ will also run those modules again. Meaning that if one thread creates a lot of
 different new lines that thread might be busier then other threads. But because
 the chunksize is quite small, this will probably not be an issue. If this is an
 issue for someone please submit a bug.
+
 Encoding detection
 ------------------
 One of the most important things of this application is the encoding detection,
