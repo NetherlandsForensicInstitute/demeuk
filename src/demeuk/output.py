@@ -31,6 +31,8 @@ class OutputFileHandler:
         Write (and flush) lines to the output file
         :param lines: A list of lines (with newlines) to write to the output file
         """
+        # NB: this works with stdout, but with a file this drops many lines if there are many files to write... (5M+)
+        # Possibly use a queue with a separate thread/process??
         self.output_file.writelines(lines)
         self.output_file.flush()
 

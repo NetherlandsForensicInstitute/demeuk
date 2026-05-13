@@ -66,7 +66,7 @@ def finish_up(jobs, config):
         # For some reason, sometimes job.wait() continues execution a fraction of a second early
         # Waiting until job.ready() has the same issue.
         # Waiting 8ms to let the thread finish "solves" this problem.
-        sleep(8 / 1000)
+        # sleep(8 / 1000)
         write_results(config.output_fh, config.logger, job.get())
 
 def write_results(output_fh, logger, async_result):
