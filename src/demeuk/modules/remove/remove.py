@@ -13,6 +13,13 @@ class RemoveModule(Module):
         return PipelinePosition.AFTER_ENCODE
 
     def handle(self, result):
+        """
+        Handle the result of RemoveModule.run(). Expects a result with the update field set and a debug message.
+
+        :param result: Result of RemoveModule.run()
+        :type result: Result
+        :return: Actions object which updates the line
+        """
         return Actions(
             update=result.update,
             debug_str=result.msg)
@@ -25,8 +32,11 @@ class RemoveModule(Module):
         """
         Utility function to get the appropriate Result object when modifying a line, to return from run().
         Checks if the new candidate is equal to the input line and only updates it if they differ.
+
         :param line: The input line
+        :type line: str
         :param cleaned_line: The modified line
+        :type cleaned_line: str
         :return: The result to return from run()
         """
         if line != cleaned_line:

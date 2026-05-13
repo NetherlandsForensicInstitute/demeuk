@@ -14,6 +14,13 @@ class ModifyModule(Module):
         return PipelinePosition.AFTER_ENCODE
 
     def handle(self, result):
+        """
+        Handle the result of ModifyModule.run(). Expects a Result with the update field set and a debug message.
+
+        :param result: Result of a ModifyModule.run()
+        :type result: Result
+        :return: Actions object which updates the line.
+        """
         return Actions(
             # Update the line in the queue
             update=result.update,
@@ -27,8 +34,11 @@ class ModifyModule(Module):
         """
         Utility function to get the appropriate Result object when modifying a line, to return from run().
         Checks if the new candidate is equal to the input line and only updates it if they differ.
+
         :param line: The input line
+        :type line: str
         :param cleaned_line: The modified line
+        :type cleaned_line: str
         :return: The result to return from run()
         """
         if line != cleaned_line:

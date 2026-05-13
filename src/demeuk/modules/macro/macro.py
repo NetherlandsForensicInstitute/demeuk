@@ -8,9 +8,10 @@ class MacroModule(Module):
     """
 
     @abstractmethod
-    def get_submodules(self) -> List[Module]:
+    def get_submodules(self) -> list[Module]:
         """
         Determines what modules to add to the pipeline.
+
         :return: An ordered list of instances of modules to add to the pipeline.
         """
         raise NotImplementedError
@@ -20,9 +21,23 @@ class MacroModule(Module):
 
     # However you can override these functions for custom behavior.
     def run(self, line):
+        """
+        Run the macro module. Does nothing and can be overridden for custom behavior.
+
+        :param line: Input line
+        :type line: str
+        :return: Result of module run
+        """
         return RESULT_NEXT
 
     def handle(self, results):
+        """
+        Handle the result of MacroModule.run(). Does nothing and can be overridden for custom behavior.
+
+        :param results: Result of a MacroModule.run()
+        :type results: Result
+        :return: An empty Actions object
+        """
         return Actions()
 
     @property

@@ -11,21 +11,21 @@ This module contains the abstract base versions of demeuk modules, and some auxi
 class Result(NamedTuple):
     """
     The result of a module run() on a single line
-
-    status: If this is True, some action needs to be performed. If this is false, continue to the next module.
-    msg: A log or debug string
-    add: Lines to add to the demeuk queue
-    update: Change this line for future modules
     """
+
+    #: If this is True, some action needs to be performed. If this is false, continue to the next module.
     status: bool
+    #: A log or debug string
     msg: str | None
+    #: Lines to add to the demeuk queue
     add: str | bytes | list | None = None
+    #: Change this line for future modules
     update: str | bytes | None = None
 
 # Class (namedtuple/dataclass) creation is slow!
 # For the results we use often, create them once and use them everywhere
 
-# This result can be used if you want to continue to the next line, and not take any action
+#: This result can be used if you want to continue to the next line, and not take any action
 RESULT_NEXT=Result(status=False, msg=None)
 
 # Result of module.handle, these can perform an action
@@ -36,51 +36,48 @@ class Actions(NamedTuple):
     The result of a modules handle(), run on a Result when its status is True. These encode information on
     control flow and the actions to take after a module is tripped. Multiple actions can be set.
     If an attribute is not None, the corresponding action will be performed.
-
-    stop: If True, don't do any more demeuking on this line and do not include it in the results.
-    add: A list of lines to add to the work queue
-    update: Update the current line to this string
-    do_not_re_encode: A flag for use in combination with add. When set, we add back a byte sequence instead of a string into the queue
-    log_str: When set, log a string.
-    debug_str: When set, log a string if --debug is set.
-    debug_add_str: For use in combination with add. When set, log a string for every added line if --debug is set.
     """
+    #: If True, don't do any more demeuking on this line and do not include it in the results.
     stop: bool = False
+    #: A list of lines to add to the work queue
     add: list | None = None
+    #: Update the current line to this string
     update: str | None = None
+    #: A flag for use in combination with add. When set, we add back a byte sequence instead of a string into the queue
     do_not_re_encode: bool = False
+    #: when set, log a string
     log_str: str | None = None
+    #: When set, log a string if --debug is set
     debug_str: str | None = None
+    #: For use in combination with add. When set, log a string for every added line if --debug is set.
     debug_add_str: str | None = None
 
 
 class HelpInfo(NamedTuple):
     """
     Tuple containing 'help info' about a module which does not take a parameter.
-
-    option: A string or list of strings of command-line names. These should not start with dashes.
-    help_str: The explainer string for this module for use in demeuk -h.
     """
+    #: A string or list of strings of command-line names. These should not start with dashes.
     option: str | list[str]
+    #: The explainer string for this module for use in demeuk -h.
     help_str: str
 
 
 class HelpInfoParam(NamedTuple):
     """
     Tuple containing 'help info' about a module which does take a parameter.
-
-    option: A string or list of strings of command-line names. These should not start with dashes.
-    help_str: The explainer string for this module for use in demeuk -h.
-    param_type: The type of the parametere this module expects
-    metavar: The name by which the parameter can be reference in the help string, for example '<string>'
     """
+    #: A string or list of strings of command-line names. These should not start with dashes.
     option: str | list[str]
+    #: The explainer string for this module for use in demeuk -h.
     help_str: str
+    #: The type of the parameter this module expects
     param_type: type
+    #: The name by which the parameter can be reference in the help string, for example '<string>'
     metavar: str
 
 
-# An enum describing the different positions which a module can be in, depending on how they act on types
+#: An enum describing the different positions which a module can be in, depending on how they act on type
 PipelinePosition = Enum('PipelinePosition', [
     ('BEFORE_ENCODE', 0),   # Modules which act on bytes
     ('ENCODE', 1),          # Modules which turn bytes into strings
@@ -98,7 +95,9 @@ class Module(ABC):
     @abstractmethod
     def get_help_info() -> HelpInfo | HelpInfoParam:
         """
-        Return either a HelpInfo or HelpInfoParam tuple, for the command-line option and the info displayed when running demeuk -h.
+        Return info for the command-line option and the message displayed when running demeuk -h.
+
+        :return: The help info for this module
         """
         raise NotImplementedError
 
@@ -106,8 +105,10 @@ class Module(ABC):
     @abstractmethod
     def debug_str(self) -> str:
         """
-        Returns a small debug string describing the action of a module. For example: 'dropped line', 'modified line'.
+        Returns a small debug string describing the action of a module.
         NB: When logging with --debug, the class name is logged, along with the debug string and the line in question.
+
+        :return: Debug string
         """
         raise NotImplementedError
 
@@ -115,8 +116,10 @@ class Module(ABC):
     def run(self, line) -> Result:
         """
         Run the module on a line. Note that this module is runs for every word in the word list!
+
         :param line: The line on which the module runs
-        :return: A Result object.
+        :type line: str
+        :return: The result of the module operation
         """
         raise NotImplementedError
 
@@ -125,7 +128,9 @@ class Module(ABC):
         """
         Handle the result of Module.run(). Unless you are implementing a new category of module, you should use the
         implementation of AddModule, CheckModule, etc.
+
         :param result: The result of Module.run().
+        :type result: Result
         :return: An Actions object containing the actions to perform.
         """
         raise NotImplementedError
@@ -134,8 +139,9 @@ class Module(ABC):
     @abstractmethod
     def get_pipeline_position() -> PipelinePosition:
         """
-        Here you can set where in the pipeline this module should be placed. If it takes a string and spits out a string,
-        this should be PipelinePosition.AFTER_ENCODE.
+        Set where in the pipeline this module should be placed.
+
+        :return: Pipeline position
         """
         raise NotImplementedError
 
@@ -158,6 +164,9 @@ class ParamModule(Module):
 
     @property
     def param(self):
+        """
+        The parameter of the module
+        """
         return self._param
 
     @param.setter
@@ -178,23 +187,31 @@ class ConfigModule(Module):
     def set_configs(self, config):
         """
         Set config values for this module. You can use add_config in this function to actually store the values.
-        :param config: The Config object obtained from the parsed command-line arguments.
+
+        :param config: Config object
+        :type config: Config
         """
         raise NotImplementedError
 
     def add_config(self, key, value):
         """
         Store a key-value pair in the config dict for this module.
+
         :param key: The key
+        :type key: Any
         :param value: The value
+        :type value: Any
         """
         self._config[key] = value
 
     def get_config(self, key):
         """
         Retrieve a config value from the config dict
+
         :param key: The key
+        :type key: Any
         :return: The associated config value
+
         """
         return self._config[key]
 
