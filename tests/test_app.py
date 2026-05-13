@@ -8,19 +8,6 @@ from demeuk.demeuk import cli_entry_point as main
 from demeuk.demeuk import run_cli
 
 
-# Q: test_check_email (22)
-#   Expected behaviour (--check-email --remove-email)
-#   is to drop the line test@example.com:line5 ?
-#   Fixed by flipping check and remove
-
-# NB: test_unhex (15)
-#   It looks like chardet behaviour changed, it detects the QWERTY line as cp424 (hebrew)
-#   This test also fails on the current master branch of demeuk.
-
-# test_check_hash (23)
-#   The test assumed cut would run before check-hash
-
-
 def calculate_line_numbers(file_name):
     lines = 0
     with open(file_name, 'rb') as file:
