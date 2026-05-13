@@ -21,6 +21,15 @@ def int_or_all(arg):
     raise ArgumentTypeError(f"invalid value {arg} not int or 'all'")
 
 
+ParserGroup = Enum('ParserGroup', [
+    ('STANDARD', 0),
+    ('MACRO', 1),
+    ('CONFIG', 2),
+    ('CHECK', 3),
+    ('MODIFY', 4),
+    ('ADD', 5),
+    ('REMOVE', 6)])
+
 
 class CommandLineParser:
     """
@@ -49,72 +58,71 @@ Example uses:
                                 add_help=False,  # We add our own help so that it is grouped correctly
                                 formatter_class=RawDescriptionHelpFormatter)
 
-        # Do we want strings as keys? Or create an enum just for the parser groups
         self.parser_groups = {
-            'standard': self.parser.add_argument_group('Standard options'),
-            'macro': self.parser.add_argument_group('Macro modules'),
-            'config': self.parser.add_argument_group('Configuration options'),
-            'check': self.parser.add_argument_group('Check modules (check if a line matches a specific condition)'),
-            'modify': self.parser.add_argument_group('Modify modules (modify a line in place)'),
-            'add': self.parser.add_argument_group('Add modules (Modify a line, but keep the original as well)'),
-            'remove': self.parser.add_argument_group('Remove modules (remove specific parts of a line)'),
+            ParserGroup.STANDARD: self.parser.add_argument_group('Standard options'),
+            ParserGroup.MACRO: self.parser.add_argument_group('Macro modules'),
+            ParserGroup.CONFIG: self.parser.add_argument_group('Configuration options'),
+            ParserGroup.CHECK: self.parser.add_argument_group('Check modules (check if a line matches a specific condition)'),
+            ParserGroup.MODIFY: self.parser.add_argument_group('Modify modules (modify a line in place)'),
+            ParserGroup.ADD: self.parser.add_argument_group('Add modules (Modify a line, but keep the original as well)'),
+            ParserGroup.REMOVE: self.parser.add_argument_group('Remove modules (remove specific parts of a line)'),
         }
 
         self.args = None
         self.lookup_table = {}
 
         # Standard options
-        self.parser_groups['standard'].add_argument('-i', '--input', action='store',
+        self.parser_groups[ParserGroup.STANDARD].add_argument('-i', '--input', action='store',
                                nargs='*',
                                metavar='<path>',
                                help='Specify the input file to be cleaned, or provide a glob pattern. (default: stdin)')
-        self.parser_groups['standard'].add_argument('-o', '--output', action='store',
+        self.parser_groups[ParserGroup.STANDARD].add_argument('-o', '--output', action='store',
                                metavar='<path>',
                                help='Specify the output file name. (default: stdout)')
-        self.parser_groups['standard'].add_argument('-l', '--log', action='store',
+        self.parser_groups[ParserGroup.STANDARD].add_argument('-l', '--log', action='store',
                                metavar='<path>',
                                help='Optional, specify where the log file needs to be writen to (default: stderr)')
-        self.parser_groups['standard'].add_argument('-j', '--threads', action='store', type=int_or_all,
+        self.parser_groups[ParserGroup.STANDARD].add_argument('-j', '--threads', action='store', type=int_or_all,
                                metavar='<n>',
                                help='Optional, specify amount of threads to spawn. Specify the string '
                                     "'all' to make demeuk auto detect the amount of threads to "
                                     "start based on the CPU's (default: all threads). Note: "
                                     'threading will cost some setup time. Only speeds up for larger files.')
-        self.parser_groups['standard'].add_argument('-v', '--verbose', action='store_true',
+        self.parser_groups[ParserGroup.STANDARD].add_argument('-v', '--verbose', action='store_true',
                                help='When set, printing some extra information to stderr. And will '
                                     'print the lines containing errors to logfile.')
-        self.parser_groups['standard'].add_argument('--debug', action='store_true',
+        self.parser_groups[ParserGroup.STANDARD].add_argument('--debug', action='store_true',
                                help='When set, the logfile will not only contain lines which caused '
                                     'an error, but also line which were modified.')
-        self.parser_groups['standard'].add_argument('--progress', action='store_true',
+        self.parser_groups[ParserGroup.STANDARD].add_argument('--progress', action='store_true',
                                help='Prints out the progress of the demeuk process.')
-        self.parser_groups['standard'].add_argument('-n', '--limit', action='store', type=int,
+        self.parser_groups[ParserGroup.STANDARD].add_argument('-n', '--limit', action='store', type=int,
                                metavar='<n>', help='Limit the number of lines per thread.')
-        self.parser_groups['standard'].add_argument('-s', '--skip', action='store', type=int,
+        self.parser_groups[ParserGroup.STANDARD].add_argument('-s', '--skip', action='store', type=int,
                                metavar='<n>', help='Skip <int> amount of lines per thread.')
-        self.parser_groups['standard'].add_argument('--version', action='version', version='%(prog)s ' + str(version),
-                               help='Prints the version of demeuk.')
-        self.parser_groups['standard'].add_argument('-h', '--help', action='help',
+        self.parser_groups[ParserGroup.STANDARD].add_argument('--version', action='version',
+                                                    version=f'%(prog)s {version}', help='Prints the version of demeuk.')
+        self.parser_groups[ParserGroup.STANDARD].add_argument('-h', '--help', action='help',
                                help='Prints this message and exits.')
 
         # Configuration options
-        self.parser_groups['config'].add_argument('--input-encoding', action='store',
+        self.parser_groups[ParserGroup.CONFIG].add_argument('--input-encoding', action='store',
                                                     metavar='<encoding>',
                                                     help='Forces demeuk to decode the input using this encoding (default: en_US.UTF-8).')
-        self.parser_groups['config'].add_argument('--output-encoding', action='store',
+        self.parser_groups[ParserGroup.CONFIG].add_argument('--output-encoding', action='store',
                                                     metavar='<encoding>',
                                                     help='Forces demeuk to encoding the output using this encoding (default: en_US.UTF-8).')
-        self.parser_groups['config'].add_argument('--punctuation', action='store',
+        self.parser_groups[ParserGroup.CONFIG].add_argument('--punctuation', action='store',
                                                     metavar='<punctuation>',
                                                     help='Use to set the punctuation that is use by options. Defaults to: string.punctuation.')
-        self.parser_groups['config'].add_argument('-f','--cut-fields', action='store',
+        self.parser_groups[ParserGroup.CONFIG].add_argument('-f','--cut-fields', action='store',
                                                   metavar='<field>',
                                                   help="Specifies the field to be returned, this is in the 'cut' language.")
         # TODO do we want to explain cut in helpstr?
-        self.parser_groups['config'].add_argument('--cut-before', action='store_true',
+        self.parser_groups[ParserGroup.CONFIG].add_argument('--cut-before', action='store_true',
                                                   help='Specify if demeuk should return the string before the delimiter')
         # Desribe default behavior of cut inside of CutModule
-        self.parser_groups['config'].add_argument('-d', '--delimiter', action='store',
+        self.parser_groups[ParserGroup.CONFIG].add_argument('-d', '--delimiter', action='store',
                                                   metavar='<delimiters>',
                                                   help="Specify what delimiter to use for --cut. Multiple delimiteres can be specified with ','")
 
@@ -189,11 +197,11 @@ Example uses:
         """
         # Hardcoded: Module Type determines help category
         categories = {
-            CheckModule: 'check',
-            ModifyModule: 'modify',
-            AddModule: 'add',
-            RemoveModule: 'remove',
-            MacroModule: 'macro',
+            CheckModule: ParserGroup.CHECK,
+            ModifyModule: ParserGroup.MODIFY,
+            AddModule: ParserGroup.ADD,
+            RemoveModule: ParserGroup.REMOVE,
+            MacroModule: ParserGroup.MACRO,
         }
 
         for module_type, group_str in categories.items():
