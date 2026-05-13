@@ -1,5 +1,7 @@
-from .modify import ModifyModule
 from demeuk.modules.base import *
+
+from .modify import ModifyModule
+
 
 class UmlautModule(ModifyModule):
     # Duplicated. Store somewhere else?

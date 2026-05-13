@@ -1,6 +1,7 @@
 from os import linesep
-from signal import signal, SIGINT, SIG_IGN
+from signal import SIG_IGN, SIGINT, signal
 from time import sleep
+
 
 """
 Utility functions for multiprocessing and chunking input files

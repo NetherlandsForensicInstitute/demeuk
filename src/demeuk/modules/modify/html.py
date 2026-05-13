@@ -1,8 +1,10 @@
 from html import unescape
 
-from ftfy.chardata import HTML_ENTITY_RE, HTML_ENTITIES
-from .modify import ModifyModule
+from ftfy.chardata import HTML_ENTITIES, HTML_ENTITY_RE
+
 from ..base import *
+from .modify import ModifyModule
+
 
 class HtmlModule(ModifyModule):
     @staticmethod

@@ -1,5 +1,6 @@
-from .modify import ModifyModule
 from ..base import *
+from .modify import ModifyModule
+
 
 class LowercaseModule(ModifyModule):
     @staticmethod

@@ -1,8 +1,8 @@
-import string
 from re import split as re_split
 
-from .add import AddModule
 from ..base import *
+from .add import AddModule
+
 
 class SplitModule(AddModule):
     # TODO do we want this to take punctuation from --punctuation? If so, turn this into a ConfigModule

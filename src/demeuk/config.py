@@ -1,6 +1,6 @@
 from glob import glob
-from locale import setlocale, LC_ALL
-from os import cpu_count, R_OK, access
+from locale import LC_ALL, setlocale
+from os import R_OK, access, cpu_count
 from string import punctuation as string_punctuation
 
 from .logger import Logger

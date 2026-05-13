@@ -1,5 +1,6 @@
-from .add import AddModule
 from ..base import *
+from .add import AddModule
+
 
 class FirstUpperModule(AddModule):
 

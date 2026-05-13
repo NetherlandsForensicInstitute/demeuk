@@ -1,17 +1,16 @@
 import sys
 from math import ceil
-from os import cpu_count, linesep, path, access, R_OK
-from signal import signal, SIGINT, SIG_IGN
+from os import cpu_count, linesep, path
 
 from multiprocess.pool import Pool
 from tqdm import tqdm
-from .multiproc import chunkify, submit, finish_up, init_worker, write_results
-from .config import Config
 
+from .config import Config
+from .discover import discover_modules
+from .multiproc import chunkify, finish_up, init_worker, submit, write_results
 from .parser import CommandLineParser
 from .pipeline import Pipeline
 
-from .discover import discover_modules
 
 """
 Demeuk is a tool to clean up lists of words.
@@ -83,7 +82,7 @@ def demeuk_files(pipeline, input_files, cfg):
     :type cfg: :class:`Config`
     """
     with Pool(cfg.threads, init_worker) as pool:
-        cfg.logger.stderr_print(f'Reading input file(s)...')
+        cfg.logger.stderr_print('Reading input file(s)...')
 
         jobs = []
 
@@ -109,7 +108,7 @@ def demeuk_files(pipeline, input_files, cfg):
 
 # For profiling
 def demeuk_files_single_threaded(pipeline, input_files, cfg):
-    cfg.logger.stderr_print(f'Reading input file(s)...')
+    cfg.logger.stderr_print('Reading input file(s)...')
     with open(input_files[0], 'rb') as fh:
         lines = [line.rstrip(linesep.encode()) for line in fh.readlines(cfg.chunk_size)]
     cfg.logger.stderr_print('Submitted jobs, waiting for jobs to finish...')
@@ -127,7 +126,7 @@ def demeuk_stdin(pipeline, cfg):
     :type cfg: :class:`Config`
     """
     with Pool(cfg.threads, init_worker) as pool:
-        cfg.logger.stderr_print(f'Reading from stdin...')
+        cfg.logger.stderr_print('Reading from stdin...')
 
         jobs = []
 

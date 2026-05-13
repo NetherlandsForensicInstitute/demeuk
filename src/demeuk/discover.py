@@ -1,9 +1,9 @@
 import importlib.util
 import inspect
+from pathlib import Path
 
 from demeuk.modules.base import Module
-from pathlib import Path
-import os
+
 
 """
 Discovers demeuk modules dynamically.

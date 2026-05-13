@@ -1,9 +1,5 @@
-from re import split as re_split
-from string import punctuation as string_punctuation
 
 from ..base import *
-
-from ftfy.fixes import fix_latin_ligatures
 
 
 # For certain string checks/operations, we maybe want to construct an Add, Remove and Modify(Clean) module in one go?

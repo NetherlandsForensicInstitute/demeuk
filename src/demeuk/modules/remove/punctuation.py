@@ -1,5 +1,6 @@
-from .remove import RemoveModule
 from ..base import *
+from .remove import RemoveModule
+
 
 class StripPunctuationModule(RemoveModule, ConfigModule):
     def set_configs(self, config):

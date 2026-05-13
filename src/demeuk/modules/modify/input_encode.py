@@ -1,7 +1,9 @@
 from unicodedata import category
 
 from chardet import detect
-from demeuk.modules.base import Module, PipelinePosition, HelpInfo, HelpInfoParam, Result, Actions, ConfigModule
+
+from demeuk.modules.base import Actions, ConfigModule, HelpInfo, PipelinePosition, Result
+
 from .modify import ModifyModule
 
 
@@ -22,7 +24,7 @@ class EncodeModule(ModifyModule, ConfigModule):
     # Only here, this is the success message...
     @property
     def debug_str(self) -> str:
-        return f'decoded line'
+        return 'decoded line'
 
     @staticmethod
     def _try_encoding(line, encoding):
@@ -66,7 +68,7 @@ class EncodeModule(ModifyModule, ConfigModule):
                     decoded_line = line.decode(encode['encoding'])
                     # successful decoding!
                     return Result(status=True, update=decoded_line, msg=self.debug_str)
-                except (UnicodeDecodeError, LookupError) as e:
+                except (UnicodeDecodeError, LookupError):
                     return Result(status=True, msg=f"decoding error with {encode['encoding']}")
             else:
                 return Result(status=True, msg='decoding error with unknown encoding')
@@ -96,7 +98,7 @@ class DefaultEncodeModule(ConfigModule):
         try:
             decoded_line = line.decode(self.get_config('encoding'))
             return Result(status=True, update=decoded_line, msg=f"decoded using input encoding {self.get_config('encoding')}")
-        except UnicodeDecodeError as e:
+        except UnicodeDecodeError:
             return Result(status=True, msg=self.debug_str)
 
 

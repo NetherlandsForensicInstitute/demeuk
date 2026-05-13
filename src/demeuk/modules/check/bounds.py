@@ -1,5 +1,6 @@
-from .check import CheckModule
 from ..base import *
+from .check import CheckModule
+
 
 # Maybe add a BoundsCheckModule which automatically creates min/max versions based on a lambda?
 

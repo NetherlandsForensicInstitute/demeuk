@@ -1,5 +1,6 @@
-from .check import CheckModule
 from ..base import *
+from .check import CheckModule
+
 
 # Do we want a generic RegexCheckModule which we can extend with different regexes we choose?
 # This would cut back on duplicate even more, but maybe not necessary.

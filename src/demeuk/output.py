@@ -1,6 +1,5 @@
 from locale import getlocale
-from os import access, path, W_OK, F_OK
-from sys import stdout, stderr
+from sys import stdout
 
 
 # Manages file handle to output file
@@ -25,7 +24,7 @@ class OutputFileHandler:
                 exit(2)
         else:
             self.output_file = stdout
-            logger.stderr_print(f'Writing output to stdout')
+            logger.stderr_print('Writing output to stdout')
 
     def write(self, lines):
         """

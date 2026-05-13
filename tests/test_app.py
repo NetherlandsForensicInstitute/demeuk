@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 from pytest import mark, raises
 
-from demeuk.demeuk import run_cli
 from demeuk.demeuk import cli_entry_point as main
+from demeuk.demeuk import run_cli
 
 
 # Q: test_check_email (22)

@@ -1,11 +1,10 @@
-from .modify import ModifyModule
-
 from .case import *
 from .char_encoding import *
 from .cut import *
 from .hex import *
 from .html import *
 from .input_encode import *
+from .modify import ModifyModule
 from .transliterate import *
 from .umlaut import *
 from .whitespace import *

@@ -1,7 +1,6 @@
-from re import search
-from unicodedata import category
 
 from ..base import *
+
 
 # Maybe add shortcut Result object ResultPass and ResultFail or something?
 class CheckModule(Module):
@@ -16,7 +15,7 @@ class CheckModule(Module):
 
     @property
     def debug_str(self) -> str:
-        return f'dropped line'
+        return 'dropped line'
 
     def handle(self, result):
         return Actions(

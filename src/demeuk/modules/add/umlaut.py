@@ -1,5 +1,6 @@
-from .add import AddModule
 from ..base import *
+from .add import AddModule
+
 
 # Looks very mych like UmlautModule (ModifyModule).
 # Why do we need --umlaut AND --add-umlaut?

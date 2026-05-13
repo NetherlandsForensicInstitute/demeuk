@@ -1,5 +1,6 @@
 from ..base import *
 
+
 class ModifyModule(Module):
     """
     The abstract base class for modify modules.

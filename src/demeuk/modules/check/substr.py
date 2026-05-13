@@ -1,5 +1,6 @@
-from .check import CheckModule
 from ..base import *
+from .check import CheckModule
+
 
 class StartingWithModule(CheckModule, ParamModule):
     @staticmethod

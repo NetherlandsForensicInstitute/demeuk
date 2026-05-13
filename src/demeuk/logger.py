@@ -1,6 +1,5 @@
 from locale import getlocale
-from os import access, path, W_OK, F_OK
-from sys import stdout, stderr
+from sys import stderr
 
 
 # Manage logging tasks
@@ -33,7 +32,7 @@ class Logger:
                 exit(2)
         else:
             self.log_file = stderr
-            self.stderr_print(f'Logger: writing log to stderr')
+            self.stderr_print('Logger: writing log to stderr')
 
         self.logs = []
 

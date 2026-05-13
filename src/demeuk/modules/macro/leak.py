@@ -1,10 +1,10 @@
-from .macro import MacroModule
 from ..base import *
-
-from ..modify import *
-from ..check.regex import *
 from ..check.character import *
 from ..check.empty_line import EmptyLineModule
+from ..check.regex import *
+from ..modify import *
+from .macro import MacroModule
+
 
 # NB: Macro module contains config module as submodule. So we pass the config on...
 # Maybe not the best way? or not too bad...

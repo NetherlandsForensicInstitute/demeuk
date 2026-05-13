@@ -1,5 +1,6 @@
 from ..base import *
 
+
 class MacroModule(Module):
     """
     The abstract base class for a macro module.
@@ -26,7 +27,7 @@ class MacroModule(Module):
 
     @property
     def debug_str(self) -> str:
-        return f'performed action'
+        return 'performed action'
 
     @staticmethod
     def get_pipeline_position():

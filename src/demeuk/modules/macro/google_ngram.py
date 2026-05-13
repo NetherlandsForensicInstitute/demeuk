@@ -1,9 +1,11 @@
-from nltk import WhitespaceTokenizer, str2tuple
 from string import punctuation as string_punctuation
 
-from .macro import MacroModule
+from nltk import WhitespaceTokenizer, str2tuple
+
 from ..base import *
 from ..modify.input_encode import EncodeModule
+from .macro import MacroModule
+
 
 class GoogleNgramModule(MacroModule, ConfigModule):
 

@@ -1,7 +1,8 @@
 from re import compile as re_compile
 
-from .modify import ModifyModule
 from ..base import *
+from .modify import ModifyModule
+
 
 class HexModule(ModifyModule):
 

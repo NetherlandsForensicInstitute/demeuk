@@ -1,7 +1,8 @@
 from unicodedata import category
 
-from .check import CheckModule
 from ..base import *
+from .check import CheckModule
+
 
 class ReplacementCharModule(CheckModule):
     @staticmethod

@@ -1,8 +1,9 @@
 from ftfy import fix_encoding
 from unidecode import unidecode
 
-from .modify import ModifyModule
 from ..base import *
+from .modify import ModifyModule
+
 
 class NonAsciiModule(ModifyModule):
     @staticmethod

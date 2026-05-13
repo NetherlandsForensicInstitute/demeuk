@@ -1,5 +1,5 @@
-from .modify import ModifyModule
 from ..base import *
+from .modify import ModifyModule
 
 
 class NewlineModule(ModifyModule):

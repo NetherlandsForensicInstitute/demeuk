@@ -1,11 +1,7 @@
 from abc import ABC, abstractmethod
-from binascii import unhexlify
 from enum import Enum
-from re import search, sub
-from re import compile as re_compile
-from typing import NamedTuple, List
+from typing import NamedTuple
 
-from transliterate import translit
 
 """
 This module contains the abstract base versions of demeuk modules, and some auxiliary help classes.

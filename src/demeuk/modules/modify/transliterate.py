@@ -1,5 +1,6 @@
-from .modify import ModifyModule
 from ..base import *
+from .modify import ModifyModule
+
 
 # TODO add argparse thing where option can only take certain arguments
 class TransliterateModule(ModifyModule, ParamModule):

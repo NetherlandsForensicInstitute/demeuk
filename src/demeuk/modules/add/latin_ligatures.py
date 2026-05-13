@@ -1,7 +1,8 @@
 from ftfy.fixes import fix_latin_ligatures
 
-from .add import AddModule
 from ..base import *
+from .add import AddModule
+
 
 class LatinLigaturesModule(AddModule):
     @staticmethod

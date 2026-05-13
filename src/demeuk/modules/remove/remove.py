@@ -1,5 +1,6 @@
 from ..base import *
 
+
 # Functionality-wise, a remove module is just a modify module.
 # We still create a different abstract module class to separate this in a different help category, as well as different debug string.
 class RemoveModule(Module):

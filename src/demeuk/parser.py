@@ -1,9 +1,9 @@
-from argparse import ArgumentTypeError, ArgumentParser, RawDescriptionHelpFormatter
+from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
 from os import cpu_count
 from textwrap import dedent
 
-from .modules.base import *
 from .modules.add.add import AddModule
+from .modules.base import *
 from .modules.check.check import CheckModule
 from .modules.macro.macro import MacroModule
 from .modules.modify.modify import ModifyModule

@@ -1,5 +1,6 @@
-from .check import CheckModule
 from ..base import *
+from .check import CheckModule
+
 
 # Name conflict with NonAsciiModule
 class NonAsciiCheckModule(CheckModule):

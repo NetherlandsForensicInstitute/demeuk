@@ -1,7 +1,8 @@
 from re import search, sub
 
-from .remove import RemoveModule
 from ..base import *
+from .remove import RemoveModule
+
 
 # EmailModule already exists as a check module...
 # TODO should we capture the module type in the name? (CheckEmailModule)
