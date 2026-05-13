@@ -18,7 +18,7 @@ def discover_modules():
     Discover demeuk modules in src/demeuk/modules.
     Any class which is a subclass of Module is detected and registered automatically.
     """
-    root_dir = Path('.') / 'src' / 'demeuk'
+    root_dir = Path(__file__).parent
     modules_dir = root_dir / 'modules'
 
     classes = set()
