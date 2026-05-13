@@ -35,12 +35,12 @@ Now you can invoke demeuk directly from the command-line from any directory:
 
 Examples:
 ```
-    demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt
-    demeuk -i inputfile -o outputfile -j 24 -l logfile.log
-    demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt --leak
-    demeuk -i inputfile -o outputfile -j 24 -l logfile.log --leak-full
-    demeuk -i inputdir/*.txt -o outputfile.dict -l logfile.log
-    demeuk -o outputfile.dict -l logfile.log
+    demeuk -i inputfile.tmp -o outputfile.dict -l demeuk.log
+    demeuk -i inputfile -o outputfile -j 24 -l demeuk.log
+    demeuk -i inputfile.tmp -o outputfile.dict -l demeuk.log --leak
+    demeuk -i inputfile -o outputfile -j all -l demeuk.log --leak-full
+    demeuk -i inputdir/*.txt -o outputfile.dict -l demeuk.log
+    demeuk -o outputfile.dict -l demeuk.log
 ```
 
 ## Development
