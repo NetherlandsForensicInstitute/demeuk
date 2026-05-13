@@ -40,7 +40,10 @@ Examples:
     demeuk -i inputfile.tmp -o outputfile.dict -l demeuk.log --leak
     demeuk -i inputfile -o outputfile -j all -l demeuk.log --leak-full
     demeuk -i inputdir/*.txt -o outputfile.dict -l demeuk.log
-    demeuk -o outputfile.dict -l demeuk.log
+```
+Demeuk also works with pipes:
+```
+    cat wordlist | demeuk --leak-full --debug > list.out 2> list.log
 ```
 
 ## Development
