@@ -1,3 +1,5 @@
+from re import sub
+
 from ..base import *
 from .modify import ModifyModule
 

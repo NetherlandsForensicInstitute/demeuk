@@ -59,7 +59,7 @@ fix = {composite = [
 ]}
 test = {composite = [
     "tox",
-    "coverage run --branch --module pytest --junit-xml pytest.xml tests/",
+    "coverage run --branch --module pytest -s --junit-xml pytest.xml tests/",
     "coverage xml",
 ]}
 

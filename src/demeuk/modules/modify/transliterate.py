@@ -1,3 +1,4 @@
+from transliterate import translit
 from ..base import *
 from .modify import ModifyModule
 

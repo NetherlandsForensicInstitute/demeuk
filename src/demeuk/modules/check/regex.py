@@ -1,3 +1,5 @@
+from re import search
+
 from ..base import *
 from .check import CheckModule
 

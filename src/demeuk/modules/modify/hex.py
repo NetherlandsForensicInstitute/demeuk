@@ -1,3 +1,4 @@
+from binascii import unhexlify
 from re import compile as re_compile
 
 from ..base import *
