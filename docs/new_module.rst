@@ -105,10 +105,6 @@ If you want your module to perform actions which do not fall neatly in the descr
 in the queue and stopping further processing), you can return a custom ``Result`` and override the
 ``handle(result)`` function.
 
-The ``Result`` object returned from ``run()`` contains a ``status`` field which, if set to True,
-passes on the ``Result`` to ``handle(result)``. This function will return an ``Actions`` object
-which tells the program what actions to take concerning the current line.
-
 ``Actions`` is a tuple containing the following values:
 
 * ``stop`` - If True, drop this line completely and go to the next line.
@@ -119,8 +115,9 @@ which tells the program what actions to take concerning the current line.
 * ``debug_str`` - A string to log if ``--debug`` is set
 * ``debug_add_str`` - A string to log if ``--debug`` is set, for adding lines to the queue.
 
-If a value is not set, no action will be taken. So for example, if we want to add a single line
-without logging anything we simply return a ``Actions(add=[line])`` from ``handle()``.
+If a value is not set, no action will be taken. So for example, if we want to add two variant lines
+and remove the current line from the work queue without logging anything we simply return a
+``Actions(add=[line1, line2], stop=True)`` from ``handle()``.
 
 Performance considerations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

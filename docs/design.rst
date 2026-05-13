@@ -51,6 +51,13 @@ mind, a module can fall in three classes:
 * A module which takes bytes as input and returns a string (an *encoding* module),
 * A module which takes a string as input and returns a string.
 
+A module in the pipeline will return a ``Results`` object, containing a ``status`` field. If this
+is set to ``False``, nothing happens and the line is passed to the next module in line. If however
+this field is ``True``, the ``Results`` object is passed to ``handle()`` which, depending on the
+module type, determines what concrete actions to take. These actions could be: Stop further
+processing of the line, add a variant, log a debug message, etc. This is encoded in and ``Actions``
+object which is processed by ``Pipeline.run()``.
+
 Threading
 ---------
 In cause of an input file, the file is 'chunked' by the main processes. It will split
