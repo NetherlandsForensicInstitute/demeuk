@@ -86,7 +86,13 @@ class Pipeline:
         """
         results = []
         logger = config.logger # This is fine, multiprocessing creates a new copy.
+
+        # Keep track of already processed lines so that we do not check the same line twice.
+        # Set lookups are constant time.
         processed_lines = set()
+
+        # We use a double-ended queue for the remaining lines: We insert lines (with add modules) at the back, while we
+        # process the lines at the front.
         work_queue = deque(lines)
 
         while work_queue:
@@ -137,7 +143,7 @@ class Pipeline:
                         # Log a message (with --debug)
                         logger.log_debug(f'{module.__class__.__name__}:\t{actions.debug_str}:\t{line}{linesep}')
 
-                    # Do this last
+                    # Do this last, so that logs are written of stop == True
                     # If stop is set, don't do anything else.
                     if actions.stop:
                         break
