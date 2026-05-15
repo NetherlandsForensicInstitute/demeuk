@@ -25,7 +25,7 @@ Please read the docs for more information.
 
 ## Quick start
 Demeuk supports Python versions 3.12 and up.
-The recommended way to install demeuk is to use [pipx](github.com/bulletmark/pipxu/).
+The recommended way to install demeuk is to use [pipx](https://pipx.pypa.io/stable/).
 
 ```
 pipx install demeuk --python /usr/bin/python3.14
