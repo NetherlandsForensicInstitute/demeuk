@@ -4,8 +4,6 @@ from ..base import *
 from .remove import RemoveModule
 
 
-# EmailModule already exists as a check module...
-# TODO should we capture the module type in the name? (CheckEmailModule)
 class RemoveEmailModule(RemoveModule):
 
     # This is now in two places. Delegate this to a 'constants.py' or 'regexes.py' file?

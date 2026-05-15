@@ -4,10 +4,6 @@ from .check import CheckModule
 
 # Maybe add a BoundsCheckModule which automatically creates min/max versions based on a lambda?
 
-# TODO strange bug where some test fail and some pass some of the time...?
-# investigate more.
-
-
 class MinLengthModule(CheckModule, ParamModule):
     @staticmethod
     def get_help_info():

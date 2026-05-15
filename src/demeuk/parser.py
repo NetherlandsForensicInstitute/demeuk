@@ -117,14 +117,12 @@ Example uses:
                                                     help='Use to set the punctuation that is use by options. Defaults to: string.punctuation.')
         self.parser_groups[ParserGroup.CONFIG].add_argument('-f','--cut-fields', action='store',
                                                   metavar='<field>',
-                                                  help="Specifies the field to be returned, this is in the 'cut' language.")
-        # TODO do we want to explain cut in helpstr?
+                                                  help="Specifies the field to be returned, this is in the 'cut' syntax.")
         self.parser_groups[ParserGroup.CONFIG].add_argument('--cut-before', action='store_true',
                                                   help='Specify if demeuk should return the string before the delimiter')
-        # Desribe default behavior of cut inside of CutModule
         self.parser_groups[ParserGroup.CONFIG].add_argument('-d', '--delimiter', action='store',
                                                   metavar='<delimiters>',
-                                                  help="Specify what delimiter to use for --cut. Multiple delimiteres can be specified with ','")
+                                                  help="Specify what delimiter to use for --cut. Multiple delimiters can be specified with ','")
 
     @staticmethod
     def make_cli_option(option):

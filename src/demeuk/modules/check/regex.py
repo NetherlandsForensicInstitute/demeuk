@@ -19,7 +19,7 @@ class RegexModule(CheckModule, ParamModule):
             param_type=str)
 
     def run(self, line):
-        # TODO I think now we cannot have a regex containing a comma
+        # We cannot have a regex containing a comma
         for regex in self.param.split(','):
             if search(regex, line):
                 continue

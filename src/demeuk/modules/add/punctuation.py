@@ -5,8 +5,6 @@ from .add import AddModule
 
 
 class SplitModule(AddModule):
-    # TODO do we want this to take punctuation from --punctuation? If so, turn this into a ConfigModule
-
     @staticmethod
     def get_help_info():
         return HelpInfo(
