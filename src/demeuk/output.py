@@ -17,7 +17,10 @@ class OutputFileHandler:
         encoding = getlocale()[1]
         if args.output:
             try:
-                self.output_file = open(args.output, 'w', encoding=encoding, newline='') # Overwrite output file
+                # Open in write mode to overwrite file if it exists, and close immediately.
+                open(args.output, 'w').close()
+                # Now open it in append mode, this solves a bug where file writes would get dropped unexpectedly
+                self.output_file = open(args.output, 'a', encoding=encoding, newline='') # Now
                 logger.stderr_print(f'Writing output to {args.output}')
             except PermissionError:
                 logger.stderr_print_always(f'Cannot write output file to {args.output}!')
@@ -31,8 +34,6 @@ class OutputFileHandler:
         Write (and flush) lines to the output file
         :param lines: A list of lines (with newlines) to write to the output file
         """
-        # NB: this works with stdout, but with a file this drops many lines if there are many files to write... (5M+)
-        # Possibly use a queue with a separate thread/process??
         self.output_file.writelines(lines)
         self.output_file.flush()
 
