@@ -54,7 +54,9 @@ cd demeuk
 pipx install ./ --python /usr/bin/python3.14
 ```
 Now you can run demeuk as in the examples. Note that the shortcut `demeuk` only updates after you
-run `pipx upgrade demeuk`. You can also use PDM, this circumvents this issue although you have to
+run `pipx upgrade demeuk`.
+
+You can install demeuk through PDM with `pdm install -p ./`, this circumvents this issue although you have to
 run demeuk with `pdm run demeuk`.
 
 ## Docs
