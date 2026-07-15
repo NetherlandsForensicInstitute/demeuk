@@ -1002,3 +1002,7 @@ def test_order():
     assert 'test@example.com' not in results
     assert 'password1' in results
     assert 'password' in results
+
+def test_remove_emptyline():
+    results = _run_demeuk(58, '--remove-punctuation')
+    assert len(results) == 1

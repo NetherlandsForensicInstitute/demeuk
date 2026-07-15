@@ -406,3 +406,8 @@ with open('testdata/input56', 'w') as file:
     file.write(f'demeuk@example.com:password1{linesep}')
     file.write(f'demeuk@example.com:test@example.com{linesep}')
     file.write(f'1238661:test@example.com:password{linesep}')
+
+with open('testdata/input58', 'w') as file:
+    file.write(f'line{linesep}')
+    file.write(f'.{linesep}')
+    file.write(f'+{linesep}')
