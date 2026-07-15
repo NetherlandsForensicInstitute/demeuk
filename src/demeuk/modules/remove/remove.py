@@ -20,6 +20,12 @@ class RemoveModule(Module):
         :type result: Result
         :return: Actions object which updates the line
         """
+        if result.update == '':
+            # If all characters got removed, do not include an empty line
+            # but delete the line from the queue instead
+            return Actions(
+                stop=True,
+                debug_str='removed line')
         return Actions(
             update=result.update,
             debug_str=result.msg)
