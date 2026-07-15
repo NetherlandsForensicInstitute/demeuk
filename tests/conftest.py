@@ -406,3 +406,9 @@ with open('testdata/input56', 'w') as file:
     file.write(f'demeuk@example.com:password1{linesep}')
     file.write(f'demeuk@example.com:test@example.com{linesep}')
     file.write(f'1238661:test@example.com:password{linesep}')
+
+with open('testdata/input57', 'w') as file:
+    file.write(f'all lower{linesep}')
+    file.write(f'ALL UPPER{linesep}')
+    file.write(f'MixeD cAsE{linesep}')
+    file.write(f'unicode caße{linesep}')

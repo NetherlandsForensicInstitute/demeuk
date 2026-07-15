@@ -1002,3 +1002,19 @@ def test_order():
     assert 'test@example.com' not in results
     assert 'password1' in results
     assert 'password' in results
+
+def test_upper():
+    results = _run_demeuk(57, '--uppercase')
+    assert len(results) == 4
+    assert 'ALL LOWER' in results
+    assert 'ALL UPPER' in results
+    assert 'MIXED CASE' in results
+    assert 'UNICODE CASSE' in results
+
+def test_add_upper():
+    results = _run_demeuk(57, '--add-upper')
+    assert len(results) == 7
+    assert 'ALL LOWER' in results
+    assert 'ALL UPPER' in results
+    assert 'MIXED CASE' in results
+    assert 'UNICODE CASSE' in results
