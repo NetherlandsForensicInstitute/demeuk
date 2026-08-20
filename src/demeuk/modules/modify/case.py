@@ -24,3 +24,14 @@ class TitleCaseModule(ModifyModule):
     def run(self, line):
         cleaned_line = line.title()
         return self.get_result(line, cleaned_line)
+
+class UppercaseModule(ModifyModule):
+    @staticmethod
+    def get_help_info():
+        return HelpInfo(
+            option='uppercase',
+            help_str="Replace line like 'this test string' with 'THIS TEST STRING'.")
+
+    def run(self, line):
+        cleaned_line = line.upper()
+        return self.get_result(line, cleaned_line)
