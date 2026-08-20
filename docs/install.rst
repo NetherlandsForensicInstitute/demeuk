@@ -2,77 +2,54 @@ Install
 =======
 This document describes how to install demeuk.
 
-There are multiple ways to install python packages
-
-- System-wide
-- User specific
-- Virtual environment
-
-The recommended way to install demeuk is to install it in a virtual
-environment.
-
 Requirements
 ------------
 
-- Python 3.6 is required
+- Python 3.12 is required, Python 3.14 is recommended.
 - Ubuntu is the only OS on which demeuk has been tested.
 
 Installing
 ----------
+The recommended way is to install demeuk using `pipx`_. ::
 
-Virtual environment
-~~~~~~~~~~~~~~~~~~~
+    pipx install demeuk --python /usr/bin/python3.14
 
-.. code-block:: none
+This will make demeuk available everywhere by simply running ``demeuk``.
 
-    $ sudo apt install python3-pip
-    $ sudo pip3 install virtualenv
-    $ cd <some place where the virtual environment will be created>
-    $ virtualenv venv-demeuk
-    $ source venv-demeuk/bin/activate
+.. _pipx: https://pipx.pypa.io/stable/
 
-Installing from PyPi
-~~~~~~~~~~~~~~~~~~~~
+Running
+-------
+You can run demeuk using::
 
-.. code-block:: none
+    demeuk [options]
 
-    $ pip3 install demeuk
-
-Installing from source
-~~~~~~~~~~~~~~~~~~~~~~
-If for some reason the PyPi is not available, you can build the wheelfile
-yourself. First create a Virtual environment as described above.
-:ref:`Virtual environment`
-
-.. code-block:: none
-
-    $ git clone <link to repository>
-    $ cd demeuk
-    $ python3 setup.py bdist_wheel
-    $ pip3 install dist/*.whl
-
-Run from source
+Development
 ~~~~~~~~~~~~~~~
-If for some reason you want to run demeuk from source you only have to install
-the requirements.
+If you want to run demeuk from source you can also easily do this with pipx: ::
 
-.. code-block:: none
+    # Clone the repo
+    git clone <link to repository>
+    cd demeuk
+    # Install from source
+    pipx install ./ --python /usr/bin/python3.14
 
-    $ git clone <link to repository>
-    $ cd demeuk
-    $ pip3 install -r requirements.txt
-    $ python3 bin/demeuk.py --help
+If you change the Python source, you will have to run::
 
-Upgrading
----------
+    pipx upgrade demeuk
 
-Upgrading demeuk is quite simple. In case you have installed demeuk through pip
-and using a virtualenv:
+to reload the shortcut ``demeuk``.
 
-.. code-block:: none
+Alternatively, you can use PDM: ::
 
-    $ source venv-demeuk/bin/activate
-    $ pip3 install demeuk --upgrade
+    # Clone the repo
+    git clone <link to repository>
+    cd demeuk
+    # Set up PDM project
+    pdm init -n --no-git --python /usr/bin/python3.14
 
-In case that you installed demeuk using the source, just rebuild the software
-and install the wheel file. Pip3 will upgrade the package automatically. 
+in which case you don't have to reload the command everytime you change the source code, but you then have to run demeuk with ::
+
+    pdm run demeuk [options]
+
+which is also not globally available.

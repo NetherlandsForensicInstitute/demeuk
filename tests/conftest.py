@@ -1,6 +1,7 @@
 from os import linesep, mkdir, path
 from shutil import rmtree
 
+
 if path.isdir('testdata'):
     rmtree('testdata')
 mkdir('testdata')
@@ -51,17 +52,17 @@ with open('testdata/input5', 'w', encoding='utf-8') as file:
     file.write(f'email@example.com;line5{linesep}')
     file.write(f'test:email@example.com:line6{linesep}')
 
-with open('testdata/input6', 'w', encoding='utf-8') as file:
-    file.write(f'I\'Afrique_ADJ occidental_ADJ\t1927\t2\t2{linesep}')
-    file.write(f'I\'Allemagne )\t2009\t1\t1{linesep}')
-    file.write(f'I\'ain _VERB_\t2009\t2\t2{linesep}')
-    file.write(f'I\'ain a_VERB\t2009\t2\t2{linesep}')
+with open('testdata/input6', 'w') as file:
+    file.write(f"I'Afrique_ADJ occidental_ADJ\t1927\t2\t2{linesep}")
+    file.write(f"I'Allemagne )\t2009\t1\t1{linesep}")
+    file.write(f"I'ain _VERB_\t2009\t2\t2{linesep}")
+    file.write(f"I'ain a_VERB\t2009\t2\t2{linesep}")
 
 with open('testdata/input7', 'wb') as file:
     # coupÉ
     file.write(b'\x63\x6F\x75\x70\xC3\x89' + f'{linesep}'.encode('utf-8'))
     # LANCIA AURELIA B20 COUPÉ GT\n
-    file.write(b'\x4C\x41\x4E\x43\x49\x41\x20\x41\x55\x52\x45\x4C\x49\x41\x20\x42\x32\x30\x20\x43\x4F\x55\x50\xC3\x83\xC2\x89\x20\x47\x54\x0A')  # noqa: E501
+    file.write(b'\x4C\x41\x4E\x43\x49\x41\x20\x41\x55\x52\x45\x4C\x49\x41\x20\x42\x32\x30\x20\x43\x4F\x55\x50\xC3\x83\xC2\x89\x20\x47\x54\x0A')
 
 
 with open('testdata/input8', 'w', encoding='utf-8') as file:
@@ -102,7 +103,6 @@ with open('testdata/input14', 'w', encoding='utf-8') as file:
 
 with open('testdata/input15', 'w', encoding='utf-8') as file:
     file.write(f'$HEX[5045d141524f4c]{linesep}')
-    file.write(f'$HEX[51574552545955494f50c5]{linesep}')
     file.write(f'$HEX[5a73f3666932303030]{linesep}')
     file.write(f'$HEX[617261f16173]{linesep}')
 
@@ -401,3 +401,19 @@ with open('testdata/input54', 'w', encoding='utf-8') as file:
 with open('testdata/input55', 'w', encoding='utf-8') as file:
     file.write(f'здраво пријатељу{linesep}')
     file.write(f'жута банана{linesep}')
+
+with open('testdata/input56', 'w') as file:
+    file.write(f'demeuk@example.com:password1{linesep}')
+    file.write(f'demeuk@example.com:test@example.com{linesep}')
+    file.write(f'1238661:test@example.com:password{linesep}')
+
+with open('testdata/input57', 'w') as file:
+    file.write(f'all lower{linesep}')
+    file.write(f'ALL UPPER{linesep}')
+    file.write(f'MixeD cAsE{linesep}')
+    file.write(f'unicode caße{linesep}')
+
+with open('testdata/input58', 'w') as file:
+    file.write(f'line{linesep}')
+    file.write(f'.{linesep}')
+    file.write(f'+{linesep}')

@@ -24,28 +24,40 @@ grant agreement No. 82201
 Please read the docs for more information.
 
 ## Quick start
-The recommended way to install demeuk is to install it in a virtual
-environment.
+Demeuk supports Python versions 3.12 and up.
+The recommended way to install demeuk is to use [pipx](https://pipx.pypa.io/stable/).
 
 ```
-# Create virtual environment
-virtualenv <virtual environment name>
-# Activate the virtual environment
-source <virtual environment name>/bin/activate
-pip3 install -r requirements.txt
+pipx install demeuk --python /usr/bin/python3.14
 ```
 
-Now you can run bin/demeuk.py:
+Now you can invoke demeuk directly from the command-line from any directory:
 
 Examples:
 ```
-    demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt
-    demeuk -i inputfile -o outputfile -j 24 -l logfile.log
-    demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt --leak
-    demeuk -i inputfile -o outputfile -j 24 -l logfile.log --leak-full
-    demeuk -i inputdir/*.txt -o outputfile.dict -l logfile.log
-    demeuk -o outputfile.dict -l logfile.log
+    demeuk -i inputfile.tmp -o outputfile.dict -l demeuk.log
+    demeuk -i inputfile -o outputfile -j 24 -l demeuk.log
+    demeuk -i inputfile.tmp -o outputfile.dict -l demeuk.log --leak
+    demeuk -i inputfile -o outputfile -j all -l demeuk.log --leak-full
+    demeuk -i inputdir/*.txt -o outputfile.dict -l demeuk.log
 ```
+Demeuk also works with pipes:
+```
+    cat wordlist | demeuk --leak-full --debug > list.out 2> list.log
+```
+
+## Development
+To make changes to demeuk, you need to run it from the source Python files.
+```
+git clone https://github.com/NetherlandsForensicInstitute/demeuk.git
+cd demeuk
+pipx install ./ --python /usr/bin/python3.14
+```
+Now you can run demeuk as in the examples. Note that the shortcut `demeuk` only updates after you
+run `pipx upgrade demeuk`.
+
+You can install demeuk through PDM with `pdm install -p ./`, this circumvents this issue although you have to
+run demeuk with `pdm run demeuk`.
 
 ## Docs
 The docs are available at: <http://demeuk.rtfd.io/>

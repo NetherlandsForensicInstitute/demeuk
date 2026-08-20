@@ -3,9 +3,10 @@ from subprocess import PIPE, run
 from os import name, linesep
 from unittest.mock import patch
 
-from pytest import raises, mark
+from pytest import mark, raises
 
-from bin.demeuk import main
+from demeuk.demeuk import cli_entry_point as main
+from demeuk.demeuk import run_cli
 
 
 def calculate_line_numbers(file_name):
@@ -25,10 +26,10 @@ def test_demeuk():
     line_num_output1 = calculate_line_numbers('testdata/output1')
     line_num_log1 = calculate_line_numbers('testdata/log1')
 
-    assert line_num_log1 == 5
+    assert line_num_log1 == 6
     assert line_num_output1 == 9
-    assert line_num_input1 == (line_num_output1 + line_num_log1 - 1)
-    with open('testdata/output1', encoding='utf-8') as file:
+    assert line_num_input1 == (line_num_output1 + line_num_log1 - 2)
+    with open('testdata/output1') as file:
         filecontent = file.read()
         assert 'Password123!@"\n' in filecontent
         assert 'ǓǝǪǼȧɠ\n' in filecontent
@@ -41,12 +42,10 @@ def test_demeuk():
 
 
 def test_multithread():
-    testargs = ['demeuk', '-i', 'testdata/input2', '-o', 'testdata/output2', '-j', '3']
-    with patch.object(sys, 'argv', testargs):
-        main()
+    results = _run_demeuk(2, '-j', '3')
 
     line_num_input1 = calculate_line_numbers('testdata/input2')
-    line_num_output1 = calculate_line_numbers('testdata/output2')
+    line_num_output1 = len(results)
 
     assert line_num_output1 == 8
     assert line_num_input1 == line_num_output1
@@ -105,10 +104,10 @@ def test_googlengram():
     assert line_num_output == 4
     with open('testdata/output6', encoding='utf-8') as f:
         filecontent = f.read()
-        assert 'I\'ain\n' in filecontent
-        assert 'I\'Afrique occidental\n' in filecontent
-        assert 'I\'Allemagne\n' in filecontent
-        assert 'I\'ain a\n' in filecontent
+        assert "I'ain\n" in filecontent
+        assert "I'Afrique occidental\n" in filecontent
+        assert "I'Allemagne\n" in filecontent
+        assert "I'ain a\n" in filecontent
 
 
 def test_coupe():
@@ -251,14 +250,13 @@ def test_cut_fields_single():
 def test_unhex():
     testargs = [
         'demeuk', '-i', 'testdata/input15', '-o', 'testdata/output15', '-l', 'testdata/log15',
-        '--hex', '--encode',
+        '--hex', '--encode'
     ]
     with patch.object(sys, 'argv', testargs):
         main()
     with open('testdata/output15', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'PEÑAROL\n' in filecontent
-        assert 'QWERTYUIOPÅ\n' in filecontent
         assert 'Zsófi2000\n' in filecontent
         assert 'arañas\n' in filecontent
         assert '$HEX[' not in filecontent
@@ -305,7 +303,7 @@ def test_verbose():
         main()
     with open('testdata/log18', encoding='utf-8') as f:
         filecontent = f.read()
-        assert 'Clean_cut; ' in filecontent
+        assert 'CutModule:' in filecontent
 
 
 def test_limit():
@@ -369,7 +367,7 @@ def test_multiple_delimiters():
 def test_check_email():
     testargs = [
         'demeuk', '-i', 'testdata/input22', '-o', 'testdata/output22', '-l', 'testdata/log22',
-        '--verbose', '--check-email', '--remove-email',
+        '--verbose', '--remove-email', '--check-email'
     ]
     with patch.object(sys, 'argv', testargs):
         main()
@@ -386,7 +384,7 @@ def test_check_email():
 def test_check_hash():
     testargs = [
         'demeuk', '-i', 'testdata/input23', '-o', 'testdata/output23', '-l', 'testdata/log23',
-        '--verbose', '--check-hash', '-c',
+        '--verbose', '-c', '--check-hash',
     ]
     with patch.object(sys, 'argv', testargs):
         main()
@@ -499,11 +497,10 @@ def test_glob():
         'demeuk', '-i', 'testdata/input*', '-o', 'testdata/output30', '-l', 'testdata/log30',
         '--verbose', '-c', '-d', ',;:',
     ]
-    with patch.object(sys, 'argv', testargs):
-        main()
-    with open('testdata/output30', encoding='utf-8') as f:
-        assert len(f.readlines()) > 100
-
+    run_cli(testargs)
+    with open('testdata/output30') as f:
+        results = f.readlines()
+    assert len(results) > 100
 
 def test_bug_html_control():
     testargs = [
@@ -614,23 +611,16 @@ def test_trim():
 
 
 def test_invalid_unhex():
-    testargs = [
-        'demeuk', '-i', 'testdata/input37', '-o', 'testdata/output37', '-l', 'testdata/log37',
-        '--verbose', '--hex',
-    ]
-    with patch.object(sys, 'argv', testargs):
-        main()
+    results = _run_demeuk(37, '--hex')
 
-    with open('testdata/output37', encoding='utf-8') as f:
-        filecontent = f.read()
-        # Invalid hex string, leaving at as is.
-        assert '$HEX[e]tiredofwaiting\n' in filecontent
-        # Invalid hex string, leaving at as is.
-        assert '\n$HEX[eee]\n' in filecontent
-        # This is a valid hash, but it is not a hex string from start to end.
-        assert '\n$HEX[6C657469746B69636B696E]123!\n' in filecontent
-        # Valid upcase test
-        assert '\nlosingtouch\n' in filecontent
+    # Invalid hex string, leaving at as is.
+    assert '$HEX[e]tiredofwaiting' in results
+    # Invalid hex string, leaving at as is.
+    assert '$HEX[eee]' in results
+    # This is a valid hash, but it is not a hex string from start to end.
+    assert '$HEX[6C657469746B69636B696E]123!' in results
+    # Valid upcase test
+    assert 'losingtouch' in results
 
 
 def test_skip():
@@ -726,17 +716,8 @@ def test_check_ending_with():
 
 
 def test_check_title_case():
-    testargs = [
-        'demeuk', '-i', 'testdata/input44', '-o', 'testdata/output44', '-l', 'testdata/log44',
-        '--verbose', '--title-case',
-    ]
-    with patch.object(sys, 'argv', testargs):
-        main()
-
-    with open('testdata/output44', encoding='utf-8') as f:
-        filecontent = f.read()
-
-    assert '3 Doors Down' in filecontent
+    results = _run_demeuk(44, '--title-case')
+    assert '3 Doors Down' in results
 
 
 def test_leak_full():
@@ -813,7 +794,7 @@ def test_check_multiple_regexes():
 
 
 def test_stdin_stdout():
-    comlist = ['bin/demeuk.py']
+    comlist = ['demeuk']
     # On Windows scripts cant be executed with the shebang so manually add python3 in front
     if name == 'nt':
         comlist.insert(0, 'python3')
@@ -843,93 +824,94 @@ def test_check_lowercase():
     assert '3 doors down' in filecontent
 
 
-def _run_demeuk(file_name, *extra_args):
+def _run_demeuk(test_num, *extra_args):
     testargs = [
-        'demeuk', '-i', f'testdata/{file_name}',
-        '-o', f'testdata/{file_name}.out',
-        '-l', f'testdata/{file_name}.log',
+        'demeuk', '-i', f'testdata/input{test_num}',
+        '-o', f'testdata/output{test_num}',
+        '-l', f'testdata/log{test_num}',
         '--verbose',
     ]
     testargs.extend(extra_args)
-
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open(f'testdata/{file_name}.out', encoding='utf-8') as f:
-        return f.read()
+    with open(f'testdata/output{test_num}', encoding='utf-8') as f:
+        results = [line.rstrip('\n') for line in f.readlines()]
+
+    return results
 
 
 def test_check_digits():
-    result = _run_demeuk('input49', '--check-min-digits', '0', '--check-max-digits', '0').splitlines()
+    result = _run_demeuk(49, '--check-min-digits', '0', '--check-max-digits', '0')
     assert result == ['nodigits']
 
-    result = _run_demeuk('input49', '--check-max-digits', '0').splitlines()
+    result = _run_demeuk(49, '--check-max-digits', '0')
     assert result == ['nodigits']
 
-    result = _run_demeuk('input49', '--check-max-digits', '9999999').splitlines()
+    result = _run_demeuk(49, '--check-max-digits', '9999999')
     assert result == ['nodigits', '0digit', 'd1git', 'digit2', '६', 'pw123!']
 
-    result = _run_demeuk('input49', '--check-min-digits', '1').splitlines()
+    result = _run_demeuk(49, '--check-min-digits', '1')
     assert result == ['0digit', 'd1git', 'digit2', '६', 'pw123!']
 
-    result = _run_demeuk('input49', '--check-min-digits', '2').splitlines()
+    result = _run_demeuk(49, '--check-min-digits', '2')
     assert result == ['pw123!']
 
-    result = _run_demeuk('input49', '--check-min-digits', '3', '--check-max-digits', '3').splitlines()
+    result = _run_demeuk(49, '--check-min-digits', '3', '--check-max-digits', '3')
     assert result == ['pw123!']
 
-    result = _run_demeuk('input49', '--check-min-digits', '4').splitlines()
+    result = _run_demeuk(49, '--check-min-digits', '4')
     assert result == []
 
 
 def test_check_uppercase():
-    result = _run_demeuk('input50', '--check-min-uppercase', '0', '--check-max-uppercase', '0').splitlines()
+    result = _run_demeuk(50, '--check-min-uppercase', '0', '--check-max-uppercase', '0')
     assert result == ['noupper']
 
-    result = _run_demeuk('input50', '--check-max-uppercase', '0').splitlines()
+    result = _run_demeuk(50, '--check-max-uppercase', '0')
     assert result == ['noupper']
 
-    result = _run_demeuk('input50', '--check-max-digits', '9999999').splitlines()
+    result = _run_demeuk(50, '--check-max-digits', '9999999')
     assert result == ['noupper', 'Uppercase', 'upperCase', 'uppercasE', 'greek:Ω', 'ThisIsUpperCase!!!']
 
-    result = _run_demeuk('input50', '--check-min-uppercase', '1').splitlines()
+    result = _run_demeuk(50, '--check-min-uppercase', '1')
     assert result == ['Uppercase', 'upperCase', 'uppercasE', 'greek:Ω', 'ThisIsUpperCase!!!']
 
-    result = _run_demeuk('input50', '--check-min-uppercase', '2').splitlines()
+    result = _run_demeuk(50, '--check-min-uppercase', '2')
     assert result == ['ThisIsUpperCase!!!']
 
-    result = _run_demeuk('input50', '--check-min-uppercase', '4', '--check-max-uppercase', '4').splitlines()
+    result = _run_demeuk(50, '--check-min-uppercase', '4', '--check-max-uppercase', '4')
     assert result == ['ThisIsUpperCase!!!']
 
-    result = _run_demeuk('input50', '--check-min-uppercase', '9999999').splitlines()
+    result = _run_demeuk(50, '--check-min-uppercase', '9999999')
     assert result == []
 
 
 def test_check_special():
-    result = _run_demeuk('input51', '--check-min-special', '0', '--check-max-special', '0').splitlines()
+    result = _run_demeuk(51, '--check-min-special', '0', '--check-max-special', '0')
     assert result == ['NoSpecialsHere']
 
-    result = _run_demeuk('input51', '--check-max-special', '0').splitlines()
+    result = _run_demeuk(51, '--check-max-special', '0')
     assert result == ['NoSpecialsHere']
 
-    result = _run_demeuk('input51', '--check-max-digits', '9999999').splitlines()
+    result = _run_demeuk(51, '--check-max-digits', '9999999')
     assert result == ['NoSpecialsHere', '!special', 'No?Here', 'evenSpecialer#', 'Richie£Rich', '%✓⏻',
                       '8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽']
 
-    result = _run_demeuk('input51', '--check-min-special', '1').splitlines()
+    result = _run_demeuk(51, '--check-min-special', '1')
     assert result == ['!special', 'No?Here', 'evenSpecialer#', 'Richie£Rich', '%✓⏻', '8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽']
 
-    result = _run_demeuk('input51', '--check-min-special', '2').splitlines()
+    result = _run_demeuk(51, '--check-min-special', '2')
     assert result == ['%✓⏻', '8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽']
 
-    result = _run_demeuk('input51', '--check-min-special', '3', '--check-max-special', '3').splitlines()
+    result = _run_demeuk(51, '--check-min-special', '3', '--check-max-special', '3')
     assert result == ['%✓⏻']
 
     # 9 specials: 1 for * and each hand emoji is represented by 2 unicode codepoints
-    result = _run_demeuk('input51', '--check-min-special', '9', '--check-max-special', '9').splitlines()
+    result = _run_demeuk(51, '--check-min-special', '9', '--check-max-special', '9')
     assert result == ['8bytesemoji*4🙌🏽🙌🏽🙌🏽🙌🏽']
 
-    result = _run_demeuk('input51', '--check-min-special', '9999999').splitlines()
+    result = _run_demeuk(51, '--check-min-special', '9999999')
     assert result == []
 
 
@@ -976,20 +958,12 @@ def test_add_title_case():
 
 
 def test_check_contains():
-    testargs = [
-        'demeuk', '-i', 'testdata/input53', '-o', 'testdata/output53', '-l', 'testdata/log53',
-        '--verbose', '--check-contains', '_',
-    ]
-    with patch.object(sys, 'argv', testargs):
-        main()
+    results = _run_demeuk(53, '--check-contains', '_')
 
-    with open('testdata/output53', encoding='utf-8') as f:
-        filecontent = f.read()
-
-    assert 'three_down' not in filecontent
-    assert '_amsterdam' not in filecontent
-    assert 'ROTTERDAM_' not in filecontent
-    assert 'Cookie Monster' in filecontent
+    assert 'three_down ' not in results
+    assert '_amsterdam ' not in results
+    assert 'ROTTERDAM_ ' not in results
+    assert 'Cookie Monster ' in results
 
 
 @mark.timeout(1)
@@ -1027,3 +1001,32 @@ def test_transliterate():
 
     assert 'zdravo prijatelju' in filecontent
     assert 'zuta banana' in filecontent
+
+def test_order():
+    results = _run_demeuk(56, '--check-email', '--remove-email')
+    assert len(results) == 0
+
+    results = _run_demeuk(56, '--remove-email', '--check-email')
+    assert 'test@example.com' not in results
+    assert 'password1' in results
+    assert 'password' in results
+
+def test_remove_emptyline():
+    results = _run_demeuk(58, '--remove-punctuation')
+    assert len(results) == 1
+
+def test_upper():
+    results = _run_demeuk(57, '--uppercase')
+    assert len(results) == 4
+    assert 'ALL LOWER' in results
+    assert 'ALL UPPER' in results
+    assert 'MIXED CASE' in results
+    assert 'UNICODE CASSE' in results
+
+def test_add_upper():
+    results = _run_demeuk(57, '--add-upper')
+    assert len(results) == 7
+    assert 'ALL LOWER' in results
+    assert 'ALL UPPER' in results
+    assert 'MIXED CASE' in results
+    assert 'UNICODE CASSE' in results

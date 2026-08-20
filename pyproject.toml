@@ -1,0 +1,103 @@
+[project]
+name = "demeuk"
+dynamic = ["version"]
+description = "A command-line tool to clean up corpora."
+authors = [
+    {name = "Netherlands Forensic Institute"},
+]
+dependencies = [
+    "multiprocess>=0.70.19",
+    "tqdm>=4.67.3",
+    "ftfy>=6.3.1",
+    "nltk>=3.9.4",
+    "chardet>=7.4.3",
+    "transliterate>=1.10.2",
+    "unidecode>=1.4.0",
+]
+requires-python = ">=3.12"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+
+[project.scripts]
+demeuk = "demeuk.demeuk:cli_entry_point"
+
+[project.optional-dependencies]
+test = [
+    "coverage>=7.13.5",
+    "pytest>=9.0.3",
+    "tox>=4.53.0",
+    "pytest-timeout>=2.4.0",
+]
+check = [
+    "ruff>=0.15.11",
+    "mdformat>=1.0.0",
+]
+[tool.pdm]
+distribution = true
+
+[tool.pdm.version]
+source = "file"
+path = "src/demeuk/demeuk.py"
+pattern = "version = '([^']+)'"
+
+[tool.pdm.build]
+package-dir = "src"
+
+[tool.pdm.scripts]
+all = {composite = [
+    "check",
+    "test"
+]}
+check = {composite = [
+    "pdm lock --check",
+    "ruff check src/demeuk/ tests/",
+    "mdformat --check README.md",
+]}
+fix = {composite = [
+    "ruff check --fix src/demeuk/ tests/",
+    "mdformat README.md",
+]}
+test = {composite = [
+    "tox",
+    "coverage run --branch --module pytest -s --junit-xml pytest.xml tests/",
+    "coverage xml",
+]}
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "single"
+exclude = ["tests/*.py"]
+
+[tool.ruff.lint]
+select = [
+    "E", # Errors
+    "F", # Pyflakes rules
+    "I", # Imports
+    "Q", # Quotes
+    "RUF100", # Unused noqa
+    "RUF101", # redirected noqa
+    "TD", # Check for todo comments
+    "UP" # pyupgrade
+]
+ignore = [
+    "F403", "F405", # from module import *
+    "UP012", # explicitly encode tests as utf-8
+    "UP022", # use pipe in test to simulate unix pipe
+]
+flake8-quotes.inline-quotes = "single"
+isort.lines-after-imports = 2
+
+[tool.mdformat]
+end_of_line = "lf"
+wrap = 120
+
+[tool.pytest.ini_options]
+markers = [
+    "timeout: maximum runtime for a test",
+]
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
