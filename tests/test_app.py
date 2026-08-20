@@ -1,5 +1,6 @@
 import sys
 from subprocess import PIPE, run
+from os import name, linesep
 from unittest.mock import patch
 
 from pytest import mark, raises
@@ -60,7 +61,7 @@ def test_newline():
 
     assert line_num_output1 == 8
     assert line_num_input1 == line_num_output1
-    with open('testdata/output3') as file:
+    with open('testdata/output3', encoding='utf-8') as file:
         filecontent = file.read()
         for x in range(7):
             assert f'line{x}\n' in filecontent
@@ -73,7 +74,7 @@ def test_tabchar():
 
     line_num_output1 = calculate_line_numbers('testdata/output4')
     assert line_num_output1 == 2
-    with open('testdata/output4') as file:
+    with open('testdata/output4', encoding='utf-8') as file:
         filecontent = file.read()
         assert 'line:entry\n' in filecontent
         assert 'line2:entry2\n' in filecontent
@@ -85,7 +86,7 @@ def test_split_email():
         main()
     line_num_output = calculate_line_numbers('testdata/output5')
     assert line_num_output == 6
-    with open('testdata/output5') as file:
+    with open('testdata/output5', encoding='utf-8') as file:
         filecontent = file.read()
         assert 'line1\n' in filecontent
         assert 'email@example.com' not in filecontent
@@ -101,7 +102,7 @@ def test_googlengram():
         main()
     line_num_output = calculate_line_numbers('testdata/output6')
     assert line_num_output == 4
-    with open('testdata/output6') as f:
+    with open('testdata/output6', encoding='utf-8') as f:
         filecontent = f.read()
         assert "I'ain\n" in filecontent
         assert "I'Afrique occidental\n" in filecontent
@@ -116,7 +117,7 @@ def test_coupe():
 
     line_num_output = calculate_line_numbers('testdata/output7')
     assert line_num_output == 2
-    with open('testdata/output7') as f:
+    with open('testdata/output7', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'coupÉ' in filecontent
         assert 'LANCIA AURELIA B20 COUPÉ GT\n' in filecontent
@@ -129,7 +130,7 @@ def test_split():
 
     line_num_output = calculate_line_numbers('testdata/output8')
     assert line_num_output == 4
-    with open('testdata/output8') as f:
+    with open('testdata/output8', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'example.com' not in filecontent
         assert 'sub.example.com' not in filecontent
@@ -151,7 +152,7 @@ def test_input_encoding():
         main()
     line_num_output = calculate_line_numbers('testdata/output9')
     assert line_num_output == 2
-    with open('testdata/output9') as f:
+    with open('testdata/output9', encoding='utf-8') as f:
         filecontent = f.read()
         assert '16THEBEST!!!\n' in filecontent
         assert '!!!ееместной%%@!\n' in filecontent
@@ -169,7 +170,7 @@ def test_delimiter():
         main()
     line_num_output = calculate_line_numbers('testdata/output10')
     assert line_num_output == 1
-    with open('testdata/output10') as f:
+    with open('testdata/output10', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'cĳfer\n' in filecontent
         assert '3M\n' not in filecontent
@@ -188,7 +189,7 @@ def test_language_processing():
         main()
     line_num_output = calculate_line_numbers('testdata/output11')
     assert line_num_output == 21
-    with open('testdata/output11') as f:
+    with open('testdata/output11', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'cĳfer\n' in filecontent
         assert 'cijfer\n' in filecontent
@@ -212,10 +213,10 @@ def test_fries():
                 '-l', 'testdata/log12', '--encode', '--check-controlchar']
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/log12') as f:
+    with open('testdata/log12', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'West-Frysl' in filecontent
-    with open('testdata/output12') as f:
+    with open('testdata/output12', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'West-Frysl‰n' not in filecontent
 
@@ -227,7 +228,7 @@ def test_cut_fields():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output13') as f:
+    with open('testdata/output13', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'field5:field6:field7\n' in filecontent
         assert 'field4' not in filecontent
@@ -240,7 +241,7 @@ def test_cut_fields_single():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output14') as f:
+    with open('testdata/output14', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'field5\n' in filecontent
         assert 'field4' not in filecontent
@@ -253,7 +254,7 @@ def test_unhex():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output15') as f:
+    with open('testdata/output15', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'PEÑAROL\n' in filecontent
         assert 'Zsófi2000\n' in filecontent
@@ -268,7 +269,7 @@ def test_unhtml():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output16') as f:
+    with open('testdata/output16', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'İSMAİL\n' in filecontent
         assert 'İSTANBUL\n' in filecontent
@@ -284,7 +285,7 @@ def test_unhtml_named():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output17') as f:
+    with open('testdata/output17', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'İSMAİL\n' in filecontent
         assert 'İSTANBUL\n' in filecontent
@@ -300,7 +301,7 @@ def test_verbose():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/log18') as f:
+    with open('testdata/log18', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'CutModule:' in filecontent
 
@@ -325,7 +326,7 @@ def test_clean_add_umlaut():
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open('testdata/output20') as f:
+    with open('testdata/output20', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'Eselsbrücke' in filecontent
         assert 'Fremdschämen' in filecontent
@@ -339,7 +340,7 @@ def test_clean_add_umlaut():
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open('testdata/output20.2') as f:
+    with open('testdata/output20.2', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'Eselsbrücke' in filecontent
         assert 'Fremdschämen' in filecontent
@@ -355,7 +356,7 @@ def test_multiple_delimiters():
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open('testdata/output21') as f:
+    with open('testdata/output21', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'password\n' in filecontent
         assert 'password2\n' in filecontent
@@ -371,7 +372,7 @@ def test_check_email():
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open('testdata/output22') as f:
+    with open('testdata/output22', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'line1' in filecontent
         assert 'line2' not in filecontent
@@ -387,7 +388,7 @@ def test_check_hash():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output23') as f:
+    with open('testdata/output23', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'baabe00a81fc405af4ab9b0f99615498' not in filecontent
         assert '$h$7/uhfibmxg83yq6y1rh5y9wjee13kh.' not in filecontent
@@ -410,7 +411,7 @@ def test_check_bug_comma_d():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output24') as f:
+    with open('testdata/output24', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'line1' not in filecontent
         assert 'angus' in filecontent
@@ -425,7 +426,7 @@ def test_check_non_ascii():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output25') as f:
+    with open('testdata/output25', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'laténight' not in filecontent
         assert 'thestrokes' in filecontent
@@ -438,7 +439,7 @@ def test_clean_non_ascii():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output26') as f:
+    with open('testdata/output26', encoding='utf-8') as f:
         filecontent = f.read()
 
         assert 'polopaç' not in filecontent
@@ -454,7 +455,7 @@ def test_remove_punctuation():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output27') as f:
+    with open('testdata/output27', encoding='utf-8') as f:
         filecontent = f.read()
 
         assert 'ripitup' in filecontent
@@ -468,7 +469,7 @@ def test_remove_different_punctuation():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output28') as f:
+    with open('testdata/output28', encoding='utf-8') as f:
         filecontent = f.read()
 
         assert 'standbyme' in filecontent
@@ -482,7 +483,7 @@ def test_add_without_punctuation():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output29') as f:
+    with open('testdata/output29', encoding='utf-8') as f:
         filecontent = f.read()
 
         assert 'stand_by_me' in filecontent
@@ -508,7 +509,7 @@ def test_bug_html_control():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output31') as f:
+    with open('testdata/output31', encoding='utf-8') as f:
         filecontent = f.read()
         assert '\x0c\x0c' not in filecontent
 
@@ -520,7 +521,7 @@ def test_bug_dollar_line():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output32') as f:
+    with open('testdata/output32', encoding='utf-8') as f:
         filecontent = f.read()
         assert '$1$2$3$4' in filecontent
         assert '$1$money$1$' in filecontent
@@ -536,7 +537,7 @@ def test_check_replacement_character():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output33') as f:
+    with open('testdata/output33', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'invalidstring�' not in filecontent
         assert 'jungejunge' in filecontent
@@ -549,7 +550,7 @@ def test_email_detection():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output34') as f:
+    with open('testdata/output34', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'bar@example.com' not in filecontent
         assert 'foo@example.com' not in filecontent
@@ -567,7 +568,7 @@ def test_newline_replacement():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output35') as f:
+    with open('testdata/output35', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'Avocado\n' in filecontent
         assert '\nBanana\\r\\n\n' in filecontent
@@ -588,7 +589,7 @@ def test_trim():
     ]
     with patch.object(sys, 'argv', testargs):
         main()
-    with open('testdata/output36') as f:
+    with open('testdata/output36', encoding='utf-8') as f:
         filecontent = f.read()
         assert 'angleball\n' in filecontent
         assert '\nbadminton\n' in filecontent
@@ -630,7 +631,7 @@ def test_skip():
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open('testdata/output38') as f:
+    with open('testdata/output38', encoding='utf-8') as f:
         filecontent = f.read()
 
     assert '112345678' not in filecontent
@@ -644,7 +645,7 @@ def test_check_starting_with():
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open('testdata/output39') as f:
+    with open('testdata/output39', encoding='utf-8') as f:
         filecontent = f.read()
 
     assert 'firstlovesong' not in filecontent
@@ -661,7 +662,7 @@ def test_check_empty_line():
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open('testdata/output40') as f:
+    with open('testdata/output40', encoding='utf-8') as f:
         filecontent = f.read()
 
     assert '\n\n' not in filecontent
@@ -675,7 +676,7 @@ def test_check_mac_address():
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open('testdata/output41') as f:
+    with open('testdata/output41', encoding='utf-8') as f:
         filecontent = f.read()
 
     assert '2C:C5:D3:70:78:2c' not in filecontent
@@ -690,7 +691,7 @@ def test_check_uuid():
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open('testdata/output42') as f:
+    with open('testdata/output42', encoding='utf-8') as f:
         filecontent = f.read()
 
     assert 'd4662e44-00f1-4ef6-857e-76e3c61604cd' not in filecontent
@@ -706,7 +707,7 @@ def test_check_ending_with():
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open('testdata/output43') as f:
+    with open('testdata/output43', encoding='utf-8') as f:
         filecontent = f.read()
 
     assert 'test.jpg' not in filecontent
@@ -727,7 +728,7 @@ def test_leak_full():
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open('testdata/output45') as f:
+    with open('testdata/output45', encoding='utf-8') as f:
         filecontent = f.read()
 
     # Test for mojibake
@@ -764,7 +765,7 @@ def test_check_regex():
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open('testdata/output46') as f:
+    with open('testdata/output46', encoding='utf-8') as f:
         filecontent = f.read()
 
     assert 'abc' in filecontent
@@ -784,7 +785,7 @@ def test_check_multiple_regexes():
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open('testdata/output47') as f:
+    with open('testdata/output47', encoding='utf-8') as f:
         filecontent = f.read()
 
     assert 'alpha\n' not in filecontent
@@ -794,11 +795,18 @@ def test_check_multiple_regexes():
 
 def test_stdin_stdout():
     comlist = ['demeuk']
-    script = b'input\nlines\n'
+    # On Windows scripts cant be executed with the shebang so manually add python3 in front
+    if name == 'nt':
+        comlist.insert(0, 'python3')
+    script = f'input{linesep}lines{linesep}'.encode()
     res = run(comlist, input=script,
               stdout=PIPE, stderr=PIPE)
     assert res.returncode == 0
-    assert res.stdout == b'input\nlines\n'
+    if name == 'nt':
+        # On Windows when stdout is used, there is a trailing \r in new lines, but this does not effect terminal output
+        assert res.stdout == b'input\r\r\nlines\r\r\n'
+    else:
+        assert res.stdout == script
     assert res.stderr == b''
 
 
@@ -810,7 +818,7 @@ def test_check_lowercase():
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open('testdata/output48') as f:
+    with open('testdata/output48', encoding='utf-8') as f:
         filecontent = f.read()
 
     assert '3 doors down' in filecontent
@@ -827,7 +835,7 @@ def _run_demeuk(test_num, *extra_args):
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open(f'testdata/output{test_num}') as f:
+    with open(f'testdata/output{test_num}', encoding='utf-8') as f:
         results = [line.rstrip('\n') for line in f.readlines()]
 
     return results
@@ -915,7 +923,7 @@ def test_add_first_upper():
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open('testdata/output52') as f:
+    with open('testdata/output52', encoding='utf-8') as f:
         filecontent = f.read()
 
     assert 'three doors down' in filecontent
@@ -936,7 +944,7 @@ def test_add_title_case():
     with patch.object(sys, 'argv', testargs):
         main()
 
-    with open('testdata/output52') as f:
+    with open('testdata/output52', encoding='utf-8') as f:
         filecontent = f.read()
 
     assert 'three doors down' in filecontent
@@ -1006,3 +1014,19 @@ def test_order():
 def test_remove_emptyline():
     results = _run_demeuk(58, '--remove-punctuation')
     assert len(results) == 1
+
+def test_upper():
+    results = _run_demeuk(57, '--uppercase')
+    assert len(results) == 4
+    assert 'ALL LOWER' in results
+    assert 'ALL UPPER' in results
+    assert 'MIXED CASE' in results
+    assert 'UNICODE CASSE' in results
+
+def test_add_upper():
+    results = _run_demeuk(57, '--add-upper')
+    assert len(results) == 7
+    assert 'ALL LOWER' in results
+    assert 'ALL UPPER' in results
+    assert 'MIXED CASE' in results
+    assert 'UNICODE CASSE' in results

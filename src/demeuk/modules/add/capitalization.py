@@ -36,3 +36,14 @@ class TitleCaseModule(AddModule):
     def run(self, line):
         add_line = line.title()
         return self.get_result(line, add_line)
+
+class UpperAddModule(AddModule):
+    @staticmethod
+    def get_help_info():
+        return HelpInfo(
+            option='add-upper',
+            help_str='Add a variant of the line which is all uppercased')
+
+    def run(self, line):
+        add_line = line.upper()
+        return self.get_result(line, add_line)

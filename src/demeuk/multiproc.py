@@ -8,7 +8,10 @@ Utility functions for multiprocessing and chunking input files
 """
 
 def init_worker():
-    signal(SIGINT, SIG_IGN)
+    try:
+        signal(SIGINT, SIG_IGN)
+    except ValueError:
+        pass  # signal() only works in the main thread; ThreadPool workers are threads
 
 def chunkify(file, cfg):
     """

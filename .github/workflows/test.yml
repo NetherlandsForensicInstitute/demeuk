@@ -9,32 +9,30 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.12", "3.13", "3.14"]
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python
       uses: pdm-project/setup-pdm@v4
-      with:
-        python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
+        set +x
         python -m pip install --upgrade pip
         pdm install -G test
     - name: Run tests
       run: |
-        tox
+        pdm run test
   publish:
     runs-on: ubuntu-latest
     needs: test
+    # Only publish on master
+    if: github.ref == 'refs/heads/master'
     permissions:
       id-token: write
     steps:
       - uses: actions/checkout@v3
       - name: Set up PDM
         uses: pdm-project/setup-pdm@v4
-      - name: Install dependencies
+      - name: Publish wheel
         env:
           PDM_PUBLISH_USERNAME: __token__
           PDM_PUBLISH_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
