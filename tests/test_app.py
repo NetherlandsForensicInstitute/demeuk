@@ -1011,6 +1011,10 @@ def test_order():
     assert 'password1' in results
     assert 'password' in results
 
+def test_remove_emptyline():
+    results = _run_demeuk(58, '--remove-punctuation')
+    assert len(results) == 1
+
 def test_upper():
     results = _run_demeuk(57, '--uppercase')
     assert len(results) == 4

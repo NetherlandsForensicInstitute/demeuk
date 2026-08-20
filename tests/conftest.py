@@ -412,3 +412,8 @@ with open('testdata/input57', 'w') as file:
     file.write(f'ALL UPPER{linesep}')
     file.write(f'MixeD cAsE{linesep}')
     file.write(f'unicode caße{linesep}')
+
+with open('testdata/input58', 'w') as file:
+    file.write(f'line{linesep}')
+    file.write(f'.{linesep}')
+    file.write(f'+{linesep}')
