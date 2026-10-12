@@ -5,7 +5,7 @@ from unittest.mock import patch
 from pytest import mark, raises
 
 from demeuk.demeuk import cli_entry_point as main
-from demeuk.demeuk import run_cli
+from demeuk.demeuk import demeuk_files_single_threaded, run_cli
 
 
 def calculate_line_numbers(file_name):
@@ -1002,3 +1002,22 @@ def test_order():
     assert 'test@example.com' not in results
     assert 'password1' in results
     assert 'password' in results
+
+def test_single_thread_chunks():
+    def mock_demeuk_single_threaded(pipeline, input, cfg):
+        cfg.chunk_size = 18  # Chunk size is in bytes
+        return demeuk_files_single_threaded(pipeline, input, cfg)
+
+    testargs = [
+        'demeuk', '-i', 'testdata/input19', '-o', 'testdata/output19b', '-l', 'testdata/log19b',
+        '-j', '1'
+    ]
+
+    with patch.object(sys, 'argv', testargs):
+        with patch('demeuk.demeuk.demeuk_files_single_threaded', side_effect=mock_demeuk_single_threaded):
+            main()
+
+    with open('testdata/output19b') as f:
+        results = [line.rstrip('\n') for line in f.readlines()]
+
+    assert len(results) == 10
