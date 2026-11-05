@@ -35,17 +35,37 @@ source <virtual environment name>/bin/activate
 pip3 install -r requirements.txt
 ```
 
-Now you can run bin/demeuk.py:
+Now you can run Demeuk from bin/demeuk.py. Examples:
+```
+python3 bin/demeuk.py --version
+python3 bin/demeuk.py --help
+python3 bin/demeuk.py -i inputfile.tmp -o outputfile.dict -l droppedfile.txt
+python3 bin/demeuk.py -i inputfile -o outputfile -j 24 -l logfile.log
+python3 bin/demeuk.py -i inputfile.tmp -o outputfile.dict -l droppedfile.txt --leak
+python3 bin/demeuk.py -i inputfile -o outputfile -j 24 -l logfile.log --leak-full
+python3 bin/demeuk.py -i inputdir/*.txt -o outputfile.dict -l logfile.log
+python3 bin/demeuk.py -o outputfile.dict -l logfile.log
+```
 
-Examples:
+## Install
+For a systemwide Demeuk do:
+
 ```
-    demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt
-    demeuk -i inputfile -o outputfile -j 24 -l logfile.log
-    demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt --leak
-    demeuk -i inputfile -o outputfile -j 24 -l logfile.log --leak-full
-    demeuk -i inputdir/*.txt -o outputfile.dict -l logfile.log
-    demeuk -o outputfile.dict -l logfile.log
+cd <path>/demeuk/
+python3 -m pip install .
 ```
+
+Check the version:
+```
+demeuk.py -version
+```
+
+Usage:
+```
+demeuk.py --help
+```
+
 
 ## Docs
 The docs are available at: <http://demeuk.rtfd.io/>
+
