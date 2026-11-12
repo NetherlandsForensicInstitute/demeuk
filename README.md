@@ -32,16 +32,23 @@ pipx install demeuk --python /usr/bin/python3.14
 ```
 
 Now you can invoke demeuk directly from the command-line from any directory:
+```
+demeuk --version
+demeuk --help
+demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt
+demeuk -i inputfile -o outputfile -j 24 -l logfile.log
+demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt --leak
+demeuk -i inputfile -o outputfile -j 24 -l logfile.log --leak-full
+demeuk -i inputdir/*.txt -o outputfile.dict -l logfile.log
+demeuk -o outputfile.dict -l logfile.log
+```
 
-Examples:
+Alternatively you can install demeuk in a venv as usual, in which case the `demeuk` command becomes available while the venv is active.
 ```
-    demeuk -i inputfile.tmp -o outputfile.dict -l demeuk.log
-    demeuk -i inputfile -o outputfile -j 24 -l demeuk.log
-    demeuk -i inputfile.tmp -o outputfile.dict -l demeuk.log --leak
-    demeuk -i inputfile -o outputfile -j all -l demeuk.log --leak-full
-    demeuk -i inputdir/*.txt -o outputfile.dict -l demeuk.log
+pip install demeuk
 ```
-Demeuk also works with pipes:
+
+Demeuk follows conventions of other text-processing shell tools: it can take input from stdin, and demeuk outputs its results to stdout, with logs being written to stderr.
 ```
     cat wordlist | demeuk --leak-full --debug > list.out 2> list.log
 ```
@@ -54,8 +61,22 @@ cd demeuk
 pipx install ./ --python /usr/bin/python3.14
 ```
 Now you can run demeuk as in the examples. Note that the shortcut `demeuk` only updates after you
-run `pipx upgrade demeuk`. You can also use PDM, this circumvents this issue although you have to
+run `pipx upgrade demeuk`.
+
+You can install demeuk through PDM with `pdm install -p ./`, this circumvents this issue although you have to
 run demeuk with `pdm run demeuk`.
+
+Check the version:
+```
+demeuk.py -version
+```
+
+Usage:
+```
+demeuk.py --help
+```
+
 
 ## Docs
 The docs are available at: <http://demeuk.rtfd.io/>
+

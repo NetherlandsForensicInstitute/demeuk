@@ -2,7 +2,11 @@ import sys
 from math import ceil
 from os import cpu_count, linesep, path
 
-from multiprocess.pool import Pool
+from os import name as os_name
+if os_name == 'nt':
+    from multiprocess.pool import ThreadPool as Pool
+else:
+    from multiprocess.pool import Pool
 from tqdm import tqdm
 
 from .config import Config
