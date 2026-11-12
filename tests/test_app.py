@@ -139,8 +139,12 @@ def test_split():
 
 
 def test_output_encoding():
+    # Python 3.15 fixes this! opening with encoding=None now defaults to utf-8. So we patch in an expliticly wrong encoding.
     testargs = ['demeuk', '-i', 'testdata/input1', '-o', 'testdata/output1', '--output-encoding', 'C', '--encode']
-    with patch.object(sys, 'argv', testargs):
+    with (
+        patch.object(sys, 'argv', testargs),
+        patch('demeuk.output.getlocale', return_value=('ascii', 'ascii')),
+    ):
         with raises(UnicodeEncodeError):
             main()
 
