@@ -80,3 +80,12 @@ demeuk.py --help
 ## Docs
 The docs are available at: <http://demeuk.rtfd.io/>
 
+To build the documentation locally with PDM:
+
+```
+pdm install -G docs
+pdm run make -C docs html
+```
+
+The generated site is in `docs/_build/html/`. On Windows, run
+`pdm run docs\make.bat html` instead of `make`.
