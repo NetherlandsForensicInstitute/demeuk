@@ -80,6 +80,30 @@ def test_multithread_writes_chunks_and_logs_in_order():
     assert logs.index("----BEGIN---- b'6c696e6530'") < logs.index("----BEGIN---- b'7365636f6e64'")
 
 
+def test_multiple_encoding_steps():
+    testargs = [
+        'demeuk', '-i', 'testdata/input2', '-o', 'testdata/output-multiple-encoding',
+        '-j', '2', '--encode', '--leak',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output-multiple-encoding', encoding='utf-8') as file:
+        assert file.readlines() == [f'line{x}\n' for x in range(8)]
+
+
+def test_multiple_macro_steps():
+    testargs = [
+        'demeuk', '-i', 'testdata/input2', '-o', 'testdata/output-multiple-macros',
+        '-j', '2', '--leak', '--leak-full',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output-multiple-macros', encoding='utf-8') as file:
+        assert file.readlines() == [f'line{x}\n' for x in range(8)]
+
+
 def test_single_threaded_processes_all_chunks():
     testargs = ['demeuk', '-i', 'testdata/input59', '-o', 'testdata/output59', '-j', '1']
     with patch.object(sys, 'argv', testargs):
