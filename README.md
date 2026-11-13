@@ -68,12 +68,12 @@ run demeuk with `pdm run demeuk`.
 
 Check the version:
 ```
-demeuk.py -version
+demeuk -version
 ```
 
 Usage:
 ```
-demeuk.py --help
+demeuk --help
 ```
 
 

@@ -14,7 +14,7 @@ Download a list, like for example RockYou. Then run the following command:
 
 .. code-block:: none
 
-    $ demeuk.py -i <input file> -o <output file> -l <log file> 
+    $ demeuk -i <input file> -o <output file> -l <log file> 
     -c -j 8 --leak --remove-email
 
 So what do all the parameters do? The -i selects the input file. The -o specifies
@@ -43,14 +43,14 @@ decoded using the following example:
 
 .. code-block:: none
 
-    $ cat inputfile | demeuk.py -j all --leak | sort -u
+    $ cat inputfile | demeuk -j all --leak | sort -u
 
 When --input or --output is not specified, demeuk will use stdin and stdout.
 This allows for easy combining with other tools.
 
 .. code-block:: none
 
-    $ demeuk.py -i <input file> -o <output file> -l <log file> -j all --hex --html
+    $ demeuk -i <input file> -o <output file> -l <log file> -j all --hex --html
 
 The '-j all' option allows demeuk to use all CPU cores in the system. --hex will unhex
 hex strings. --html will un-htlm htlm escaped passwords.
@@ -64,7 +64,7 @@ To take the password using demeuk run the following command:
 
 .. code-block:: none
 
-    $ demeuk.py -i <input file> -o <output file> -c -f4
+    $ demeuk -i <input file> -o <output file> -c -f4
 
 The -c option tells demeuk to cut, and -f4 tell demeuk to select the 4-th field.
 
@@ -72,7 +72,7 @@ Have totally no idea and just what a leak to be fully demeaked? Use the followin
 
 .. code-block:: none
 
-    $ demeuk.py -i <input file> -o <output file> -l <log file> -j all --leak-full
+    $ demeuk -i <input file> -o <output file> -l <log file> -j all --leak-full
 
 Standard Options
 ----------------
