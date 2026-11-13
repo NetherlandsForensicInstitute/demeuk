@@ -428,3 +428,6 @@ with open('testdata/input60', 'w', encoding='utf-8') as file:
 with open('testdata/input61', 'w', encoding='utf-8') as file:
     file.write(f'needle{linesep}')
     file.write(f'other{linesep}')
+
+with open('testdata/input62', 'wb') as file:
+    file.write('café'.encode('cp1252') + linesep.encode())

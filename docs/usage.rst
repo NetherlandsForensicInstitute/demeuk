@@ -152,7 +152,7 @@ limit will only apply to the only thread that could be spawned.
 
 n skip
 ~~~~~~
-Skip n lines starting from the start of the file.
+Skip n lines from the start of each input file or stdin.
 
 
 Separating options

@@ -841,6 +841,33 @@ def test_stdin_stdout():
     assert res.stderr == b''
 
 
+def test_stdin_input_encoding():
+    comlist = [
+        'demeuk', '-j', '1', '-o', 'testdata/output62',
+        '--input-encoding', 'cp1252', '--leak-full',
+    ]
+    if name == 'nt':
+        comlist.insert(0, 'python3')
+    with open('testdata/input62', 'rb') as file:
+        res = run(comlist, input=file.read(), stdout=PIPE, stderr=PIPE)
+
+    assert res.returncode == 0, res.stderr
+    with open('testdata/output62', encoding='utf-8') as file:
+        assert file.read() == 'café\n'
+
+
+def test_stdin_skip():
+    comlist = ['demeuk', '-j', '1', '-o', 'testdata/output63', '--skip', '1']
+    if name == 'nt':
+        comlist.insert(0, 'python3')
+    with open('testdata/input2', 'rb') as file:
+        res = run(comlist, input=file.read(), stdout=PIPE, stderr=PIPE)
+
+    assert res.returncode == 0, res.stderr
+    with open('testdata/output63', encoding='utf-8') as file:
+        assert file.readlines() == [f'line{x}\n' for x in range(1, 8)]
+
+
 def test_check_lowercase():
     testargs = [
         'demeuk', '-i', 'testdata/input48', '-o', 'testdata/output48', '-l', 'testdata/log48',

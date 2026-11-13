@@ -99,7 +99,7 @@ Example uses:
         self.parser_groups[ParserGroup.STANDARD].add_argument('-n', '--limit', action='store', type=int,
                                metavar='<n>', help='Limit the number of lines per thread.')
         self.parser_groups[ParserGroup.STANDARD].add_argument('-s', '--skip', action='store', type=int,
-                               metavar='<n>', help='Skip <int> amount of lines per thread.')
+                               metavar='<n>', help='Skip <n> lines at the start of each input file or stdin.')
         self.parser_groups[ParserGroup.STANDARD].add_argument('--version', action='version',
                                                     version=f'%(prog)s {version}', help='Prints the version of demeuk.')
         self.parser_groups[ParserGroup.STANDARD].add_argument('-h', '--help', action='help',

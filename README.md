@@ -48,23 +48,19 @@ Alternatively you can install demeuk in a venv as usual, in which case the `deme
 pip install demeuk
 ```
 
-Demeuk follows conventions of other text-processing shell tools: it can take input from stdin, and demeuk outputs its results to stdout, with logs being written to stderr.
+Demeuk follows conventions of other text-processing shell tools: it can take input from stdin, and demeuk outputs its results to stdout, with logs being written to stderr. Note that this can case issue's with encoding. 
 ```
     cat wordlist | demeuk --leak-full --debug > list.out 2> list.log
 ```
 
 ## Development
-To make changes to demeuk, you need to run it from the source Python files.
+To make changes to demeuk, you need to install the source code
+
 ```
 git clone https://github.com/NetherlandsForensicInstitute/demeuk.git
 cd demeuk
-pipx install ./ --python /usr/bin/python3.14
+pdm install -p ./
 ```
-Now you can run demeuk as in the examples. Note that the shortcut `demeuk` only updates after you
-run `pipx upgrade demeuk`.
-
-You can install demeuk through PDM with `pdm install -p ./`, this circumvents this issue although you have to
-run demeuk with `pdm run demeuk`.
 
 Check the version:
 ```

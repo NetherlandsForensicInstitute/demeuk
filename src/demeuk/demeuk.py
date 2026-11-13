@@ -97,14 +97,15 @@ def demeuk_files(pipeline, input_files, cfg):
                          disable=not cfg.progress,
                          position=0):
             total_chunks = ceil(path.getsize(file) / cfg.chunk_size)
-            for chunk in tqdm(chunkify(file, cfg),
-                              desc='Chunks processed',
-                              mininterval=0.5,
-                              unit=' chunks',
-                              disable=not cfg.progress,
-                              total=total_chunks,
-                              position=1):
-                submit(pool, jobs, pipeline, chunk, cfg)
+            with open(file, 'rb') as fh:
+                for chunk in tqdm(chunkify(fh, cfg),
+                                  desc='Chunks processed',
+                                  mininterval=0.5,
+                                  unit=' chunks',
+                                  disable=not cfg.progress,
+                                  total=total_chunks,
+                                  position=1):
+                    submit(pool, jobs, pipeline, chunk, cfg)
         cfg.logger.stderr_print('Submitted jobs, waiting for jobs to finish...')
 
         # Wait for jobs to finish
@@ -134,12 +135,8 @@ def demeuk_stdin(pipeline, cfg):
 
         jobs = []
 
-        chunks = sys.stdin.readlines(cfg.chunk_size)
-        while chunks:
-            chunk = [line.rstrip('\n').encode(cfg.input_encodings[0]) for line in chunks]
+        for chunk in chunkify(sys.stdin.buffer, cfg):
             submit(pool, jobs, pipeline, chunk, cfg)
-
-            chunks = sys.stdin.readlines(cfg.chunk_size)
         cfg.logger.stderr_print('Submitted jobs, waiting for jobs to finish...')
 
         # Wait for jobs to finish

@@ -13,21 +13,17 @@ def init_worker():
     except ValueError:
         pass  # signal() only works in the main thread; ThreadPool workers are threads
 
-def chunkify(file, cfg):
+def chunkify(fh, cfg):
     """
-    Split a file into chunks, to pass onto the module pipeline
-    :param file: File to split
+    Split a binary stream into chunks, to pass onto the module pipeline
+    :param fh: Binary stream to split
     :param cfg: Config object, needed for skip and chunk_size.
     """
-    with open(file, 'rb') as fh:
-        for x in range(0, cfg.skip):
-            fh.readline()
+    for x in range(0, cfg.skip):
+        fh.readline()
 
-        while True:
-            lines = [line.rstrip(linesep.encode()) for line in fh.readlines(cfg.chunk_size)]
-            yield lines
-            if len(lines) == 0:
-                break
+    while lines := fh.readlines(cfg.chunk_size):
+        yield [line.rstrip(linesep.encode()) for line in lines]
 
 def check_finished_jobs(jobs, config):
     """
