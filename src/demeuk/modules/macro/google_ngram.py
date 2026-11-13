@@ -10,7 +10,9 @@ from .macro import MacroModule
 class GoogleNgramModule(MacroModule, ConfigModule):
 
     def set_configs(self, config):
-        self.add_config('config', config)
+        encode_module = EncodeModule()
+        encode_module.set_configs(config)
+        self.add_config('encode_module', encode_module)
 
     @staticmethod
     def get_help_info():
@@ -24,11 +26,9 @@ class GoogleNgramModule(MacroModule, ConfigModule):
         return 'cleaned tags'
 
     def get_submodules(self):
-        encode_module = EncodeModule()
-        encode_module.set_configs(self.get_config('config'))
         # Disable certain modules?
         return [
-            encode_module
+            self.get_config('encode_module')
         ]
 
     def run(self, line):
@@ -66,5 +66,4 @@ class GoogleNgramModule(MacroModule, ConfigModule):
             debug_str=results.msg,
             update=results.update,
         )
-
 

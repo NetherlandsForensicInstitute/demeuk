@@ -77,15 +77,16 @@ class Pipeline:
                 self.modules.append(instance)
 
     # This is one worker job, process a list of lines.
-    def run(self, lines, config):
+    def run(self, lines, limit, debug):
         """
         Run a list of lines through the pipeline
         :param lines: The list of lines to demeuk
-        :param config: Config object, used for --limit and its logger
+        :param limit: Maximum number of lines to process per chunk
+        :param debug: Whether to record debug messages
         :return: A dict containing a list of results, and a list of log lines
         """
         results = []
-        logger = config.logger # This is fine, multiprocessing creates a new copy.
+        log = []
 
         # Keep track of already processed lines so that we do not check the same line twice.
         # Set lookups are constant time.
@@ -102,16 +103,17 @@ class Pipeline:
                 continue
             processed_lines.add(line)
 
-            # Process at most config.limit lines (per thread)
+            # Process at most limit lines (per thread)
             # Why is this per thread?
-            if config.limit is not None:
-                if config.limit > 0:
-                    config.limit -= 1
+            if limit is not None:
+                if limit > 0:
+                    limit -= 1
                 else:
                     break
 
 
-            logger.log_debug(f'----BEGIN---- {hexlify(line)}{linesep}')
+            if debug:
+                log.append(f'----BEGIN---- {hexlify(line)}{linesep}')
 
 
 
@@ -130,18 +132,18 @@ class Pipeline:
                                 work_queue.append(word) # for --hex
                             else:
                                 work_queue.append(word.encode())
-                            if actions.debug_add_str is not None:
-                                logger.log_debug(f'{module.__class__.__name__}:\t{actions.debug_add_str}:\t{word}{linesep}')
+                            if debug and actions.debug_add_str is not None:
+                                log.append(f'{module.__class__.__name__}:\t{actions.debug_add_str}:\t{word}{linesep}')
 
                     if actions.update is not None:
                         line = actions.update
 
                     if actions.log_str is not None:
                         # Log a message (always)
-                        logger.log(f'{module.__class__.__name__}:\t{actions.log_str}:\t{line}{linesep}')
-                    if actions.debug_str is not None:
+                        log.append(f'{module.__class__.__name__}:\t{actions.log_str}:\t{line}{linesep}')
+                    if debug and actions.debug_str is not None:
                         # Log a message (with --debug)
-                        logger.log_debug(f'{module.__class__.__name__}:\t{actions.debug_str}:\t{line}{linesep}')
+                        log.append(f'{module.__class__.__name__}:\t{actions.debug_str}:\t{line}{linesep}')
 
                     # Do this last, so that logs are written of stop == True
                     # If stop is set, don't do anything else.
@@ -150,9 +152,9 @@ class Pipeline:
             else:
                 # This gets executed if we do not break out of the for loop
                 results.append(f'{line}{linesep}')
-                logger.log_debug(f'-----END----- {line}{linesep}{linesep}')
+                if debug:
+                    log.append(f'-----END----- {line}{linesep}{linesep}')
 
-        return {'results': results, 'log': logger.get()}
-
+        return {'results': results, 'log': log}
 
 

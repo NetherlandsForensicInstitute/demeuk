@@ -6,12 +6,11 @@ from ..modify import *
 from .macro import MacroModule
 
 
-# NB: Macro module contains config module as submodule. So we pass the config on...
-# Maybe not the best way? or not too bad...
 class LeakModule(MacroModule, ConfigModule):
     def set_configs(self, config):
-        # Store the entire config as config,
-        self.add_config('config', config)
+        encode_module = EncodeModule()
+        encode_module.set_configs(config)
+        self.add_config('encode_module', encode_module)
 
     @staticmethod
     def get_help_info():
@@ -22,11 +21,8 @@ class LeakModule(MacroModule, ConfigModule):
         )
 
     def get_submodules(self):
-        # We need to instantiate this explicitly because we want to pass config.
-        encode_module = EncodeModule()
-        encode_module.set_configs(self.get_config('config'))
         return [
-            encode_module,
+            self.get_config('encode_module'),
             MojibakeModule(),
             ControlCharModule(),
             NewlineModule(),
@@ -34,7 +30,9 @@ class LeakModule(MacroModule, ConfigModule):
 
 class LeakFullModule(MacroModule, ConfigModule):
     def set_configs(self, config):
-        self.add_config('config', config)
+        encode_module = EncodeModule()
+        encode_module.set_configs(config)
+        self.add_config('encode_module', encode_module)
 
     @staticmethod
     def get_help_info():
@@ -46,10 +44,8 @@ class LeakFullModule(MacroModule, ConfigModule):
         )
 
     def get_submodules(self):
-        encode_module = EncodeModule()
-        encode_module.set_configs(self.get_config('config'))
         return [
-            encode_module,
+            self.get_config('encode_module'),
             NewlineModule(),
             MojibakeModule(), ControlCharModule(),
             HexModule(),
@@ -57,6 +53,5 @@ class LeakFullModule(MacroModule, ConfigModule):
             HashModule(), MacAddressModule(), UuidModule(), EmailModule(),
             ReplacementCharModule(), EmptyLineModule()
         ]
-
 
 

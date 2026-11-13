@@ -1,4 +1,5 @@
 from locale import getlocale
+import sys
 from sys import stdout
 
 
@@ -21,13 +22,13 @@ class OutputFileHandler:
                 open(args.output, 'w').close()
                 # Now open it in append mode, this solves a bug where file writes would get dropped unexpectedly
                 self.output_file = open(args.output, 'a', encoding=encoding, newline='') # Now
-                logger.stderr_print(f'Writing output to {args.output}')
+                logger.progress(f'Writing output to {args.output}')
             except PermissionError:
-                logger.stderr_print_always(f'Cannot write output file to {args.output}!')
+                print(f'Cannot write output file to {args.output}!', file=sys.stderr)
                 exit(2)
         else:
             self.output_file = stdout
-            logger.stderr_print('Writing output to stdout')
+            logger.progress('Writing output to stdout')
 
     def write(self, lines):
         """

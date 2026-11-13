@@ -51,27 +51,29 @@ def run_cli(args):
 
     cfg = Config(parser.args)
 
-    # Global config can be done here (in/out file, log etc.)
+    try:
+        pipeline = Pipeline(parser, args, cfg)
 
-    pipeline = Pipeline(parser, args, cfg)
+        cfg.logger.write(f'Running demeuk - {get_version()}{linesep}')
+        cfg.logger.write(f'Running pipeline {[module.__class__.__name__ for module in pipeline.modules]}\n')
 
-    cfg.logger.write(f'Running demeuk - {get_version()}{linesep}')
-    cfg.logger.write(f'Running pipeline {[module.__class__.__name__ for module in pipeline.modules]}\n')
+        cfg.logger.progress(f'Running demeuk - {get_version()}')
+        cfg.logger.progress(f'Using {cfg.threads} out of {cpu_count()} available CPUs')
 
-    cfg.logger.stderr_print(f'Running demeuk - {get_version()}')
-    cfg.logger.stderr_print(f'Using {cfg.threads} out of {cpu_count()} available CPUs')
-
-    if cfg.input_files is not None:
-        if cfg.threads > 1:
-            demeuk_files(pipeline, cfg.input_files, cfg)
+        if cfg.input_files is not None:
+            if cfg.threads > 1:
+                demeuk_files(pipeline, cfg.input_files, cfg)
+            else:
+                demeuk_files_single_threaded(pipeline, cfg.input_files, cfg)
         else:
-            demeuk_files_single_threaded(pipeline, cfg.input_files, cfg)
-    else:
-        demeuk_stdin(pipeline, cfg)
+            demeuk_stdin(pipeline, cfg)
 
-    cfg.logger.stderr_print('Done')
-    cfg.logger.close()
-    cfg.output_fh.close()
+        cfg.logger.progress('Done')
+    finally:
+        try:
+            cfg.logger.close()
+        finally:
+            cfg.output_fh.close()
 
 
 def demeuk_files(pipeline, input_files, cfg):
@@ -86,7 +88,7 @@ def demeuk_files(pipeline, input_files, cfg):
     :type cfg: :class:`Config`
     """
     with Pool(cfg.threads, init_worker) as pool:
-        cfg.logger.stderr_print('Reading input file(s)...')
+        cfg.logger.progress('Reading input file(s)...')
 
         jobs = []
 
@@ -106,19 +108,19 @@ def demeuk_files(pipeline, input_files, cfg):
                                   total=total_chunks,
                                   position=1):
                     submit(pool, jobs, pipeline, chunk, cfg)
-        cfg.logger.stderr_print('Submitted jobs, waiting for jobs to finish...')
+        cfg.logger.progress('Submitted jobs, waiting for jobs to finish...')
 
         # Wait for jobs to finish
         finish_up(jobs, cfg)
 
 # For profiling
 def demeuk_files_single_threaded(pipeline, input_files, cfg):
-    cfg.logger.stderr_print('Reading input file(s)...')
+    cfg.logger.progress('Reading input file(s)...')
     with open(input_files[0], 'rb') as fh:
         lines = [line.rstrip(linesep.encode()) for line in fh.readlines(cfg.chunk_size)]
-    cfg.logger.stderr_print('Submitted jobs, waiting for jobs to finish...')
+    cfg.logger.progress('Submitted jobs, waiting for jobs to finish...')
 
-    res = pipeline.run(lines, cfg)
+    res = pipeline.run(lines, cfg.limit, cfg.debug)
     write_results(cfg.output_fh, cfg.logger, res)
 
 def demeuk_stdin(pipeline, cfg):
@@ -131,13 +133,13 @@ def demeuk_stdin(pipeline, cfg):
     :type cfg: :class:`Config`
     """
     with Pool(cfg.threads, init_worker) as pool:
-        cfg.logger.stderr_print('Reading from stdin...')
+        cfg.logger.progress('Reading from stdin...')
 
         jobs = []
 
         for chunk in chunkify(sys.stdin.buffer, cfg):
             submit(pool, jobs, pipeline, chunk, cfg)
-        cfg.logger.stderr_print('Submitted jobs, waiting for jobs to finish...')
+        cfg.logger.progress('Submitted jobs, waiting for jobs to finish...')
 
         # Wait for jobs to finish
         finish_up(jobs, cfg)

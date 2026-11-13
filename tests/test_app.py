@@ -51,6 +51,35 @@ def test_multithread():
     assert line_num_input1 == line_num_output1
 
 
+def test_multithread_with_captured_stderr(capfd):
+    testargs = [
+        'demeuk', '-i', 'testdata/input2', '-o', 'testdata/output-capture',
+        '-j', '2', '--leak', '--debug',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output-capture', encoding='utf-8') as file:
+        assert file.readlines() == [f'line{x}\n' for x in range(8)]
+
+    assert capfd.readouterr().err.count('----BEGIN----') == 8
+
+
+def test_multithread_writes_chunks_and_logs_in_order():
+    testargs = [
+        'demeuk', '-i', 'testdata/input2', 'testdata/input60', '-o', 'testdata/output-capture-order',
+        '-l', 'testdata/log-capture-order', '-j', '2', '--debug',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output-capture-order', encoding='utf-8') as file:
+        assert file.readlines() == [f'line{x}\n' for x in range(8)] + ['second\n']
+    with open('testdata/log-capture-order', encoding='utf-8') as file:
+        logs = file.read()
+    assert logs.index("----BEGIN---- b'6c696e6530'") < logs.index("----BEGIN---- b'7365636f6e64'")
+
+
 def test_single_threaded_processes_all_chunks():
     testargs = ['demeuk', '-i', 'testdata/input59', '-o', 'testdata/output59', '-j', '1']
     with patch.object(sys, 'argv', testargs):

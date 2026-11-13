@@ -48,7 +48,7 @@ def submit(pool, jobs, pipeline, chunk, config):
         check_finished_jobs(jobs, config)
         running_jobs = sum([not job.ready() for job in jobs])
         if running_jobs < config.threads:
-            jobs.append(pool.apply_async(pipeline.run, (chunk, config)))
+            jobs.append(pool.apply_async(pipeline.run, (chunk, config.limit, config.debug)))
             return
         else:
             # Wait until a thread is available.

@@ -1,3 +1,4 @@
+import sys
 from glob import glob
 from locale import LC_ALL, setlocale
 from os import R_OK, access, cpu_count
@@ -54,17 +55,12 @@ class Config:
 
             for input_file in self.input_files:
                 if not access(input_file, R_OK):
-                    self.logger.stderr_print_always(f'Config: Cannot read input file from {input_file}!')
+                    print(f'Config: Cannot read input file from {input_file}!', file=sys.stderr)
 
 
-        if self.progress:
-            if self.verbose or self.debug:
-                if not self.log_file:
-                    self.logger.stderr_print_always('Config: --progress cannot be used with --verbose or --debug!')
-                    exit(2)
-            if not self.input_files:
-                self.logger.stderr_print_always('Config: --progress cannot be used when using stdin!')
-                exit(2)
+        if self.progress and not self.input_files:
+            print('Config: --progress cannot be used when using stdin!', file=sys.stderr)
+            exit(2)
 
         # Other configurations here, with defaults
         self.threads = int(args.threads) if args.threads else cpu_count()
@@ -95,5 +91,3 @@ class Config:
             self.cut_fields = args.cut_fields
 
         self.cut_before = True if args.cut_before else False
-
-

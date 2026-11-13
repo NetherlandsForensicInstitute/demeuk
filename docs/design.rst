@@ -60,28 +60,19 @@ object which is processed by ``Pipeline.run()``.
 
 Threading
 ---------
-In cause of an input file, the file is 'chunked' by the main processes. It will split
-the input files in chunks. It does so by reading the file per 1 MB. After reading 1 MB
-it will search for the next newline after the 1 MB. It will then read again 1 MB and
-search for the first new line after that. This will continue until the end of the file.
+In multiprocessing mode, the main process reads each input file or stdin as a
+binary stream in chunks of approximately 1 MB, using complete lines. It
+continues until the stream ends.
 
 The size of 1 MB is used to reduce memory load and was found to be a solid number for
 good performance.
 
-When using stdin, the input is not chunked. This is because stdin is a stream and
-thus we can not seek to a specific offset. So the main thread will read the input
-per 1 MB and search for the first newline after that.
-
-Searching for the next newline is done using the python's splitlines()
-function. This means the line will be splitted on: line feed, carriage return,
-LF + CR, formfeeds, file separator, etc. See https://docs.python.org/3/library/stdtypes.html
-for more information.
-
 Next a thread will process the list of lines.
 
-Once all threads are done, the main thread will combine all of the results.
-You should note that the order inside the final output will be completely
-un ordered and thus if you want to have a sorted list you need to sort it yourself.
+Workers return processed lines and log messages for each chunk. The main process
+owns the output and log streams and writes completed chunks in submission order.
+
+The output is not necessarily sorted, so sort it afterwards if needed.
 
 A note on the add modules and threading: Lines are dedicated to different
 threads based on a configured chunk size. When additional lines are added, all

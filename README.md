@@ -72,6 +72,11 @@ Usage:
 demeuk --help
 ```
 
+Running tests
+```
+pdm install -G test
+pdm run test
+```
 
 ## Docs
 The docs are available at: <http://demeuk.rtfd.io/>
