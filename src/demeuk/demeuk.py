@@ -137,7 +137,11 @@ def demeuk_stdin(pipeline, cfg):
 
         jobs = []
 
-        for chunk in chunkify(sys.stdin.buffer, cfg):
+        for chunk in tqdm(chunkify(sys.stdin.buffer, cfg),
+                          desc='Chunks submitted',
+                          mininterval=0.5,
+                          unit=' chunks',
+                          disable=not cfg.progress):
             submit(pool, jobs, pipeline, chunk, cfg)
         cfg.logger.progress('Submitted jobs, waiting for jobs to finish...')
 

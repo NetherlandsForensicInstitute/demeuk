@@ -26,9 +26,11 @@ class Config:
         self.input_files = args.input
         self.output_file = args.output
         self.log_file = args.log
+        if args.input and len(args.input) == 1:
+            self.input_files = glob(args.input[0], recursive=True)
 
         # Verbosity
-        self.progress = args.progress
+        self.progress = args.progress if args.progress is not None else sys.stderr.isatty()
         self.verbose = args.verbose
         self.debug = args.debug
 
@@ -40,27 +42,15 @@ class Config:
         else:
             setlocale(LC_ALL, 'en_US.UTF-8')
 
-        self.logger = Logger(args)
+        self.logger = Logger(args, self.progress)
 
         self.output_fh = OutputFileHandler(args, self.logger)
 
         # Check if we can read input file
         if args.input:
-            # args.input is a list (nargs *)
-            if len(args.input) > 1:
-                # Pass multiple files through command-line
-                self.input_files = args.input
-            else:
-                self.input_files = glob(args.input[0], recursive=True)
-
             for input_file in self.input_files:
                 if not access(input_file, R_OK):
                     print(f'Config: Cannot read input file from {input_file}!', file=sys.stderr)
-
-
-        if self.progress and not self.input_files:
-            print('Config: --progress cannot be used when using stdin!', file=sys.stderr)
-            exit(2)
 
         # Other configurations here, with defaults
         self.threads = int(args.threads) if args.threads else cpu_count()

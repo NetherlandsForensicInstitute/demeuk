@@ -136,11 +136,10 @@ the performance of demeuk significantly. Also this will create a large log file.
 
 progress
 ~~~~~~~~
-Use the progress option to enable the progressbar. The progressbar will be displayed for
-both the chunkify process as well as the demeuking process.
-
-Progress can only be used when the input is a file. It can not be used when the input is
-stdin.
+Progress is shown automatically when stderr is a terminal. Use ``--progress``
+to show it when stderr is redirected, or ``--no-progress`` to disable it.
+For stdin, the counter shows chunks submitted to workers; the total input size
+is unknown.
 
 n limit
 ~~~~~~~

@@ -7,10 +7,10 @@ from tqdm import tqdm
 class Logger:
     """Write progress and ordered worker logs in the parent process."""
 
-    def __init__(self, args):
+    def __init__(self, args, show_progress):
         self.verbose = args.verbose
         self.debug = args.debug
-        self.show_progress = args.progress
+        self.show_progress = show_progress
         self.log_file = None
 
         if args.log:
