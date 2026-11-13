@@ -7,6 +7,6 @@ build:
   jobs:
     post_install:
       - '"$READTHEDOCS_VIRTUALENV_PATH/bin/python" -m pip install "pdm==2.29.7"'
-      - PDM_PYTHON="$READTHEDOCS_VIRTUALENV_PATH/bin/python" "$READTHEDOCS_VIRTUALENV_PATH/bin/pdm" sync --prod -G docs
+      - PDM_PYTHON="$READTHEDOCS_VIRTUALENV_PATH/bin/python" "$READTHEDOCS_VIRTUALENV_PATH/bin/pdm" sync -G docs
 sphinx:
   configuration: docs/conf.py

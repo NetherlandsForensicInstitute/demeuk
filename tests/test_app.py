@@ -51,6 +51,37 @@ def test_multithread():
     assert line_num_input1 == line_num_output1
 
 
+def test_single_threaded_processes_all_chunks():
+    testargs = ['demeuk', '-i', 'testdata/input59', '-o', 'testdata/output59', '-j', '1']
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    assert calculate_line_numbers('testdata/output59') == 200000
+    with open('testdata/output59', encoding='utf-8') as file:
+        assert file.readlines()[-1] == 'line-199999\n'
+
+
+def test_single_threaded_processes_all_input_files():
+    testargs = ['demeuk', '-i', 'testdata/input2', 'testdata/input60', '-o', 'testdata/output60', '-j', '1']
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output60', encoding='utf-8') as file:
+        assert file.readlines() == [f'line{x}\n' for x in range(8)] + ['second\n']
+
+
+def test_check_contains_with_equals_argument():
+    testargs = [
+        'demeuk', '-i', 'testdata/input61', '-o', 'testdata/output61', '-j', '1',
+        '--check-contains=needle',
+    ]
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    with open('testdata/output61', encoding='utf-8') as file:
+        assert file.readlines() == ['other\n']
+
+
 def test_newline():
     testargs = ['demeuk', '-i', 'testdata/input3', '-o', 'testdata/output3']
     with patch.object(sys, 'argv', testargs):

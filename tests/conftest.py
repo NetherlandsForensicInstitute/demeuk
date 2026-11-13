@@ -417,3 +417,14 @@ with open('testdata/input58', 'w') as file:
     file.write(f'line{linesep}')
     file.write(f'.{linesep}')
     file.write(f'+{linesep}')
+
+with open('testdata/input59', 'w', encoding='utf-8') as file:
+    for x in range(200_000):
+        file.write(f'line-{x}{linesep}')
+
+with open('testdata/input60', 'w', encoding='utf-8') as file:
+    file.write(f'second{linesep}')
+
+with open('testdata/input61', 'w', encoding='utf-8') as file:
+    file.write(f'needle{linesep}')
+    file.write(f'other{linesep}')
