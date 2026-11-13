@@ -35,9 +35,8 @@ def discover_modules():
         for file in [path/file for file in files]:
             # This way file is a Path object instead of a string.
             if file.suffix == '.py' and file.stem != '__init__':
-                module_name = str(file.relative_to(modules_dir))
-                # Turn modify/hex.py into .modify.hex
-                module_name = '.' + module_name.replace('/', '.').replace('.py', '')
+                relative_path = file.relative_to(modules_dir).with_suffix('')
+                module_name = '.' + '.'.join(relative_path.parts)
                 # Get all python objects in the file
                 members = inspect.getmembers(importlib.import_module(module_name, 'demeuk.modules'))
                 for name, obj in members:
