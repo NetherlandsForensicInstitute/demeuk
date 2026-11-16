@@ -8,7 +8,9 @@ class Logger:
     """Write progress and ordered worker logs in the parent process."""
 
     def __init__(self, args, show_progress):
+        # Verbose messages are info messages on program execution.
         self.verbose = args.verbose
+        # Debug messages are more detailed, and log information about the pipeline run.
         self.debug = args.debug
         self.show_progress = show_progress
         self.log_file = None
@@ -23,6 +25,7 @@ class Logger:
             self.progress('Logger: writing log to stderr')
 
     def progress(self, message):
+        # A wrapper function to write a log message, so that it does not interfere with tqdm's progress bars.
         if self.verbose:
             if self.show_progress:
                 tqdm.write(message, file=sys.stderr)

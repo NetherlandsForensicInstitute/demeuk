@@ -1,6 +1,7 @@
 from binascii import hexlify
 from collections import deque
 from os import linesep
+from sys import stderr
 
 from .modules.base import *
 from .modules.macro.macro import MacroModule
@@ -58,7 +59,7 @@ class Pipeline:
                             instance = module(current_value)
                             self.include_module(instance)
                         else:
-                            print(f"Cannot parse '{current_arg}={current_value}', {current_arg} does not take a parameter!")
+                            print(f"Cannot parse '{current_arg}={current_value}', {current_arg} does not take a parameter!", file=stderr)
 
 
 
@@ -83,7 +84,7 @@ class Pipeline:
                 self.encoding_slot += 1
             case PipelinePosition.ENCODE:
                 if self.has_encoding is True:
-                    print(f'Cannot include module {instance} in pipeline, an encode module is already present!')
+                    print(f'Cannot include module {instance} in pipeline, an encode module is already present!', file=stderr)
                     return
                 self.modules.insert(self.encoding_slot, instance)
                 self.has_encoding = True
@@ -171,5 +172,3 @@ class Pipeline:
                     log.append(f'-----END----- {line}{linesep}{linesep}')
 
         return {'results': results, 'log': log}
-
-
