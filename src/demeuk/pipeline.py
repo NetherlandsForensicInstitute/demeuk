@@ -25,6 +25,7 @@ class Pipeline:
         self.modules = []
 
 
+
         # Build pipeline
         for i in range(1, len(argv)):
             current_arg = argv[i]
@@ -45,9 +46,20 @@ class Pipeline:
                 if issubclass(module, MacroModule):
                     for subinstance in instance.get_submodules():
                         self.include_module(subinstance)
-
-
                 self.include_module(instance)
+            else:
+                # If argv[i] not in lookup_table, it could be of type --arg=value.
+                if '=' in current_arg:
+                    current_arg, current_value = current_arg.split('=', maxsplit=1)
+                    # This is only allowed for parameterized modules
+                    if current_arg in parser.lookup_table:
+                        module = parser.lookup_table[current_arg]
+                        if issubclass(module, ParamModule):
+                            instance = module(current_value)
+                            self.include_module(instance)
+                        else:
+                            print(f"Cannot parse '{current_arg}={current_value}', {current_arg} does not take a parameter!")
+
 
 
         # --encode not used
