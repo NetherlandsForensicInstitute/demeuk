@@ -70,6 +70,9 @@ class Pipeline:
                 # Bump up encoding slot. Also makes sure BEFORE_ENCODE modules are placed in order.
                 self.encoding_slot += 1
             case PipelinePosition.ENCODE:
+                if self.has_encoding is True:
+                    print(f'Cannot include module {instance} in pipeline, an encode module is already present!')
+                    return
                 self.modules.insert(self.encoding_slot, instance)
                 self.has_encoding = True
                 # don't need to keep track of encoding_slot if inserted.
