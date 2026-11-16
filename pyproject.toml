@@ -64,7 +64,7 @@ fix = {composite = [
 test = {composite = [
     "tox",
     "coverage run --branch --module pytest --junit-xml pytest.xml tests/",
-    "coverage xml",
+    "coverage report --fail-under=75",
 ]}
 
 [tool.ruff]
