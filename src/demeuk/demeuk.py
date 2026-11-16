@@ -60,13 +60,17 @@ def run_cli(args):
         cfg.logger.progress(f'Running demeuk - {get_version()}')
         cfg.logger.progress(f'Using {cfg.threads} out of {cpu_count()} available CPUs')
 
-        if cfg.input_files is not None:
-            if cfg.threads > 1:
+        if cfg.profile:
+            # Run demeuk without any chunking or multiprocessing. Useful to profile running time per module.
+            if cfg.input_files is not None:
+                demeuk_files_single_threaded(pipeline, cfg.input_files, cfg)
+            else:
+                print('Cannot use --profile when reading content from stdin!', file=sys.stderr)
+        else:
+            if cfg.input_files is not None:
                 demeuk_files(pipeline, cfg.input_files, cfg)
             else:
-                demeuk_files_single_threaded(pipeline, cfg.input_files, cfg)
-        else:
-            demeuk_stdin(pipeline, cfg)
+                demeuk_stdin(pipeline, cfg)
 
         cfg.logger.progress('Done')
     finally:

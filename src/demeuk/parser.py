@@ -94,6 +94,8 @@ Example uses:
         self.parser_groups[ParserGroup.STANDARD].add_argument('--debug', action='store_true',
                                help='When set, the logfile will not only contain lines which caused '
                                     'an error, but also line which were modified.')
+        self.parser_groups[ParserGroup.STANDARD].add_argument('--profile', action='store_true',
+            help='Run demeuk in profiling mode, this disables all threading')
         progress = self.parser_groups[ParserGroup.STANDARD].add_mutually_exclusive_group()
         progress.add_argument('--progress', action='store_true', default=None,
                               help='Show progress, even when stderr is not a terminal.')

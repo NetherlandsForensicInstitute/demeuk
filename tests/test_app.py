@@ -113,6 +113,15 @@ def test_single_threaded_processes_all_chunks():
     with open('testdata/output59', encoding='utf-8') as file:
         assert file.readlines()[-1] == 'line-199999\n'
 
+def test_profile_mode_processes_all_chunks():
+    testargs = ['demeuk', '-i', 'testdata/input59', '-o', 'testdata/output59', '--profile']
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    assert calculate_line_numbers('testdata/output59') == 200000
+    with open('testdata/output59', encoding='utf-8') as file:
+        assert file.readlines()[-1] == 'line-199999\n'
+
 
 def test_single_threaded_processes_all_input_files():
     testargs = ['demeuk', '-i', 'testdata/input2', 'testdata/input60', '-o', 'testdata/output60', '-j', '1']

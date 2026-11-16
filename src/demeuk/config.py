@@ -34,6 +34,9 @@ class Config:
         self.verbose = args.verbose
         self.debug = args.debug
 
+        # Profiling flag - if set, run single-threaded
+        self.profile = args.profile
+
         # Encodings (set these before logger, as logger opens output files)
         self.input_encodings = args.input_encoding.split(',') if args.input_encoding else ['UTF-8']
 
