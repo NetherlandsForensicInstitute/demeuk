@@ -1,5 +1,5 @@
-from locale import getlocale
 import sys
+from locale import getlocale
 from sys import stdout
 
 

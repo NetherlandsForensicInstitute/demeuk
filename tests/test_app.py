@@ -1,6 +1,6 @@
 import sys
+from os import linesep, name
 from subprocess import PIPE, run
-from os import name, linesep
 from unittest.mock import patch
 
 from pytest import mark, raises
