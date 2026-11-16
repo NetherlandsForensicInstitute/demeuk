@@ -29,5 +29,5 @@ class MojibakeModule(ModifyModule):
             cleaned_line = fix_encoding(line)
             return self.get_result(line, cleaned_line)
         # If the line is ascii, it is not a mojibake.
-        # Mojibake detection takes quite some time, so we pre-filtering with a C function (isascii)
+        # ftfy is a pure python lib, and isascii is a C function. Therefore pre-filtering is way way faster
         return RESULT_NEXT
