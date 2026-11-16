@@ -113,11 +113,11 @@ def demeuk_files(pipeline, input_files, cfg):
         # Wait for jobs to finish
         finish_up(jobs, cfg)
 
-# For profiling
+# For use with the profile flag
 def demeuk_files_single_threaded(pipeline, input_files, cfg):
     cfg.logger.progress('Reading input file(s)...')
     with open(input_files[0], 'rb') as fh:
-        lines = [line.rstrip(linesep.encode()) for line in fh.readlines(cfg.chunk_size)]
+        lines = [line.rstrip(linesep.encode()) for line in fh.readlines()]
     cfg.logger.progress('Submitted jobs, waiting for jobs to finish...')
 
     res = pipeline.run(lines, cfg.limit, cfg.debug)
