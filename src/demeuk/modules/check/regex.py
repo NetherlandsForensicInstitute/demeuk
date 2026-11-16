@@ -41,7 +41,7 @@ class EmailModule(CheckModule):
     def run(self, line) -> Result:
         # Maximum length of regex match
         if len(line) <=  64 + 1 + 64 * 3 + 6:
-            if search(self.EMAIL_REGEX, line):
+            if '@' in line and search(self.EMAIL_REGEX, line):
                 return self.stop
         return self.next
 
