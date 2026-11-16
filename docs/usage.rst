@@ -4,7 +4,7 @@ Usage
 
 This document describes how to usage demeuk.
 
-Please read ::ref:`Install` 
+Please read ::ref:`Install`
 
 Basic usage
 -----------
@@ -14,7 +14,7 @@ Download a list, like for example RockYou. Then run the following command:
 
 .. code-block:: none
 
-    $ demeuk -i <input file> -o <output file> -l <log file> 
+    $ demeuk -i <input file> -o <output file> -l <log file>
     -c -j 8 --leak --remove-email
 
 So what do all the parameters do? The -i selects the input file. The -o specifies
@@ -27,8 +27,8 @@ indicates that we will be using multithreading and we'll be creating 8 threads.
 Demeuk has been tested with as many as 48 cores and all cores will be fully used,
 if IO is not a problem (for example on a fast SSD setup).
 
-The --leak option indicates the following modules: 
---mojibake, --encode, --newline, --check-controlchar. 
+The --leak option indicates the following modules:
+--mojibake, --encode, --newline, --check-controlchar.
 --mojibake will try to detect and fix encoding issues known as mojibakes. Example of a Mojibake is
 SmˆrgÂs (Smörgås). This is a very common encoding issue. --encode will enable the encoding detection of
 demeuk. --newline will remove newlines from lines. --check-controlchar will drop lines containg control-chars.
@@ -38,7 +38,7 @@ This set of options was the default for demeuk version 3 and lower.
 The --remove-email option will remove simple email addresses from a line. It is useful when a dataset
 contained line like  <something>:<email>:password.
 
-Some datasets contain encoded strings like hex strings (HEX[] format). Those can be 
+Some datasets contain encoded strings like hex strings (HEX[] format). Those can be
 decoded using the following example:
 
 .. code-block:: none
@@ -105,9 +105,9 @@ machine. Use the string 'all' to specify to use all cores. Example: -j all
 input-encoding
 ~~~~~~~~~~~~~~
 By default demeuk will try to detect the encoding per line. If you already know
-the input encoding you can specify it using this option. Using this option can speed 
-up the demeuking process significantly. Note: if demeuk fails to decode the line 
-using this encoding, it will still perform the default encoding detection. Thus 
+the input encoding you can specify it using this option. Using this option can speed
+up the demeuking process significantly. Note: if demeuk fails to decode the line
+using this encoding, it will still perform the default encoding detection. Thus
 specifying a not installed encoding will not result in an error.
 
 output-encoding
@@ -118,7 +118,7 @@ Note, this will change the internal python unicode encoding.
 
 punctuation
 ~~~~~~~~~~~
-Use to set the punctuation that is use by options. For example used by the --remove-punctuation 
+Use to set the punctuation that is use by options. For example used by the --remove-punctuation
 option.
 
 Defaults to all ascci punctuation:
@@ -162,7 +162,7 @@ Will perform a cut on the line using the delimiter that can be specified.
 By default it will work with everything AFTER the first delimiter. If the delimiter
 is present multiple times, the cut will only be performed on the first delimiter.
 This is in case passwords do contain the delimiter as a character in the password.
-For example to correctly get the password from the line: 
+For example to correctly get the password from the line:
 <username>:mypassword:is:very:interesting.
 
 f cut-fields
@@ -171,7 +171,7 @@ When specifying the --cut command, the cut-fields command can be used to specify
 which fields needs to be cut. The same syntax as the -f command in the cut binary
 can be used. This means:
 
-N N'th field, N- from N-th field to end line, N-M, from N-th field to M-th field. 
+N N'th field, N- from N-th field to end line, N-M, from N-th field to M-th field.
 -M from start to M-th field.
 
 So examples -f 1-2, will cut field 1 till 2. -f 5 will cut field 5.
@@ -185,7 +185,7 @@ d delimiter
 ~~~~~~~~~~~
 Use the delimiter option to cut on a different delimiter. Like cutting on '/'.
 Default to ':', multiple delimiters can be specified using a ','. If it is needed
-to split on a comma, make the first delimiter a ','. If you need a comma and multiple 
+to split on a comma, make the first delimiter a ','. If you need a comma and multiple
 delimiters specify the delimiters using ';'. Example: ',;:' would split on ',' and ':'.
 The order in which they appear matters, the first delimiter will be tested first.
 
@@ -283,10 +283,10 @@ check-starting-with
 ~~~~~~~~~~~~~~~~~~~
 Checks if a line starts with the argument of check-starting-with. If the line starts
 with this, the line will be dropped. The string to check can be multiple strings. multiple
-values are comma-seperated. Example: #,// would skip lines starting with '#' and with 
+values are comma-seperated. Example: #,// would skip lines starting with '#' and with
 '//'.
 
-If you enabled the '--tab' option and you want to drop lines starting with a tab, add 
+If you enabled the '--tab' option and you want to drop lines starting with a tab, add
 ':' to the list of strings to check. '--check starting-with :'. When using --tab tab
 characters are transfered to ':'.
 
@@ -294,7 +294,7 @@ check-ending-with
 ~~~~~~~~~~~~~~~~~
 Checks if a line ends with the argument of check-ending-with. If the line ends
 with this, the line will be dropped. The string to check can be multiple strings. Multiple
-values are comma-seperated. Example: #,// would skip lines ending with '#' and with 
+values are comma-seperated. Example: #,// would skip lines ending with '#' and with
 '//'.
 
 If you enabled the '--tab' option and you want to drop lines ending with a tab, add
@@ -395,7 +395,7 @@ Some datasets might contain strings containing html encoded passwords. This can 
 because of a implementation of a hash algorithm that encodes passwords submitted by a user
 in html encoding to support non-ascii characters.
 
-A string like: &#304;STANBUL will be converted to İSTANBUL. Note, if an password would 
+A string like: &#304;STANBUL will be converted to İSTANBUL. Note, if an password would
 really contain &#304; those entries would also be converted. Thus might invalidate some
 passwords.
 
@@ -453,20 +453,20 @@ using the --input-encoding option. Only use this if you are 100% of the input en
 
 tab
 ~~~~~~
-If you enable this, demeuk will replace tab characters with ':'. 
+If you enable this, demeuk will replace tab characters with ':'.
 This is useful when cleaning up data from collection leaks. They might
 contain tab characters and ':' as seperator in the same file.
 
 newline
 ~~~~~~~
-Enable this option to remove newlines from lines. This can be extra important 
+Enable this option to remove newlines from lines. This can be extra important
 when using --html or --hex, the decoded lines may contain newline characters.
 To remove those newline characters, enable this option.
 
 
 trim
 ~~~~
-Enable this to let demeuk trim lines. Demuk will removes remove sequences which represent 
+Enable this to let demeuk trim lines. Demuk will removes remove sequences which represent
 newline characters from beginning and of end of input entry. For example the Ascii sequence '\n' or
 Html sequence '<br />'. But in case this sequences are part of a password this
 option allows to disable this option.
@@ -565,7 +565,7 @@ Basically it will strip the tags like: _NOUN_ or _ADJ
 leak
 ~~~~
 The leak option will enable the following modules:
-    
+
  - mojibake
  - encode
  - newline

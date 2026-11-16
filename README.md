@@ -48,13 +48,13 @@ Alternatively you can install demeuk in a venv as usual, in which case the `deme
 pip install demeuk
 ```
 
-Demeuk follows conventions of other text-processing shell tools: it can take input from stdin, and demeuk outputs its results to stdout, with logs being written to stderr. Note that this can case issue's with encoding. 
+Demeuk follows conventions of other text-processing shell tools: it can take input from stdin, and demeuk outputs its results to stdout, with logs being written to stderr.
 ```
     cat wordlist | demeuk --leak-full --debug > list.out 2> list.log
 ```
 
 ## Development
-To make changes to demeuk, you need to install the source code
+To make changes to demeuk, you need to install the source code:
 
 ```
 git clone https://github.com/NetherlandsForensicInstitute/demeuk.git
