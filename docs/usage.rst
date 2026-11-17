@@ -102,6 +102,12 @@ The threads option can be used to speed up the process of demeuking. Of course
 this option needs to be a number. Do not use more threads then CPU core on your
 machine. Use the string 'all' to specify to use all cores. Example: -j all
 
+profile
+~~~~~~~
+Demeuk is a multithreaded application, this makes profiling results hard to interpret.
+Pass ``--profile`` to run demeuk completely single-threaded, which allows easy profiling
+of the different modules.
+
 input-encoding
 ~~~~~~~~~~~~~~
 By default demeuk will try to detect the encoding per line. If you already know
