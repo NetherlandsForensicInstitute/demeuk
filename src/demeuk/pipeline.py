@@ -25,7 +25,7 @@ class Pipeline:
 
         self.modules = []
 
-
+        self.config = config  # Store the config object, with a reference to the logger object
 
         # Build pipeline
         for i in range(1, len(argv)):
@@ -59,7 +59,7 @@ class Pipeline:
                             instance = module(current_value)
                             self.include_module(instance)
                         else:
-                            print(f"Cannot parse '{current_arg}={current_value}', {current_arg} does not take a parameter!", file=stderr)
+                            config.logger.log(f"Cannot parse '{current_arg}={current_value}', {current_arg} does not take a parameter!")
 
 
 
@@ -84,7 +84,7 @@ class Pipeline:
                 self.encoding_slot += 1
             case PipelinePosition.ENCODE:
                 if self.has_encoding is True:
-                    print(f'Cannot include module {instance} in pipeline, an encode module is already present!', file=stderr)
+                    self.config.logger.log(f'Cannot include module {instance} in pipeline, an encode module is already present!')
                     return
                 self.modules.insert(self.encoding_slot, instance)
                 self.has_encoding = True
