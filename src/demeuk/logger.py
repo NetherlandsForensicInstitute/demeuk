@@ -19,12 +19,12 @@ class Logger:
             try:
                 self.log_file = open(args.log, 'a+', encoding=getlocale()[1], newline='')
             except PermissionError:
-                print(f'Logger: Cannot write log file to {args.log}!', file=sys.stderr)
+                self.log(f'Cannot write log file to {args.log}!')
                 raise SystemExit(2)
         else:
-            self.progress('Logger: writing log to stderr')
+            self.log('Logger: writing log to stderr')
 
-    def progress(self, message):
+    def log(self, message):
         # A wrapper function to write a log message, so that it does not interfere with tqdm's progress bars.
         if self.verbose:
             if self.show_progress:

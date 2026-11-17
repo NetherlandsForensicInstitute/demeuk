@@ -892,7 +892,7 @@ def test_check_multiple_regexes():
 
 
 def test_stdin_stdout():
-    comlist = ['demeuk']
+    comlist = ['demeuk', '--leak']
     # On Windows scripts cant be executed with the shebang so manually add python3 in front
     if name == 'nt':
         comlist.insert(0, 'python3')
