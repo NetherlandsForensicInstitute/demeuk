@@ -53,7 +53,7 @@ class Config:
         if args.input:
             for input_file in self.input_files:
                 if not access(input_file, R_OK):
-                    print(f'Config: Cannot read input file from {input_file}!', file=sys.stderr)
+                    self.logger.log(f'Config: Cannot read input file from {input_file}!')
 
         # Other configurations here, with defaults
         self.threads = int(args.threads) if args.threads else cpu_count()

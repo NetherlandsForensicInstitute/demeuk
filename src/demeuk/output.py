@@ -22,13 +22,13 @@ class OutputFileHandler:
                 open(args.output, 'w').close()
                 # Now open it in append mode, this solves a bug where file writes would get dropped unexpectedly
                 self.output_file = open(args.output, 'a', encoding=encoding, newline='') # Now
-                logger.progress(f'Writing output to {args.output}')
+                logger.log(f'Writing output to {args.output}')
             except PermissionError:
-                print(f'Cannot write output file to {args.output}!', file=sys.stderr)
+                logger.log(f'Cannot write output file to {args.output}!')
                 exit(2)
         else:
             self.output_file = stdout
-            logger.progress('Writing output to stdout')
+            logger.log('Writing output to stdout')
 
     def write(self, lines):
         """

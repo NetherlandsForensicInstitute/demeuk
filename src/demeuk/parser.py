@@ -230,4 +230,8 @@ Example uses:
         Parse arguments, this needs to be done after all modules are registered.
         :param args: A list of command-line arguments (for example sys.argv).
         """
+        if len(args) == 1:
+            # Command was just 'demeuk'
+            self.parser.print_usage()
+            self.parser.exit(0)
         self.args = self.parser.parse_args(args[1:]) # First arg is program name, we don't need that
