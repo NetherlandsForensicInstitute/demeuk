@@ -22,7 +22,7 @@ Demeuk is a tool to clean up lists of words.
 """
 
 def get_version():
-    version = '5.0.0'
+    version = '5.0.1'
     return version
 
 
