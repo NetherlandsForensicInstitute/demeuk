@@ -1,7 +1,0 @@
-docopt
-chardet==5.2.0
-nltk
-ftfy
-unidecode
-tqdm
-transliterate

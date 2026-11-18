@@ -24,48 +24,83 @@ grant agreement No. 82201
 Please read the docs for more information.
 
 ## Quick start
-The recommended way to install demeuk is to install it in a virtual
-environment.
+Demeuk supports Python versions 3.12 and up.
+The recommended way to install demeuk is to use [pipx](https://pipx.pypa.io/stable/).
 
 ```
-# Create virtual environment
-virtualenv <virtual environment name>
-# Activate the virtual environment
-source <virtual environment name>/bin/activate
-pip3 install -r requirements.txt
+pipx install demeuk --python /usr/bin/python3.14
 ```
 
-Now you can run Demeuk from bin/demeuk.py. Examples:
-```
-python3 bin/demeuk.py --version
-python3 bin/demeuk.py --help
-python3 bin/demeuk.py -i inputfile.tmp -o outputfile.dict -l droppedfile.txt
-python3 bin/demeuk.py -i inputfile -o outputfile -j 24 -l logfile.log
-python3 bin/demeuk.py -i inputfile.tmp -o outputfile.dict -l droppedfile.txt --leak
-python3 bin/demeuk.py -i inputfile -o outputfile -j 24 -l logfile.log --leak-full
-python3 bin/demeuk.py -i inputdir/*.txt -o outputfile.dict -l logfile.log
-python3 bin/demeuk.py -o outputfile.dict -l logfile.log
-```
-
-## Install
-For a systemwide Demeuk do:
+Now you can invoke demeuk directly from the command-line from any directory:
 
 ```
-cd <path>/demeuk/
-python3 -m pip install .
+demeuk --version
+demeuk --help
+demeuk -i rockyou.txt -o rockyou-demuked.txt --leak-full
+```
+
+Since demeuk version 5, the order of arguments is the order of which they are executed. Want to first split based on spaces and then do a length check?
+
+```
+demeuk -i inputfile -o outputfile --add-split --check-max-length 12
+```
+
+demeuk also supports masks as input:
+
+```
+demeuk -i inputdir/*.txt -o outputfile --check-max-length 12
+```
+
+Demeuk follows conventions of other text-processing shell tools: it can take input from stdin, and demeuk outputs its results to stdout, with logs being written to stderr.
+```
+    cat wordlist | demeuk --leak-full --debug > list.out 2> list.log
+```
+
+More information available in the docs: <http://demeuk.rtfd.io/>
+
+### Alternative install method
+
+Alternatively you can install demeuk in a venv as usual, in which case the `demeuk` command becomes available while the venv is active.
+```
+virtualenv venv
+source venv/bin/activate
+pip install demeuk
+```
+
+## Development
+To make changes to demeuk, you need to install the source code:
+
+```
+git clone https://github.com/NetherlandsForensicInstitute/demeuk.git
+cd demeuk
+pdm install -p ./
 ```
 
 Check the version:
 ```
-demeuk.py -version
+demeuk -version
 ```
 
 Usage:
 ```
-demeuk.py --help
+demeuk --help
 ```
 
+Running tests
+```
+pdm install -G test
+pdm run test
+```
 
 ## Docs
 The docs are available at: <http://demeuk.rtfd.io/>
 
+To build the documentation locally with PDM:
+
+```
+pdm install -G docs
+pdm run make -C docs html
+```
+
+The generated site is in `docs/_build/html/`. On Windows, run
+`pdm run docs\make.bat html` instead of `make`.
