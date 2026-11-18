@@ -1,6 +1,7 @@
 from binascii import hexlify
 from collections import deque
 from os import linesep
+from sys import stderr
 
 from .modules.base import *
 from .modules.macro.macro import MacroModule
@@ -24,6 +25,7 @@ class Pipeline:
 
         self.modules = []
 
+        self.config = config  # Store the config object, with a reference to the logger object
 
         # Build pipeline
         for i in range(1, len(argv)):
@@ -45,9 +47,20 @@ class Pipeline:
                 if issubclass(module, MacroModule):
                     for subinstance in instance.get_submodules():
                         self.include_module(subinstance)
-
-
                 self.include_module(instance)
+            else:
+                # If argv[i] not in lookup_table, it could be of type --arg=value.
+                if '=' in current_arg:
+                    current_arg, current_value = current_arg.split('=', maxsplit=1)
+                    # This is only allowed for parameterized modules
+                    if current_arg in parser.lookup_table:
+                        module = parser.lookup_table[current_arg]
+                        if issubclass(module, ParamModule):
+                            instance = module(current_value)
+                            self.include_module(instance)
+                        else:
+                            config.logger.log(f"Cannot parse '{current_arg}={current_value}', {current_arg} does not take a parameter!")
+
 
 
         # --encode not used
@@ -70,6 +83,9 @@ class Pipeline:
                 # Bump up encoding slot. Also makes sure BEFORE_ENCODE modules are placed in order.
                 self.encoding_slot += 1
             case PipelinePosition.ENCODE:
+                if self.has_encoding is True:
+                    self.config.logger.log(f'Cannot include module {instance} in pipeline, an encode module is already present!')
+                    return
                 self.modules.insert(self.encoding_slot, instance)
                 self.has_encoding = True
                 # don't need to keep track of encoding_slot if inserted.
@@ -156,5 +172,3 @@ class Pipeline:
                     log.append(f'-----END----- {line}{linesep}{linesep}')
 
         return {'results': results, 'log': log}
-
-

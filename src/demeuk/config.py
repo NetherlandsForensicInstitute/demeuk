@@ -34,6 +34,9 @@ class Config:
         self.verbose = args.verbose
         self.debug = args.debug
 
+        # Profiling flag - if set, run single-threaded
+        self.profile = args.profile
+
         # Encodings (set these before logger, as logger opens output files)
         self.input_encodings = args.input_encoding.split(',') if args.input_encoding else ['UTF-8']
 
@@ -50,7 +53,7 @@ class Config:
         if args.input:
             for input_file in self.input_files:
                 if not access(input_file, R_OK):
-                    print(f'Config: Cannot read input file from {input_file}!', file=sys.stderr)
+                    self.logger.log(f'Config: Cannot read input file from {input_file}!')
 
         # Other configurations here, with defaults
         self.threads = int(args.threads) if args.threads else cpu_count()

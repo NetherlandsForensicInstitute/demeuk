@@ -1,6 +1,6 @@
 import sys
+from os import linesep, name
 from subprocess import PIPE, run
-from os import name, linesep
 from unittest.mock import patch
 
 from pytest import mark, raises
@@ -106,6 +106,15 @@ def test_multiple_macro_steps():
 
 def test_single_threaded_processes_all_chunks():
     testargs = ['demeuk', '-i', 'testdata/input59', '-o', 'testdata/output59', '-j', '1']
+    with patch.object(sys, 'argv', testargs):
+        main()
+
+    assert calculate_line_numbers('testdata/output59') == 200000
+    with open('testdata/output59', encoding='utf-8') as file:
+        assert file.readlines()[-1] == 'line-199999\n'
+
+def test_profile_mode_processes_all_chunks():
+    testargs = ['demeuk', '-i', 'testdata/input59', '-o', 'testdata/output59', '--profile']
     with patch.object(sys, 'argv', testargs):
         main()
 
@@ -223,8 +232,13 @@ def test_split():
 
 
 def test_output_encoding():
+    # Python 3.15 fixes this! opening with encoding=None now defaults to utf-8.
+    # So we patch in an expliticly wrong encoding.
     testargs = ['demeuk', '-i', 'testdata/input1', '-o', 'testdata/output1', '--output-encoding', 'C', '--encode']
-    with patch.object(sys, 'argv', testargs):
+    with (
+        patch.object(sys, 'argv', testargs),
+        patch('demeuk.output.getlocale', return_value=('ascii', 'ascii')),
+    ):
         with raises(UnicodeEncodeError):
             main()
 
@@ -878,7 +892,7 @@ def test_check_multiple_regexes():
 
 
 def test_stdin_stdout():
-    comlist = ['demeuk']
+    comlist = ['demeuk', '--leak']
     # On Windows scripts cant be executed with the shebang so manually add python3 in front
     if name == 'nt':
         comlist.insert(0, 'python3')

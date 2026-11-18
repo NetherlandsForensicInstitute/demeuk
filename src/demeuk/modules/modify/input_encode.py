@@ -3,6 +3,7 @@ from unicodedata import category
 from chardet import detect
 
 from demeuk.modules.base import Actions, ConfigModule, HelpInfo, PipelinePosition, Result
+from demeuk.modules.check.character import ControlCharModule
 
 from .modify import ModifyModule
 
@@ -44,11 +45,10 @@ class EncodeModule(ModifyModule, ConfigModule):
             # Some encodings will decode almost any line, let's check if we have invalid chars.
             # If we have invalid chars (except for tab-like chars) we will fail
             for c in line_decoded:
-                if category(c) in ['Cc', 'Cf', 'Cn', 'Co', 'Cs']:
-                    if c == '\t' or c == '\f':
-                        continue
-                    else:
-                        return False
+                if c == '\t' or c == '\f':
+                    continue
+                elif ControlCharModule.IS_CONTROL_LOOKUP[ord(c)]:
+                    return False
             return line_decoded
         except UnicodeDecodeError:
             return False
@@ -119,5 +119,3 @@ class DefaultEncodeModule(ConfigModule):
     @staticmethod
     def get_pipeline_position():
         pass
-
-

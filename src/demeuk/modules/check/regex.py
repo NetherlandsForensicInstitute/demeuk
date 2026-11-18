@@ -1,4 +1,4 @@
-from re import search
+from re import compile, search
 
 from ..base import *
 from .check import CheckModule
@@ -30,7 +30,7 @@ class RegexModule(CheckModule, ParamModule):
 
 class EmailModule(CheckModule):
 
-    EMAIL_REGEX = '.{1,64}@([a-zA-Z0-9_-]{1,63}\\.){1,3}[a-zA-Z]{2,6}'
+    EMAIL_REGEX = compile('.{1,64}@(?:[a-zA-Z0-9_-]{1,63}\\.){1,3}[a-zA-Z]{2,6}')
 
     @staticmethod
     def get_help_info():
@@ -39,13 +39,15 @@ class EmailModule(CheckModule):
             help_str='Drop lines containing e-mail addresses.')
 
     def run(self, line) -> Result:
-        if search(self.EMAIL_REGEX, line):
-            return self.stop
+        # Maximum length of regex match
+        if len(line) <=  64 + 1 + 64 * 3 + 6:
+            if '@' in line and search(self.EMAIL_REGEX, line):
+                return self.stop
         return self.next
 
 class MacAddressModule(CheckModule):
 
-    MAC_REGEX = '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$'
+    MAC_REGEX = compile('^(?:[0-9A-Fa-f]{2}[:-]){5}(?:[0-9A-Fa-f]{2})$')
 
     @staticmethod
     def get_help_info():
@@ -55,13 +57,14 @@ class MacAddressModule(CheckModule):
 
 
     def run(self, line) -> Result:
-        if search(self.MAC_REGEX, line):
-            return self.stop
+        if len(line) == 17:
+            if search(self.MAC_REGEX, line):
+                return self.stop
         return self.next
 
 class UuidModule(CheckModule):
 
-    UUID_REGEX = '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+    UUID_REGEX = compile('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')
 
     @staticmethod
     def get_help_info():
@@ -71,8 +74,9 @@ class UuidModule(CheckModule):
 
 
     def run(self, line):
-        if search(self.UUID_REGEX, line):
-            return self.stop
+        if len(line) == 36:
+            if search(self.UUID_REGEX, line):
+                return self.stop
         return self.next
 
 class HashModule(CheckModule):
