@@ -32,25 +32,39 @@ pipx install demeuk --python /usr/bin/python3.14
 ```
 
 Now you can invoke demeuk directly from the command-line from any directory:
+
 ```
 demeuk --version
 demeuk --help
-demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt
-demeuk -i inputfile -o outputfile -j 24 -l logfile.log
-demeuk -i inputfile.tmp -o outputfile.dict -l droppedfile.txt --leak
-demeuk -i inputfile -o outputfile -j 24 -l logfile.log --leak-full
-demeuk -i inputdir/*.txt -o outputfile.dict -l logfile.log
-demeuk -o outputfile.dict -l logfile.log
+demeuk -i rockyou.txt -o rockyou-demuked.txt --leak-full
 ```
 
-Alternatively you can install demeuk in a venv as usual, in which case the `demeuk` command becomes available while the venv is active.
+Since demeuk version 5, the order of arguments is the order of which they are executed. Want to first split based on spaces and then do a length check?
+
 ```
-pip install demeuk
+demeuk -i inputfile -o outputfile --add-split --check-max-length 12
+```
+
+demeuk also supports masks as input:
+
+```
+demeuk -i inputdir/*.txt -o outputfile --check-max-length 12
 ```
 
 Demeuk follows conventions of other text-processing shell tools: it can take input from stdin, and demeuk outputs its results to stdout, with logs being written to stderr. Note that this can case issue's with encoding. 
 ```
     cat wordlist | demeuk --leak-full --debug > list.out 2> list.log
+```
+
+More information available in the docs: <http://demeuk.rtfd.io/>
+
+### Alternative install method
+
+Alternatively you can install demeuk in a venv as usual, in which case the `demeuk` command becomes available while the venv is active.
+```
+virtualenv venv
+source venv/bin/activate
+pip install demeuk
 ```
 
 ## Development
