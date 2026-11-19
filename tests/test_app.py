@@ -893,9 +893,6 @@ def test_check_multiple_regexes():
 
 def test_stdin_stdout():
     comlist = ['demeuk', '--leak']
-    # On Windows scripts cant be executed with the shebang so manually add python3 in front
-    if name == 'nt':
-        comlist.insert(0, 'python3')
     script = f'input{linesep}lines{linesep}'.encode()
     res = run(comlist, input=script,
               stdout=PIPE, stderr=PIPE)
@@ -913,8 +910,6 @@ def test_stdin_input_encoding():
         'demeuk', '-j', '1', '-o', 'testdata/output62',
         '--input-encoding', 'cp1252', '--leak-full',
     ]
-    if name == 'nt':
-        comlist.insert(0, 'python3')
     with open('testdata/input62', 'rb') as file:
         res = run(comlist, input=file.read(), stdout=PIPE, stderr=PIPE)
 
@@ -925,8 +920,6 @@ def test_stdin_input_encoding():
 
 def test_stdin_skip():
     comlist = ['demeuk', '-j', '1', '-o', 'testdata/output63', '--skip', '1']
-    if name == 'nt':
-        comlist.insert(0, 'python3')
     with open('testdata/input2', 'rb') as file:
         res = run(comlist, input=file.read(), stdout=PIPE, stderr=PIPE)
 
