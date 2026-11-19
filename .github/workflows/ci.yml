@@ -1,4 +1,4 @@
-name: Demeuk CI
+name: CI
 
 on:
   push:
