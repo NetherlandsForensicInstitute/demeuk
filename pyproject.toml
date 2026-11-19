@@ -23,9 +23,13 @@ demeuk = "demeuk.demeuk:cli_entry_point"
 
 [project.optional-dependencies]
 test = [
-    "coverage>=7.13.5",
     "pytest>=9.0.3",
     "tox>=4.53.0",
+    "pytest-timeout>=2.4.0",
+]
+test-coverage = [
+    "coverage>=7.13.5",
+    "pytest>=9.0.3",
     "pytest-timeout>=2.4.0",
 ]
 check = [
@@ -61,8 +65,10 @@ fix = {composite = [
     "ruff check --fix src/demeuk/ tests/",
     "mdformat README.md",
 ]}
-test = {composite = [
-    "tox",
+test = [
+    "tox"
+]
+test-coverage = {composite = [
     "coverage run --branch --module pytest --junit-xml pytest.xml tests/",
     "coverage report --fail-under=75",
 ]}
