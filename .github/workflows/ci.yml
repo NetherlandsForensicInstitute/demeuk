@@ -75,7 +75,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pdm install -G coverage
+          pdm install -G test
       - name: Run tests
         run: |
           pdm run test-coverage
