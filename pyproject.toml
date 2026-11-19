@@ -61,8 +61,10 @@ fix = {composite = [
     "ruff check --fix src/demeuk/ tests/",
     "mdformat README.md",
 ]}
-test = {composite = [
-    "tox",
+test = [
+    "tox"
+]
+test-coverage = {composite = [
     "coverage run --branch --module pytest --junit-xml pytest.xml tests/",
     "coverage report --fail-under=75",
 ]}

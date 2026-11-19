@@ -1,0 +1,116 @@
+name: Demeuk CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-latest:
+    name: Test Python 3.15 on ${{ matrix.os }}
+    # Test only latest python version on non-master pushes
+    if: github.event_name == 'push' && github.ref != 'refs/heads/master'
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: '3.15'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pdm install -G test
+      - name: Run tests
+        run: |
+          pdm run test -e 3.15
+
+  test-matrix:
+    name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    # Test the full matrix on PR to master, or push to master.
+    if: |
+      (github.event_name == 'pull_request' && github.base_ref == 'master') ||
+      github.ref == 'refs/heads/master'
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.12', '3.13', '3.14', '3.15']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          set +x
+          python -m pip install --upgrade pip
+          pdm install -G test
+      - name: Run tests
+        run: |
+          pdm run test -e ${{ matrix.python-version }}
+  coverage:
+    name: Test coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: '3.15'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pdm install -G test
+      - name: Run tests
+        run: |
+          pdm run test-coverage
+
+
+  publish:
+    runs-on: ubuntu-latest
+    # Only publish on version tag.
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: '3.15'
+      - name: Verify tag version matches demeuk version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag '$TAG' does not match the expected format vMAJOR.MINOR.PATCH"
+            exit 1
+          fi
+
+          PROJECT_VERSION=$(python -c "import demeuk.demeuk; print(demeuk.demeuk.get_version())")
+
+          echo "Git tag version: $TAG_VERSION"
+          echo "Project version: $PROJECT_VERSION"
+
+          if [ "$TAG_VERSION" != "$PROJECT_VERSION" ]; then
+            echo "::error::Git tag version does not match project version"
+            exit 1
+          fi
+      - name: Publish wheel
+        env:
+          PDM_PUBLISH_USERNAME: __token__
+          PDM_PUBLISH_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: pdm publish

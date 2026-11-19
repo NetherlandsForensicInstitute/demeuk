@@ -18,7 +18,7 @@ def calculate_line_numbers(file_name):
 
 
 def test_demeuk():
-    testargs = ['demeuk', '-i', 'testdata/input1', '-o', 'testdata/output1', '-l', 'testdata/log1', '--leak']
+    testargs = ['demeuk', '-i', 'testdata/input1', '-o', 'testdata/output1', '-l', 'testdata/log1', '--leak', '--output-encoding', 'en_US.UTF-8']
     with patch.object(sys, 'argv', testargs):
         main()
 
@@ -29,7 +29,7 @@ def test_demeuk():
     assert line_num_log1 == 6
     assert line_num_output1 == 9
     assert line_num_input1 == (line_num_output1 + line_num_log1 - 2)
-    with open('testdata/output1') as file:
+    with open('testdata/output1', encoding='utf-8') as file:
         filecontent = file.read()
         assert 'Password123!@"\n' in filecontent
         assert 'ǓǝǪǼȧɠ\n' in filecontent
@@ -593,10 +593,10 @@ def test_add_without_punctuation():
 def test_glob():
     testargs = [
         'demeuk', '-i', 'testdata/input*', '-o', 'testdata/output30', '-l', 'testdata/log30',
-        '--verbose', '-c', '-d', ',;:',
+        '--verbose', '-c', '-d', ',;:', '--output-encoding', 'en_US.UTF-8',
     ]
     run_cli(testargs)
-    with open('testdata/output30') as f:
+    with open('testdata/output30', encoding='utf-8') as f:
         results = f.readlines()
     assert len(results) > 100
 
@@ -893,9 +893,6 @@ def test_check_multiple_regexes():
 
 def test_stdin_stdout():
     comlist = ['demeuk', '--leak']
-    # On Windows scripts cant be executed with the shebang so manually add python3 in front
-    if name == 'nt':
-        comlist.insert(0, 'python3')
     script = f'input{linesep}lines{linesep}'.encode()
     res = run(comlist, input=script,
               stdout=PIPE, stderr=PIPE)
@@ -913,8 +910,6 @@ def test_stdin_input_encoding():
         'demeuk', '-j', '1', '-o', 'testdata/output62',
         '--input-encoding', 'cp1252', '--leak-full',
     ]
-    if name == 'nt':
-        comlist.insert(0, 'python3')
     with open('testdata/input62', 'rb') as file:
         res = run(comlist, input=file.read(), stdout=PIPE, stderr=PIPE)
 
@@ -925,8 +920,6 @@ def test_stdin_input_encoding():
 
 def test_stdin_skip():
     comlist = ['demeuk', '-j', '1', '-o', 'testdata/output63', '--skip', '1']
-    if name == 'nt':
-        comlist.insert(0, 'python3')
     with open('testdata/input2', 'rb') as file:
         res = run(comlist, input=file.read(), stdout=PIPE, stderr=PIPE)
 
@@ -955,6 +948,7 @@ def _run_demeuk(test_num, *extra_args):
         '-o', f'testdata/output{test_num}',
         '-l', f'testdata/log{test_num}',
         '--verbose',
+        '--output-encoding', 'en_US.UTF-8'
     ]
     testargs.extend(extra_args)
     with patch.object(sys, 'argv', testargs):
