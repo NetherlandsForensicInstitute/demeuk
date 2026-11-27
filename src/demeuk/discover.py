@@ -1,5 +1,4 @@
 import importlib.util
-import inspect
 from pathlib import Path
 
 from demeuk.modules.base import Module
@@ -37,11 +36,13 @@ def discover_modules():
             if file.suffix == '.py' and file.stem != '__init__':
                 relative_path = file.relative_to(modules_dir).with_suffix('')
                 module_name = '.' + '.'.join(relative_path.parts)
-                # Get all python objects in the file
-                members = inspect.getmembers(importlib.import_module(module_name, 'demeuk.modules'))
-                for name, obj in members:
-                    # Save only the class-type objects which are not blacklisted. These should only be the modules.
-                    if inspect.isclass(obj):
+                # Get all python objects in the file. Iterate the module namespace
+                # directly so that lazy imports are not resolved during discovery.
+                module = importlib.import_module(module_name, 'demeuk.modules')
+                for name, obj in vars(module).items():
+                    # Save only the class-type objects defined in this file which are not blacklisted.
+                    # These should only be the modules.
+                    if isinstance(obj, type) and obj.__module__ == module.__name__:
                         if issubclass(obj, Module) and name not in blacklist:
                             classes |= {obj}
 

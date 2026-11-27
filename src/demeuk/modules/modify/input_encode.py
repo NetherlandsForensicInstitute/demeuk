@@ -1,3 +1,5 @@
+__lazy_modules__ = ['chardet']
+
 from unicodedata import category
 
 from chardet import detect

@@ -1149,3 +1149,22 @@ def test_add_upper():
     assert 'ALL UPPER' in results
     assert 'MIXED CASE' in results
     assert 'UNICODE CASSE' in results
+
+
+@mark.skipif(sys.version_info < (3, 15), reason='lazy imports require Python 3.15+')
+def test_heavy_imports_are_lazy():
+    script = (
+        'import sys\n'
+        'from demeuk.demeuk import run_cli\n'
+        'try:\n'
+        '    run_cli(["demeuk", "--version"])\n'
+        'except SystemExit:\n'
+        '    pass\n'
+        'heavy = [m for m in ("nltk", "scipy", "ftfy", "chardet", "transliterate", '
+        '"unidecode", "tqdm", "multiprocess") if m in sys.modules]\n'
+        'print(",".join(heavy))\n'
+        'raise SystemExit(1 if heavy else 0)\n'
+    )
+    result = run([sys.executable, '-c', script], capture_output=True, text=True)
+
+    assert result.returncode == 0, result.stdout + result.stderr

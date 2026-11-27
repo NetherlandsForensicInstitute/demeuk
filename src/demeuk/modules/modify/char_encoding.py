@@ -1,3 +1,5 @@
+__lazy_modules__ = ['ftfy', 'unidecode']
+
 from ftfy import fix_encoding
 from unidecode import unidecode
 

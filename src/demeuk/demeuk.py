@@ -1,3 +1,5 @@
+__lazy_modules__ = ['multiprocess.pool', 'tqdm']
+
 import sys
 from math import ceil
 from os import cpu_count, linesep, path

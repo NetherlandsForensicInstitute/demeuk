@@ -1,3 +1,5 @@
+__lazy_modules__ = ['nltk']
+
 from string import punctuation as string_punctuation
 
 from nltk import WhitespaceTokenizer, str2tuple
