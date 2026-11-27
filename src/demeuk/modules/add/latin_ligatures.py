@@ -1,3 +1,5 @@
+__lazy_modules__ = ['ftfy.fixes']
+
 from ftfy.fixes import fix_latin_ligatures
 
 from ..base import *

@@ -1,3 +1,5 @@
+__lazy_modules__ = ['ftfy.chardata']
+
 from html import unescape
 
 from ftfy.chardata import HTML_ENTITIES, HTML_ENTITY_RE

@@ -1,3 +1,5 @@
+__lazy_modules__ = ['transliterate']
+
 from transliterate import translit
 
 from ..base import *

@@ -1,3 +1,5 @@
+__lazy_modules__ = ['tqdm']
+
 import sys
 from locale import getlocale
 
